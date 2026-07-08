@@ -19,7 +19,10 @@ export function LoginForm() {
     >
       <form action={formAction} className="space-y-4">
         <div className="space-y-2">
-          <label htmlFor="email" className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
+          <label
+            htmlFor="email"
+            className="text-sm font-medium text-zinc-800 dark:text-zinc-200"
+          >
             Email
           </label>
           <input

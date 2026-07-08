@@ -1,0 +1,50 @@
+import { describe, expect, it } from "vitest";
+
+import { mapMomentDetailRow } from "@/lib/moments/detail";
+
+describe("mapMomentDetailRow", () => {
+  it("maps a text-only moment", () => {
+    const result = mapMomentDetailRow(
+      {
+        id: "moment-1",
+        body: "A proud moment.",
+        occurred_at: "2026-07-07T12:00:00.000Z",
+        moment_tags: [{ tags: { id: "tag-1", name: "work" } }],
+        media_attachments: null,
+      },
+      null,
+    );
+
+    expect(result.media).toBeNull();
+    expect(result.tags).toEqual([{ id: "tag-1", name: "work" }]);
+  });
+
+  it("includes signed media when available", () => {
+    const result = mapMomentDetailRow(
+      {
+        id: "moment-2",
+        body: "Photo moment.",
+        occurred_at: "2026-07-07T12:00:00.000Z",
+        moment_tags: null,
+        media_attachments: [
+          {
+            id: "media-1",
+            media_type: "photo",
+            mime_type: "image/jpeg",
+            original_filename: "photo.jpg",
+            storage_path: "user/moment/media-1.jpg",
+          },
+        ],
+      },
+      "https://example.com/signed",
+    );
+
+    expect(result.media).toEqual({
+      id: "media-1",
+      media_type: "photo",
+      mime_type: "image/jpeg",
+      original_filename: "photo.jpg",
+      signedUrl: "https://example.com/signed",
+    });
+  });
+});

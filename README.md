@@ -7,6 +7,7 @@ A home for life's moments — capture and revisit meaningful memories without th
 - **Frontend:** Next.js (App Router) + React + TypeScript + Tailwind CSS
 - **Hosting:** [Vercel](https://vercel.com)
 - **Backend:** [Supabase](https://supabase.com) (auth, Postgres, storage)
+- **CI:** GitHub Actions (lint, format, test, build)
 
 See [`docs/decisions.md`](docs/decisions.md) for architecture decisions and [`docs/mvp-backlog.md`](docs/mvp-backlog.md) for the implementation backlog.
 
@@ -30,47 +31,97 @@ See [`docs/decisions.md`](docs/decisions.md) for architecture decisions and [`do
    cp .env.example .env.local
    ```
 
-3. Add your Supabase project URL and anon key from **Project Settings → API** in the [Supabase dashboard](https://supabase.com/dashboard).
+3. Add your Supabase project URL and publishable key from **Project Settings → API** in the [Supabase dashboard](https://supabase.com/dashboard).
 
-4. In Supabase, enable email auth: **Authentication → Providers → Email** (enabled by default). For faster local testing, you can disable **Confirm email** under **Authentication → Providers → Email** so new accounts can log in immediately.
+4. In Supabase, enable email auth: **Authentication → Providers → Email** (enabled by default). For faster local testing, you can disable **Confirm email** so new accounts can log in immediately.
 
-5. Start the dev server:
+5. Apply the database schema (one-time) — see [Database setup](#database-setup) below.
+
+6. Start the dev server:
 
    ```bash
    npm run dev
    ```
 
-   Open [http://localhost:3000](http://localhost:3000). Unauthenticated visitors are redirected to `/login`. After sign-up or log-in, you'll land on `/timeline`.
+   Open [http://localhost:3000](http://localhost:3000).
 
-## Auth routes
+### Dev server errors (`@swc/helpers` / Turbopack)
 
-| Route | Access |
-|-------|--------|
-| `/login` | Public |
-| `/signup` | Public |
-| `/timeline` | Authenticated |
-| `/settings` | Authenticated (email + log out) |
+If you see a missing `@swc/helpers-...` module error, stop the dev server and clear the cache:
+
+```bash
+npm run clean
+npm run dev
+```
+
+Or in one step: `npm run dev:clean`
+
+If it persists: `rm -rf node_modules .next && npm install`
+
+## Routes
+
+| Route           | Access                               |
+| --------------- | ------------------------------------ |
+| `/login`        | Public                               |
+| `/signup`       | Public                               |
+| `/timeline`     | Authenticated (search + list)        |
+| `/capture`      | Authenticated                        |
+| `/moments/[id]` | Authenticated (view / edit / delete) |
+| `/settings`     | Authenticated                        |
 
 ## Database setup
-
-After configuring `.env.local`, apply the database schema:
 
 1. Open **SQL Editor** in the [Supabase dashboard](https://supabase.com/dashboard).
 2. Run the SQL in [`supabase/migrations/20260707143000_initial_schema.sql`](supabase/migrations/20260707143000_initial_schema.sql).
 
-See [`supabase/README.md`](supabase/README.md) for details and verification steps.
+See [`supabase/README.md`](supabase/README.md) for verification steps.
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start local dev server |
-| `npm run build` | Production build |
-| `npm run start` | Run production build locally |
-| `npm run lint` | ESLint |
-| `npm run format` | Prettier write |
-| `npm run format:check` | Prettier check |
-| `npm run test` | Run unit tests (Vitest) |
+| Command                | Description                  |
+| ---------------------- | ---------------------------- |
+| `npm run dev`          | Start local dev server       |
+| `npm run build`        | Production build             |
+| `npm run start`        | Run production build locally |
+| `npm run lint`         | ESLint                       |
+| `npm run format`       | Prettier write               |
+| `npm run format:check` | Prettier check               |
+| `npm run test`         | Run unit tests (Vitest)      |
+
+## CI
+
+On every push/PR to `main`, GitHub Actions runs lint, format check, tests, and build. See [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+
+## Deploy to Vercel
+
+### Option A: Vercel dashboard (recommended)
+
+1. Push this repo to GitHub.
+2. Go to [vercel.com/new](https://vercel.com/new) and import the `moment-keeper` repository.
+3. Add environment variables for **Production** (and Preview if you want PR deploys):
+
+   | Variable                        | Value                         |
+   | ------------------------------- | ----------------------------- |
+   | `NEXT_PUBLIC_SUPABASE_URL`      | Your Supabase project URL     |
+   | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase publishable key |
+
+4. Click **Deploy**.
+
+### Option B: Vercel CLI
+
+```bash
+npm i -g vercel          # if not installed
+vercel login
+vercel link              # link to a new or existing project
+vercel env add NEXT_PUBLIC_SUPABASE_URL
+vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY
+vercel --prod
+```
+
+### After deploy
+
+1. In Supabase → **Authentication → URL Configuration**, add your Vercel URL to **Site URL** and **Redirect URLs** (e.g. `https://your-app.vercel.app/**`).
+2. Visit your deployed URL and sign up / log in.
 
 ## Project structure
 
@@ -81,18 +132,12 @@ src/
   lib/          # Utilities and API clients (e.g. Supabase)
 tests/
   unit/         # Unit tests
-  integration/  # Integration tests (added as features land)
 docs/           # Data model, backlog, decision log
 supabase/
-  migrations/   # SQL schema + RLS (run in Supabase dashboard or via CLI)
+  migrations/   # SQL schema + RLS
+.github/
+  workflows/    # CI
 ```
-
-## Deploy to Vercel
-
-1. Push this repo to GitHub.
-2. Import the project in [Vercel](https://vercel.com/new).
-3. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` as environment variables.
-4. Deploy — Vercel auto-detects Next.js.
 
 ## Documentation
 

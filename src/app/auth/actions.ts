@@ -3,10 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import {
-  type AuthFormState,
-  validateAuthFields,
-} from "@/lib/auth/validation";
+import { type AuthFormState, validateAuthFields } from "@/lib/auth/validation";
 import { createClient } from "@/lib/supabase/server";
 
 export async function login(
