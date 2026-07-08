@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { AppNav } from "@/components/AppNav";
 import { DeleteMomentButton } from "@/components/moments/DeleteMomentButton";
 import { MomentDetailPanel } from "@/components/moments/MomentDetailPanel";
+import { toUserErrorMessage } from "@/lib/errors";
 import { getMomentById } from "@/lib/moments/queries";
 
 type MomentDetailPageProps = {
@@ -14,7 +15,16 @@ export default async function MomentDetailPage({
   params,
 }: MomentDetailPageProps) {
   const { id } = await params;
-  const moment = await getMomentById(id);
+
+  let moment;
+
+  try {
+    moment = await getMomentById(id);
+  } catch (error) {
+    throw new Error(
+      toUserErrorMessage(error, "Could not load this moment."),
+    );
+  }
 
   if (!moment) {
     notFound();

@@ -4,6 +4,12 @@ import {
   type MomentDetailQueryRow,
 } from "@/lib/moments/detail";
 import {
+  paginateItems,
+  TIMELINE_PAGE_SIZE,
+  type TimelinePageResult,
+  type TimelinePagination,
+} from "@/lib/moments/pagination";
+import {
   buildIlikePattern,
   hasActiveSearchFilters,
   type TimelineSearchFilters,
@@ -15,7 +21,8 @@ import {
 } from "@/lib/moments/timeline";
 import { createClient } from "@/lib/supabase/server";
 
-export type { MomentDetail, TimelineMoment };
+export type { MomentDetail, TimelineMoment, TimelinePageResult, TimelinePagination };
+export { TIMELINE_PAGE_SIZE };
 
 export type UserTag = {
   id: string;
@@ -73,32 +80,45 @@ export async function getUserTags(): Promise<UserTag[]> {
 
 export async function getTimelineMoments(
   filters: TimelineSearchFilters = { keyword: "", tagIds: [] },
-): Promise<TimelineMoment[]> {
+  pagination: TimelinePagination = {},
+): Promise<TimelinePageResult<TimelineMoment>> {
+  const limit = pagination.limit ?? TIMELINE_PAGE_SIZE;
+  const offset = pagination.offset ?? 0;
+
   if (!hasActiveSearchFilters(filters)) {
-    return fetchAllTimelineMoments();
+    return fetchAllTimelineMoments(limit, offset);
   }
 
-  return searchTimelineMoments(filters);
+  return searchTimelineMoments(filters, limit, offset);
 }
 
-async function fetchAllTimelineMoments(): Promise<TimelineMoment[]> {
+async function fetchAllTimelineMoments(
+  limit: number,
+  offset: number,
+): Promise<TimelinePageResult<TimelineMoment>> {
   const supabase = await createClient();
+  const fetchSize = limit + 1;
 
   const { data, error } = await supabase
     .from("moments")
     .select(TIMELINE_SELECT)
-    .order("occurred_at", { ascending: false });
+    .order("occurred_at", { ascending: false })
+    .range(offset, offset + fetchSize - 1);
 
   if (error) {
     throw error;
   }
 
-  return ((data ?? []) as TimelineQueryRow[]).map(mapTimelineRow);
+  const rows = ((data ?? []) as TimelineQueryRow[]).map(mapTimelineRow);
+
+  return paginateItems(rows, limit);
 }
 
 async function searchTimelineMoments(
   filters: TimelineSearchFilters,
-): Promise<TimelineMoment[]> {
+  limit: number,
+  offset: number,
+): Promise<TimelinePageResult<TimelineMoment>> {
   const supabase = await createClient();
   let momentIds: string[] | null = null;
 
@@ -115,10 +135,11 @@ async function searchTimelineMoments(
     momentIds = [...new Set((links ?? []).map((link) => link.moment_id))];
 
     if (momentIds.length === 0) {
-      return [];
+      return { items: [], hasMore: false };
     }
   }
 
+  const fetchSize = limit + 1;
   let query = supabase.from("moments").select(TIMELINE_SELECT);
 
   if (filters.keyword) {
@@ -129,15 +150,17 @@ async function searchTimelineMoments(
     query = query.in("id", momentIds);
   }
 
-  const { data, error } = await query.order("occurred_at", {
-    ascending: false,
-  });
+  const { data, error } = await query
+    .order("occurred_at", { ascending: false })
+    .range(offset, offset + fetchSize - 1);
 
   if (error) {
     throw error;
   }
 
-  return ((data ?? []) as TimelineQueryRow[]).map(mapTimelineRow);
+  const rows = ((data ?? []) as TimelineQueryRow[]).map(mapTimelineRow);
+
+  return paginateItems(rows, limit);
 }
 
 export async function getMomentById(id: string): Promise<MomentDetail | null> {
