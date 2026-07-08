@@ -47,4 +47,31 @@ describe("mapMomentDetailRow", () => {
       signedUrl: "https://example.com/signed",
     });
   });
+
+  it("handles Supabase one-to-one media attachment objects", () => {
+    const result = mapMomentDetailRow(
+      {
+        id: "moment-3",
+        body: "Video moment.",
+        occurred_at: "2026-07-07T12:00:00.000Z",
+        moment_tags: null,
+        media_attachments: {
+          id: "media-2",
+          media_type: "video",
+          mime_type: "video/mp4",
+          original_filename: "clip.mp4",
+          storage_path: "user/moment/media-2.mp4",
+        },
+      },
+      "https://example.com/signed-video",
+    );
+
+    expect(result.media).toEqual({
+      id: "media-2",
+      media_type: "video",
+      mime_type: "video/mp4",
+      original_filename: "clip.mp4",
+      signedUrl: "https://example.com/signed-video",
+    });
+  });
 });

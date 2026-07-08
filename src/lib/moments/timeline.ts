@@ -1,3 +1,5 @@
+import { normalizeRelationItems } from "@/lib/moments/relations";
+
 export type TimelineMoment = {
   id: string;
   body: string;
@@ -18,7 +20,7 @@ export type TimelineQueryRow = {
           | null;
       }[]
     | null;
-  media_attachments: { id: string }[] | null;
+  media_attachments: { id: string } | { id: string }[] | null;
 };
 
 export function mapTimelineRow(moment: TimelineQueryRow): TimelineMoment {
@@ -35,6 +37,6 @@ export function mapTimelineRow(moment: TimelineQueryRow): TimelineMoment {
     body: moment.body,
     occurred_at: moment.occurred_at,
     tags,
-    hasMedia: (moment.media_attachments ?? []).length > 0,
+    hasMedia: normalizeRelationItems(moment.media_attachments).length > 0,
   };
 }

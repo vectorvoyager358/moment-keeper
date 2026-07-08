@@ -33,4 +33,16 @@ describe("mapTimelineRow", () => {
     expect(result.tags).toEqual([{ id: "tag-1", name: "work" }]);
     expect(result.hasMedia).toBe(true);
   });
+
+  it("handles Supabase one-to-one media attachment objects", () => {
+    const result = mapTimelineRow({
+      id: "moment-3",
+      body: "Media moment.",
+      occurred_at: "2026-07-07T14:00:00.000Z",
+      moment_tags: null,
+      media_attachments: { id: "media-2" },
+    });
+
+    expect(result.hasMedia).toBe(true);
+  });
 });

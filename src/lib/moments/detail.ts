@@ -1,4 +1,5 @@
 import type { MediaType } from "@/lib/database.types";
+import { normalizeRelationItems } from "@/lib/moments/relations";
 
 export type MomentMedia = {
   id: string;
@@ -35,6 +36,13 @@ type MomentDetailQueryRow = {
         mime_type: string;
         original_filename: string | null;
         storage_path: string;
+      }
+    | {
+        id: string;
+        media_type: MediaType;
+        mime_type: string;
+        original_filename: string | null;
+        storage_path: string;
       }[]
     | null;
 };
@@ -55,7 +63,8 @@ export function mapMomentDetailRow(
   moment: MomentDetailQueryRow,
   signedUrl: string | null,
 ): MomentDetail {
-  const attachment = moment.media_attachments?.[0] ?? null;
+  const attachment =
+    normalizeRelationItems(moment.media_attachments)[0] ?? null;
 
   return {
     id: moment.id,

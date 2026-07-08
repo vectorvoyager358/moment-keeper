@@ -9,6 +9,7 @@ import {
   type TimelinePageResult,
   type TimelinePagination,
 } from "@/lib/moments/pagination";
+import { normalizeRelationItems } from "@/lib/moments/relations";
 import {
   buildIlikePattern,
   hasActiveSearchFilters,
@@ -186,7 +187,7 @@ export async function getMomentById(id: string): Promise<MomentDetail | null> {
   }
 
   const row = data as MomentDetailQueryRow;
-  const attachment = row.media_attachments?.[0] ?? null;
+  const attachment = normalizeRelationItems(row.media_attachments)[0] ?? null;
   let signedUrl: string | null = null;
 
   if (attachment) {
