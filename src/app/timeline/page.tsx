@@ -1,14 +1,13 @@
 import Link from "next/link";
 
 import { AppNav } from "@/components/AppNav";
-import {
-  MomentCard,
-  TimelineEmptyState,
-} from "@/components/timeline/MomentCard";
+import { TimelineEmptyState } from "@/components/timeline/MomentCard";
+import { TimelineFeed } from "@/components/timeline/TimelineFeed";
 import {
   TimelineSearchEmptyState,
   TimelineSearchForm,
 } from "@/components/timeline/TimelineSearchForm";
+import { toUserErrorMessage } from "@/lib/errors";
 import { getTimelineMoments, getUserTags } from "@/lib/moments/queries";
 import {
   hasActiveSearchFilters,
@@ -26,10 +25,19 @@ export default async function TimelinePage({
   searchParams,
 }: TimelinePageProps) {
   const filters = parseSearchParams(await searchParams);
-  const [moments, tags] = await Promise.all([
-    getTimelineMoments(filters),
-    getUserTags(),
-  ]);
+
+  let timelinePage;
+  let tags;
+
+  try {
+    [timelinePage, tags] = await Promise.all([
+      getTimelineMoments(filters),
+      getUserTags(),
+    ]);
+  } catch (error) {
+    throw new Error(toUserErrorMessage(error, "Could not load your timeline."));
+  }
+
   const isSearching = hasActiveSearchFilters(filters);
 
   return (
@@ -57,20 +65,19 @@ export default async function TimelinePage({
           <TimelineSearchForm filters={filters} tags={tags} />
         </div>
 
-        {moments.length === 0 ? (
+        {timelinePage.items.length === 0 ? (
           isSearching ? (
             <TimelineSearchEmptyState />
           ) : (
             <TimelineEmptyState />
           )
         ) : (
-          <ul className="space-y-4">
-            {moments.map((moment) => (
-              <li key={moment.id}>
-                <MomentCard moment={moment} />
-              </li>
-            ))}
-          </ul>
+          <TimelineFeed
+            key={`${filters.keyword}:${filters.tagIds.join(",")}`}
+            initialMoments={timelinePage.items}
+            initialHasMore={timelinePage.hasMore}
+            filters={filters}
+          />
         )}
       </main>
     </div>

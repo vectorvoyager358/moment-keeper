@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { toUserErrorMessage } from "@/lib/errors";
 import { validateOccurredAt } from "@/lib/moments/dates";
 import { getMediaFileFromFormData } from "@/lib/moments/media";
 import { uploadMediaForMoment } from "@/lib/moments/media-storage";
@@ -53,7 +54,9 @@ export async function createMoment(
     .single();
 
   if (momentError || !moment) {
-    return { error: momentError?.message ?? "Could not save your moment." };
+    return {
+      error: toUserErrorMessage(momentError, "Could not save your moment."),
+    };
   }
 
   try {
@@ -67,10 +70,9 @@ export async function createMoment(
   } catch (error) {
     await supabase.from("moments").delete().eq("id", moment.id);
 
-    const message =
-      error instanceof Error ? error.message : "Could not save your moment.";
-
-    return { error: message };
+    return {
+      error: toUserErrorMessage(error, "Could not save your moment."),
+    };
   }
 
   revalidatePath("/timeline");

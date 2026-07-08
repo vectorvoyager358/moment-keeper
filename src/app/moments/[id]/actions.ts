@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { toUserErrorMessage } from "@/lib/errors";
 import { validateOccurredAt } from "@/lib/moments/dates";
 import {
   getMediaFileFromFormData,
@@ -59,7 +60,9 @@ export async function updateMoment(
     .eq("id", momentId);
 
   if (updateError) {
-    return { error: updateError.message };
+    return {
+      error: toUserErrorMessage(updateError, "Could not update your moment."),
+    };
   }
 
   try {
@@ -76,9 +79,9 @@ export async function updateMoment(
       await replaceMediaForMoment(supabase, user.id, momentId, mediaFile);
     }
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Could not update your moment.";
-    return { error: message };
+    return {
+      error: toUserErrorMessage(error, "Could not update your moment."),
+    };
   }
 
   revalidatePath("/timeline");
@@ -92,15 +95,15 @@ export async function deleteMoment(momentId: string): Promise<void> {
   try {
     await removeMediaAttachmentsForMoment(supabase, momentId);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Could not delete moment media.";
-    throw new Error(message);
+    throw new Error(
+      toUserErrorMessage(error, "Could not delete moment media."),
+    );
   }
 
   const { error } = await supabase.from("moments").delete().eq("id", momentId);
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(toUserErrorMessage(error, "Could not delete this moment."));
   }
 
   revalidatePath("/timeline");
