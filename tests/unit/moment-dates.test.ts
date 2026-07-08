@@ -1,0 +1,32 @@
+import { describe, expect, it } from "vitest";
+
+import { truncateBody, validateOccurredAt } from "@/lib/moments/dates";
+
+describe("validateOccurredAt", () => {
+  it("rejects invalid dates", () => {
+    expect(validateOccurredAt("not-a-date")).toBe(
+      "Enter a valid date and time.",
+    );
+  });
+
+  it("rejects dates too far in the future", () => {
+    const future = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
+    expect(validateOccurredAt(future)).toBe(
+      "Moment date cannot be more than 1 hour in the future.",
+    );
+  });
+
+  it("accepts valid dates", () => {
+    expect(validateOccurredAt(new Date().toISOString())).toBeNull();
+  });
+});
+
+describe("truncateBody", () => {
+  it("truncates long text with an ellipsis", () => {
+    expect(truncateBody("a".repeat(200), 160)).toMatch(/…$/);
+  });
+
+  it("leaves short text unchanged", () => {
+    expect(truncateBody("Short moment.")).toBe("Short moment.");
+  });
+});

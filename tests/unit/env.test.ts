@@ -31,7 +31,9 @@ describe("getSupabaseConfig", () => {
     delete process.env.NEXT_PUBLIC_SUPABASE_URL;
     delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    expect(() => getSupabaseConfig()).toThrow(/Missing Supabase environment variables/);
+    expect(() => getSupabaseConfig()).toThrow(
+      /Missing Supabase environment variables/,
+    );
   });
 
   it("returns url and anon key when configured", () => {
