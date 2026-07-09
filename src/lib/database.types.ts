@@ -145,6 +145,18 @@ export type Database = {
           rank: number;
         }[];
       };
+      on_this_day_moment_ids: {
+        Args: {
+          p_month: number;
+          p_day: number;
+          p_year: number;
+          p_limit?: number;
+        };
+        Returns: {
+          id: string;
+          occurred_at: string;
+        }[];
+      };
     };
     Enums: {
       media_type: MediaType;

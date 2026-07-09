@@ -4,6 +4,10 @@ import * as Sentry from "@sentry/nextjs";
 import Link from "next/link";
 import { useEffect } from "react";
 
+import { Button, buttonClassName } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { PageShell } from "@/components/ui/PageShell";
+
 type TimelineErrorProps = {
   error: Error & { digest?: string };
   reset: () => void;
@@ -16,31 +20,32 @@ export default function TimelineError({ error, reset }: TimelineErrorProps) {
   }, [error]);
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-      <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center dark:border-red-900 dark:bg-red-950">
-        <h1 className="text-lg font-medium text-red-900 dark:text-red-100">
-          Could not load your timeline
-        </h1>
-        <p className="mt-2 text-sm text-red-800 dark:text-red-200">
-          {error.message ||
-            "Something went wrong while loading your moments. Please try again."}
-        </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-3">
-          <button
-            type="button"
-            onClick={reset}
-            className="rounded-lg bg-red-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-800 dark:bg-red-100 dark:text-red-900 dark:hover:bg-red-200"
-          >
-            Try again
-          </button>
-          <Link
-            href="/login"
-            className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-900 transition hover:bg-red-100 dark:border-red-800 dark:text-red-100 dark:hover:bg-red-900"
-          >
-            Log in again
-          </Link>
-        </div>
-      </div>
-    </div>
+    <PageShell>
+      <main className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+        <Card
+          padding="lg"
+          className="border-danger/30 bg-danger-subtle text-center"
+        >
+          <h1 className="font-display text-lg font-semibold text-danger">
+            Could not load your timeline
+          </h1>
+          <p className="mt-2 text-sm text-danger/90">
+            {error.message ||
+              "Something went wrong while loading your moments. Please try again."}
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <Button type="button" variant="danger" onClick={reset}>
+              Try again
+            </Button>
+            <Link
+              href="/login"
+              className={buttonClassName({ variant: "secondary" })}
+            >
+              Log in again
+            </Link>
+          </div>
+        </Card>
+      </main>
+    </PageShell>
   );
 }

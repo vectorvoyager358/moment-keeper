@@ -6,44 +6,57 @@ import {
   TimelineResults,
   TimelineSearchSection,
 } from "@/components/timeline/TimelinePageSections";
+import { OnThisDaySection } from "@/components/timeline/OnThisDaySection";
+import { buttonClassName } from "@/components/ui/Button";
 import {
   TimelineFeedSkeleton,
   TimelineSearchSkeleton,
 } from "@/components/ui/LoadingSkeleton";
+import { PageHeader, PageShell } from "@/components/ui/PageShell";
+import { SavedToast } from "@/components/ui/SavedToast";
 import { parseSearchParams } from "@/lib/moments/search";
 
 type TimelinePageProps = {
   searchParams: Promise<{
     q?: string | string[];
     tag?: string | string[];
+    saved?: string | string[];
   }>;
 };
 
 export default async function TimelinePage({
   searchParams,
 }: TimelinePageProps) {
-  const filters = parseSearchParams(await searchParams);
+  const rawParams = await searchParams;
+  const filters = parseSearchParams(rawParams);
+  const showSavedToast = rawParams.saved === "1";
 
   return (
-    <div className="min-h-full bg-zinc-50 dark:bg-zinc-950">
+    <PageShell>
       <AppNav current="timeline" />
       <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-        <div className="mb-8 flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-              Timeline
-            </h1>
-            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-              Your moments, newest first.
-            </p>
-          </div>
-          <Link
-            href="/capture"
-            className="shrink-0 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
-          >
-            + Capture
-          </Link>
-        </div>
+        <PageHeader
+          title="Timeline"
+          description="Your moments, newest first."
+          action={
+            <Link href="/capture" className={buttonClassName({ size: "sm" })}>
+              + Capture
+            </Link>
+          }
+        />
+
+        <SavedToast initialVisible={showSavedToast} />
+
+        <Suspense
+          fallback={
+            <div
+              className="mb-8 h-36 animate-pulse rounded-2xl border border-border bg-surface"
+              aria-hidden="true"
+            />
+          }
+        >
+          <OnThisDaySection filters={filters} />
+        </Suspense>
 
         <div className="mb-8">
           <Suspense fallback={<TimelineSearchSkeleton />}>
@@ -63,6 +76,6 @@ export default async function TimelinePage({
           <TimelineResults filters={filters} />
         </Suspense>
       </main>
-    </div>
+    </PageShell>
   );
 }

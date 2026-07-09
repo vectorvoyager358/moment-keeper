@@ -26,6 +26,10 @@ Significant technical decisions. Add a row when a choice is made — don't relit
 | 2026-07-08 | **Photo thumbnails via sharp on upload**            | Stores `thumbnail_path` beside the original; timeline signs thumbnail URLs in batch. Avoids loading full photos on the list. Video/audio thumbnails deferred.                                               |
 | 2026-07-08 | **Sentry error tracking (opt-in via DSN)**          | `@sentry/nextjs` initializes only when `NEXT_PUBLIC_SENTRY_DSN` is set. Captures client/server/edge + route error boundaries; no Session Replay; `sendDefaultPii: false`.                                   |
 | 2026-07-08 | **Vercel Web Analytics for aggregate traffic**      | `@vercel/analytics` tracks page views only (no PII, no custom events). Cookie-free; disabled in dev; opt out via `NEXT_PUBLIC_ANALYTICS_DISABLED=true`. Documented in `docs/analytics.md`.                  |
+| 2026-07-08 | **Warm archival visual identity (Phase 3)**         | Cream/paper palette, honey accent, Lora + Source Sans 3, shared UI primitives (`Button`, `Input`, `Card`, `Tag`, `Alert`). Replaces generic zinc defaults on core routes.                                   |
+| 2026-07-08 | **CSS motion with reduced-motion respect**          | Save-success toast on timeline after capture; staggered card fade-in; skeletons match card layout. No animation library — `prefers-reduced-motion` disables transforms.                                     |
+| 2026-07-08 | **On this day resurfacing on timeline**             | `on_this_day_moment_ids` RPC matches UTC month/day on `occurred_at`, excludes current year. Horizontal scroll section on timeline with years-ago labels.                                                    |
+| 2026-07-08 | **Landing page + signup first-run**                 | Public `/` for signed-out users; signed-in users still go to timeline. New signups redirect to `/capture?welcome=1` with a dismissible welcome banner.                                                      |
 
 ---
 

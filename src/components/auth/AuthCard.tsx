@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { Card } from "@/components/ui/Card";
+
 type AuthCardProps = {
   title: string;
   description: string;
@@ -17,23 +19,26 @@ export function AuthCard({
   alternateLabel,
 }: AuthCardProps) {
   return (
-    <div className="flex min-h-full flex-col items-center justify-center bg-zinc-50 px-6 py-16 dark:bg-zinc-950">
-      <main className="w-full max-w-md space-y-6 rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="flex min-h-full flex-col items-center justify-center bg-paper px-6 py-16">
+      <main className="w-full max-w-md space-y-6">
         <div className="space-y-2 text-center">
-          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+          <p className="font-display text-sm font-medium tracking-wide text-accent uppercase">
+            Moment Keeper
+          </p>
+          <h1 className="font-display text-3xl font-semibold text-ink">
             {title}
           </h1>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            {description}
-          </p>
+          <p className="text-sm leading-relaxed text-muted">{description}</p>
         </div>
 
-        {children}
+        <Card padding="lg" className="shadow-card">
+          {children}
+        </Card>
 
-        <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="text-center text-sm text-muted">
           <Link
             href={alternateHref}
-            className="font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-100"
+            className="font-medium text-ink underline-offset-4 transition hover:text-accent hover:underline"
           >
             {alternateLabel}
           </Link>

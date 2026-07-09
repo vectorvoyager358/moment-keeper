@@ -114,17 +114,15 @@ export function MediaFileInput({
 
   return (
     <div className="space-y-2">
-      <label
-        htmlFor={inputId}
-        className="text-sm font-medium text-zinc-800 dark:text-zinc-200"
-      >
+      <label htmlFor={inputId} className="text-sm font-medium text-ink">
         Photo, video, or audio{" "}
-        <span className="font-normal text-zinc-500">(optional)</span>
+        <span className="font-normal text-muted">(optional)</span>
       </label>
 
       {currentFilename ? (
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          Current file: <span className="font-medium">{currentFilename}</span>
+        <p className="text-sm text-muted">
+          Current file:{" "}
+          <span className="font-medium text-ink">{currentFilename}</span>
         </p>
       ) : null}
 
@@ -135,27 +133,27 @@ export function MediaFileInput({
         type="file"
         accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,video/quicktime,audio/mpeg,audio/mp4,audio/wav,audio/webm,audio/ogg"
         onChange={handleChange}
-        className="block w-full text-sm text-zinc-700 file:mr-4 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-zinc-800 hover:file:bg-zinc-200 dark:text-zinc-300 dark:file:bg-zinc-800 dark:file:text-zinc-100 dark:hover:file:bg-zinc-700"
+        className="block w-full text-sm text-muted file:mr-4 file:rounded-lg file:border-0 file:bg-accent-subtle file:px-3 file:py-2 file:text-sm file:font-medium file:text-accent hover:file:bg-accent/20"
       />
 
-      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+      <p className="text-xs text-muted">
         Max 10 MB photos, 50 MB video, 25 MB audio. Large photos are compressed
         before upload.
       </p>
 
       {prepareState.status === "compressing" ? (
         <div className="space-y-2" role="status" aria-live="polite">
-          <div className="h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
-            <div className="h-full w-1/2 animate-pulse rounded-full bg-zinc-900 dark:bg-zinc-100" />
+          <div className="h-2 overflow-hidden rounded-full bg-border">
+            <div className="h-full w-1/2 animate-pulse rounded-full bg-accent" />
           </div>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="text-sm text-muted">
             Preparing {prepareState.fileName}…
           </p>
         </div>
       ) : null}
 
       {prepareState.status === "ready" && prepareState.compressed ? (
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="text-sm text-muted">
           Compressed {prepareState.fileName}:{" "}
           {formatFileSize(prepareState.originalBytes)} →{" "}
           {formatFileSize(prepareState.finalBytes)}
@@ -163,24 +161,24 @@ export function MediaFileInput({
       ) : null}
 
       {prepareState.status === "ready" && !prepareState.compressed ? (
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="text-sm text-muted">
           Ready: {prepareState.fileName} (
           {formatFileSize(prepareState.finalBytes)})
         </p>
       ) : null}
 
       {prepareState.status === "error" ? (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
+        <p className="rounded-lg bg-danger-subtle px-3 py-2 text-sm text-danger">
           {prepareState.message}
         </p>
       ) : null}
 
       {showRemove && currentFilename ? (
-        <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+        <label className="flex items-center gap-2 text-sm text-muted">
           <input
             type="checkbox"
             name="remove_media"
-            className="rounded border-zinc-300 dark:border-zinc-700"
+            className="rounded border-border-strong accent-accent"
           />
           Remove current attachment
         </label>
