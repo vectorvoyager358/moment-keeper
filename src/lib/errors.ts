@@ -38,6 +38,21 @@ export function isNetworkError(error: unknown): boolean {
   );
 }
 
+export function isUploadTooLargeError(error: unknown): boolean {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const message = (error as ErrorLike).message?.toLowerCase() ?? "";
+
+  return (
+    message.includes("unexpected end of form") ||
+    message.includes("request entity too large") ||
+    message.includes("payload too large") ||
+    message.includes("body exceeded")
+  );
+}
+
 export function toUserErrorMessage(
   error: unknown,
   fallback = "Something went wrong. Please try again.",
@@ -52,6 +67,10 @@ export function toUserErrorMessage(
 
   if (isNetworkError(error)) {
     return "Could not reach the server. Check your connection and try again.";
+  }
+
+  if (isUploadTooLargeError(error)) {
+    return "That file is too large to upload. Use a smaller photo, video (max 50 MB), or audio (max 25 MB).";
   }
 
   const message =

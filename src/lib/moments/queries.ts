@@ -11,8 +11,8 @@ import {
 } from "@/lib/moments/pagination";
 import { normalizeRelationItems } from "@/lib/moments/relations";
 import {
-  buildIlikePattern,
   hasActiveSearchFilters,
+  orderByIds,
   type TimelineSearchFilters,
 } from "@/lib/moments/search";
 import {
@@ -126,6 +126,48 @@ async function searchTimelineMoments(
   offset: number,
 ): Promise<TimelinePageResult<TimelineMoment>> {
   const supabase = await createClient();
+  const fetchSize = limit + 1;
+
+  if (filters.keyword) {
+    const { data: ranked, error: searchError } = await supabase.rpc(
+      "search_moment_ids",
+      {
+        p_query: filters.keyword,
+        p_tag_ids: filters.tagIds.length > 0 ? filters.tagIds : null,
+        p_limit: fetchSize,
+        p_offset: offset,
+      },
+    );
+
+    if (searchError) {
+      throw searchError;
+    }
+
+    const orderedIds = (ranked ?? []).map(
+      (row: { id: string; rank: number }) => row.id,
+    );
+
+    if (orderedIds.length === 0) {
+      return { items: [], hasMore: false };
+    }
+
+    const { data, error } = await supabase
+      .from("moments")
+      .select(TIMELINE_SELECT)
+      .in("id", orderedIds);
+
+    if (error) {
+      throw error;
+    }
+
+    const rows = orderByIds(
+      ((data ?? []) as TimelineQueryRow[]).map(mapTimelineRow),
+      orderedIds,
+    );
+
+    return paginateItems(rows, limit);
+  }
+
   let momentIds: string[] | null = null;
 
   if (filters.tagIds.length > 0) {
@@ -145,12 +187,7 @@ async function searchTimelineMoments(
     }
   }
 
-  const fetchSize = limit + 1;
   let query = supabase.from("moments").select(TIMELINE_SELECT);
-
-  if (filters.keyword) {
-    query = query.ilike("body", buildIlikePattern(filters.keyword));
-  }
 
   if (momentIds) {
     query = query.in("id", momentIds);

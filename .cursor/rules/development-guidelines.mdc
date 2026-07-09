@@ -1,0 +1,76 @@
+---
+description: Moment Keeper development standards for all coding work
+alwaysApply: true
+---
+
+# Development Guidelines — Moment Keeper
+
+Standing reference for all development on this project. Follow before generating code, and re-check when a task touches an area it governs.
+
+## 1. Guiding Principles
+
+- **Minimal, surgical changes.** Change only what's necessary. Do not refactor unrelated code or restructure files as a side effect.
+- **No invented scope.** Do not add features, abstractions, or nice-to-haves that weren't asked for. Flag gaps and ask.
+- **Prefer boring, proven solutions.** Established libraries and patterns over clever ones.
+- **Every change should be explainable in one sentence.** If it can't, it's probably doing too much.
+- **Working software over exhaustive upfront design.** Smallest working version first, then extend.
+
+## 2. Documentation Standards
+
+- Update **README.md** in the same change when setup/usage changes.
+- Inline comments only for non-obvious *why*.
+- Data model changes → `/docs/data-model.md`.
+- Significant technical decisions → `/docs/decisions.md` (date, decision, one-line reasoning).
+- Docs are part of the task, not an afterthought.
+
+## 3. Testing Standards
+
+- New features: happy path + obvious failure cases.
+- Bug fixes: regression test where practical.
+- Keep tests in sync with code; don't leave failing tests.
+- Existing suite must pass before done.
+- Prefer unit + integration; E2E only when it earns its keep.
+
+## 4. Change Management / AI Agent Behavior
+
+- Small, reviewable increments — one issue/story per change.
+- No unrequested rewrite churn.
+- Ask before large structural, library, or data-model changes.
+- Ambiguous requests: state the assumption, take the smallest reasonable scope.
+- No dead code, commented-out blocks, or unused stubs.
+
+## 5. Repository Structure
+
+- Shallow, predictable layout: one place each for UI, routes, lib, styles, docs, tests.
+- Keep `.env.example` complete; never commit secrets.
+
+## 6. Package & Dependency Management
+
+- Prefer existing deps over new packages.
+- Verify latest stable version and compatibility before adding/updating.
+- After dependency changes: build + tests must pass.
+- Keep the lockfile committed.
+
+## 7. Git & Commit Practices
+
+- Small atomic commits with specific *what* and *why*.
+- One feature/fix per branch and PR.
+
+## 8. CI/CD
+
+- Keep pipeline simple: test + lint + deploy.
+- Add E2E/preview complexity only when it earns its keep.
+
+## 9. Definition of Done
+
+- [ ] Only what the issue describes
+- [ ] Tests added/updated and passing
+- [ ] Relevant docs updated
+- [ ] No dead code or unexplained TODOs
+- [ ] Self-reviewed against this document
+
+## 10. Speed Without Sloppiness
+
+- One clear issue at a time.
+- Brief plan before large changes.
+- Review diffs for unrequested scope.

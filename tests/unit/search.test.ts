@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  buildIlikePattern,
-  escapeIlikePattern,
   hasActiveSearchFilters,
+  orderByIds,
   parseSearchParams,
 } from "@/lib/moments/search";
 
@@ -38,9 +37,25 @@ describe("hasActiveSearchFilters", () => {
   });
 });
 
-describe("buildIlikePattern", () => {
-  it("escapes ilike wildcards", () => {
-    expect(escapeIlikePattern("100% done")).toBe("100\\% done");
-    expect(buildIlikePattern("100% done")).toBe("%100\\% done%");
+describe("orderByIds", () => {
+  it("reorders items to match ranked id order", () => {
+    expect(
+      orderByIds(
+        [
+          { id: "b", body: "second" },
+          { id: "a", body: "first" },
+        ],
+        ["a", "b"],
+      ),
+    ).toEqual([
+      { id: "a", body: "first" },
+      { id: "b", body: "second" },
+    ]);
+  });
+
+  it("skips missing ids", () => {
+    expect(orderByIds([{ id: "a", body: "only" }], ["missing", "a"])).toEqual([
+      { id: "a", body: "only" },
+    ]);
   });
 });

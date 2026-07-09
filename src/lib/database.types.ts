@@ -130,7 +130,18 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      search_moment_ids: {
+        Args: {
+          p_query: string;
+          p_tag_ids?: string[] | null;
+          p_limit?: number;
+          p_offset?: number;
+        };
+        Returns: {
+          id: string;
+          rank: number;
+        }[];
+      };
     };
     Enums: {
       media_type: MediaType;

@@ -8,8 +8,9 @@ SQL migrations for the Moment Keeper database schema.
 2. Go to **SQL Editor** → **New query**.
 3. Copy the contents of [`migrations/20260707143000_initial_schema.sql`](migrations/20260707143000_initial_schema.sql).
 4. Click **Run**.
+5. Also run later migrations in order (e.g. [`migrations/20260708200000_search_moment_ids.sql`](migrations/20260708200000_search_moment_ids.sql) for full-text search).
 
-You should see success with no errors. This creates:
+You should see success with no errors. The initial migration creates:
 
 - `profiles`, `moments`, `tags`, `moment_tags`, `media_attachments`
 - Row Level Security policies (users only access their own data)

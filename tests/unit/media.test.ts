@@ -36,6 +36,17 @@ describe("validateMediaFile", () => {
     );
   });
 
+  it("rejects audio over the size limit", () => {
+    const file = makeFile(
+      "long.mp3",
+      "audio/mpeg",
+      MEDIA_SIZE_LIMITS.audio + 1,
+    );
+    expect(validateMediaFile(file)).toBe(
+      "File is too large. Max size for audio is 25 MB.",
+    );
+  });
+
   it("accepts valid files", () => {
     const file = makeFile("moment.jpg", "image/jpeg", 1024);
     expect(validateMediaFile(file)).toBeNull();

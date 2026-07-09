@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   isAuthExpiredError,
   isNetworkError,
+  isUploadTooLargeError,
   toUserErrorMessage,
 } from "@/lib/errors";
 
@@ -28,6 +29,18 @@ describe("isNetworkError", () => {
   });
 });
 
+describe("isUploadTooLargeError", () => {
+  it("detects truncated multipart and payload-too-large failures", () => {
+    expect(isUploadTooLargeError({ message: "Unexpected end of form" })).toBe(
+      true,
+    );
+    expect(isUploadTooLargeError({ message: "Request Entity Too Large" })).toBe(
+      true,
+    );
+    expect(isUploadTooLargeError({ message: "permission denied" })).toBe(false);
+  });
+});
+
 describe("toUserErrorMessage", () => {
   it("maps auth expiry to a login prompt", () => {
     expect(toUserErrorMessage({ message: "JWT expired", status: 401 })).toBe(
@@ -38,6 +51,12 @@ describe("toUserErrorMessage", () => {
   it("maps network failures to a connection message", () => {
     expect(toUserErrorMessage({ message: "Failed to fetch" })).toBe(
       "Could not reach the server. Check your connection and try again.",
+    );
+  });
+
+  it("maps truncated uploads to a size guidance message", () => {
+    expect(toUserErrorMessage({ message: "Unexpected end of form" })).toBe(
+      "That file is too large to upload. Use a smaller photo, video (max 50 MB), or audio (max 25 MB).",
     );
   });
 

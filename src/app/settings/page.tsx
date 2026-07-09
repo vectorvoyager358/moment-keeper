@@ -1,5 +1,6 @@
 import { logout } from "@/app/auth/actions";
 import { AppNav } from "@/components/AppNav";
+import { ChangePasswordForm } from "@/components/settings/ChangePasswordForm";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function SettingsPage() {
@@ -34,6 +35,19 @@ export default async function SettingsPage() {
               Log out
             </button>
           </form>
+        </section>
+
+        <section className="mt-6 space-y-4 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+          <div>
+            <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-50">
+              Change password
+            </h2>
+            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+              Update the password you use to sign in.
+            </p>
+          </div>
+
+          <ChangePasswordForm />
         </section>
       </main>
     </div>
