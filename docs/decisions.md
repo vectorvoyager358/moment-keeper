@@ -29,7 +29,8 @@ Significant technical decisions. Add a row when a choice is made — don't relit
 | 2026-07-08 | **Warm archival visual identity (Phase 3)**         | Cream/paper palette, honey accent, Lora + Source Sans 3, shared UI primitives (`Button`, `Input`, `Card`, `Tag`, `Alert`). Replaces generic zinc defaults on core routes.                                   |
 | 2026-07-08 | **CSS motion with reduced-motion respect**          | Save-success toast on timeline after capture; staggered card fade-in; skeletons match card layout. No animation library — `prefers-reduced-motion` disables transforms.                                     |
 | 2026-07-08 | **On this day resurfacing on timeline**             | `on_this_day_moment_ids` RPC matches UTC month/day on `occurred_at`, excludes current year. Horizontal scroll section on timeline with years-ago labels.                                                    |
-| 2026-07-08 | **Landing page + signup first-run**                 | Public `/` for signed-out users; signed-in users still go to timeline. New signups redirect to `/capture?welcome=1` with a dismissible welcome banner.                                                      |
+| 2026-07-09 | **In-browser voice memo on capture/edit**           | MediaRecorder API records audio in the browser (free, no API). Attaches as `audio/webm` / `audio/mp4` to the existing media upload; 10-minute cap; works on capture and edit forms.                         |
+| 2026-07-09 | **In-browser camera photo on capture/edit**         | `getUserMedia` video preview + canvas JPEG capture; prefers rear camera on mobile; runs through existing photo compression before upload. Free — no third-party API.                                        |
 
 ---
 

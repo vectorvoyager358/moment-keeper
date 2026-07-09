@@ -2,6 +2,8 @@
 
 import { useId, useRef, useState, type ChangeEvent } from "react";
 
+import { PhotoCapture } from "@/components/capture/PhotoCapture";
+import { VoiceMemoRecorder } from "@/components/capture/VoiceMemoRecorder";
 import {
   compressImageFile,
   formatFileSize,
@@ -25,6 +27,7 @@ type PrepareState =
       originalBytes: number;
       finalBytes: number;
       compressed: boolean;
+      source: "file" | "voice" | "camera";
     }
   | { status: "error"; message: string };
 
@@ -40,6 +43,11 @@ export function MediaFileInput({
   const [prepareState, setPrepareState] = useState<PrepareState>({
     status: "idle",
   });
+  const [isRecording, setIsRecording] = useState(false);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+
+  const mediaBusy =
+    isRecording || isCameraActive || prepareState.status === "compressing";
 
   function setIdle() {
     setPrepareState({ status: "idle" });
@@ -48,12 +56,87 @@ export function MediaFileInput({
 
   function setError(message: string) {
     setPrepareState({ status: "error", message });
-    // Cleared input means no media will upload — form can still save text-only.
     onValidityChange?.(true);
 
     if (inputRef.current) {
       inputRef.current.value = "";
     }
+  }
+
+  function assignFileToInput(file: File) {
+    if (!inputRef.current) {
+      return;
+    }
+
+    const transfer = new DataTransfer();
+    transfer.items.add(file);
+    inputRef.current.files = transfer.files;
+  }
+
+  function markReady(
+    file: File,
+    options: {
+      originalBytes: number;
+      compressed: boolean;
+      source: "file" | "voice" | "camera";
+    },
+  ) {
+    setPrepareState({
+      status: "ready",
+      fileName: file.name,
+      originalBytes: options.originalBytes,
+      finalBytes: file.size,
+      compressed: options.compressed,
+      source: options.source,
+    });
+    onValidityChange?.(true);
+  }
+
+  async function attachMediaFile(
+    file: File,
+    source: "file" | "voice" | "camera",
+  ) {
+    const validationError = validateMediaFile(file);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    const shouldPrepareImage =
+      source === "camera" || (source === "file" && shouldCompressImage(file));
+
+    if (shouldPrepareImage) {
+      setPrepareState({ status: "compressing", fileName: file.name });
+      onValidityChange?.(false);
+
+      try {
+        const prepared = await compressImageFile(file);
+        const preparedError = validateMediaFile(prepared);
+
+        if (preparedError) {
+          setError(preparedError);
+          return;
+        }
+
+        assignFileToInput(prepared);
+        markReady(prepared, {
+          originalBytes: file.size,
+          compressed: prepared.size < file.size,
+          source,
+        });
+      } catch {
+        setError("Could not prepare that photo. Try another file.");
+      }
+
+      return;
+    }
+
+    assignFileToInput(file);
+    markReady(file, {
+      originalBytes: file.size,
+      compressed: false,
+      source,
+    });
   }
 
   async function handleChange(event: ChangeEvent<HTMLInputElement>) {
@@ -65,81 +148,68 @@ export function MediaFileInput({
       return;
     }
 
-    const validationError = validateMediaFile(file);
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
+    await attachMediaFile(file, "file");
+  }
 
-    if (!shouldCompressImage(file)) {
-      setPrepareState({
-        status: "ready",
-        fileName: file.name,
-        originalBytes: file.size,
-        finalBytes: file.size,
-        compressed: false,
-      });
-      onValidityChange?.(true);
-      return;
-    }
+  function handleVoiceRecorded(file: File) {
+    void attachMediaFile(file, "voice");
+  }
 
-    setPrepareState({ status: "compressing", fileName: file.name });
-    onValidityChange?.(false);
-
-    try {
-      const prepared = await compressImageFile(file);
-      const preparedError = validateMediaFile(prepared);
-
-      if (preparedError) {
-        setError(preparedError);
-        return;
-      }
-
-      const transfer = new DataTransfer();
-      transfer.items.add(prepared);
-      input.files = transfer.files;
-
-      setPrepareState({
-        status: "ready",
-        fileName: prepared.name,
-        originalBytes: file.size,
-        finalBytes: prepared.size,
-        compressed: prepared.size < file.size,
-      });
-      onValidityChange?.(true);
-    } catch {
-      setError("Could not prepare that photo. Try another file.");
-    }
+  function handlePhotoCaptured(file: File) {
+    void attachMediaFile(file, "camera");
   }
 
   return (
-    <div className="space-y-2">
-      <label htmlFor={inputId} className="text-sm font-medium text-ink">
-        Photo, video, or audio{" "}
-        <span className="font-normal text-muted">(optional)</span>
-      </label>
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <label htmlFor={inputId} className="text-sm font-medium text-ink">
+          Photo, video, or audio{" "}
+          <span className="font-normal text-muted">(optional)</span>
+        </label>
 
-      {currentFilename ? (
-        <p className="text-sm text-muted">
-          Current file:{" "}
-          <span className="font-medium text-ink">{currentFilename}</span>
+        {currentFilename ? (
+          <p className="text-sm text-muted">
+            Current file:{" "}
+            <span className="font-medium text-ink">{currentFilename}</span>
+          </p>
+        ) : null}
+
+        <input
+          ref={inputRef}
+          id={inputId}
+          name="media"
+          type="file"
+          accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,video/quicktime,audio/mpeg,audio/mp4,audio/wav,audio/webm,audio/ogg"
+          onChange={handleChange}
+          disabled={mediaBusy}
+          className="block w-full text-sm text-muted file:mr-4 file:rounded-lg file:border-0 file:bg-accent-subtle file:px-3 file:py-2 file:text-sm file:font-medium file:text-accent hover:file:bg-accent/20 disabled:cursor-not-allowed disabled:opacity-60"
+        />
+
+        <p className="text-xs text-muted">
+          Max 10 MB photos, 50 MB video, 25 MB audio. Large photos are
+          compressed before upload.
         </p>
-      ) : null}
+      </div>
 
-      <input
-        ref={inputRef}
-        id={inputId}
-        name="media"
-        type="file"
-        accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,video/quicktime,audio/mpeg,audio/mp4,audio/wav,audio/webm,audio/ogg"
-        onChange={handleChange}
-        className="block w-full text-sm text-muted file:mr-4 file:rounded-lg file:border-0 file:bg-accent-subtle file:px-3 file:py-2 file:text-sm file:font-medium file:text-accent hover:file:bg-accent/20"
+      <PhotoCapture
+        disabled={mediaBusy}
+        onCameraActiveChange={(active) => {
+          setIsCameraActive(active);
+          onValidityChange?.(!active && !isRecording);
+        }}
+        onCaptured={handlePhotoCaptured}
+        onError={setError}
       />
 
-      <p className="text-xs text-muted">
-        Max 10 MB photos, 50 MB video, 25 MB audio. Large photos are compressed
-        before upload.
-      </p>
+      <VoiceMemoRecorder
+        disabled={mediaBusy}
+        onRecordingChange={(recording) => {
+          setIsRecording(recording);
+          onValidityChange?.(!recording && !isCameraActive);
+        }}
+        onRecorded={handleVoiceRecorded}
+        onError={setError}
+      />
 
       {prepareState.status === "compressing" ? (
         <div className="space-y-2" role="status" aria-live="polite">
@@ -164,6 +234,11 @@ export function MediaFileInput({
         <p className="text-sm text-muted">
           Ready: {prepareState.fileName} (
           {formatFileSize(prepareState.finalBytes)})
+          {prepareState.source === "voice"
+            ? " · voice memo"
+            : prepareState.source === "camera"
+              ? " · camera"
+              : ""}
         </p>
       ) : null}
 

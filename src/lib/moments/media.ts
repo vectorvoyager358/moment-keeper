@@ -29,7 +29,7 @@ const AUDIO_MIME_TYPES = new Set([
   "audio/ogg",
 ]);
 
-const MIME_TO_EXTENSION: Record<string, string> = {
+export const MIME_TO_EXTENSION: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
   "image/gif": "gif",
