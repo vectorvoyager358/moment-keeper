@@ -8,7 +8,7 @@ SQL migrations for the Moment Keeper database schema.
 2. Go to **SQL Editor** → **New query**.
 3. Copy the contents of [`migrations/20260707143000_initial_schema.sql`](migrations/20260707143000_initial_schema.sql).
 4. Click **Run**.
-5. Also run later migrations in order (e.g. [`migrations/20260708200000_search_moment_ids.sql`](migrations/20260708200000_search_moment_ids.sql) for full-text search).
+5. Also run later migrations in order (e.g. [`migrations/20260708200000_search_moment_ids.sql`](migrations/20260708200000_search_moment_ids.sql) for full-text search, [`migrations/20260708210000_media_thumbnail_path.sql`](migrations/20260708210000_media_thumbnail_path.sql) for photo thumbnails).
 
 You should see success with no errors. The initial migration creates:
 

@@ -7,43 +7,68 @@ type MomentCardProps = {
   moment: TimelineMoment;
 };
 
+function mediaLabel(mediaType: TimelineMoment["mediaType"]): string {
+  if (mediaType === "photo") {
+    return "Photo";
+  }
+  if (mediaType === "video") {
+    return "Video";
+  }
+  if (mediaType === "audio") {
+    return "Audio";
+  }
+  return "Media";
+}
+
 export function MomentCard({ moment }: MomentCardProps) {
   return (
     <Link
       href={`/moments/${moment.id}`}
-      className="block rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
+      className="block overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
     >
       <article>
-        <div className="flex items-start justify-between gap-4">
-          <time
-            dateTime={moment.occurred_at}
-            className="text-sm text-zinc-500 dark:text-zinc-400"
-          >
-            {formatMomentDate(moment.occurred_at)}
-          </time>
-          {moment.hasMedia ? (
-            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-              Media
-            </span>
+        {moment.thumbnailUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URLs
+          <img
+            src={moment.thumbnailUrl}
+            alt=""
+            loading="lazy"
+            className="aspect-[16/9] w-full object-cover"
+          />
+        ) : null}
+
+        <div className="p-5">
+          <div className="flex items-start justify-between gap-4">
+            <time
+              dateTime={moment.occurred_at}
+              className="text-sm text-zinc-500 dark:text-zinc-400"
+            >
+              {formatMomentDate(moment.occurred_at)}
+            </time>
+            {moment.hasMedia ? (
+              <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                {mediaLabel(moment.mediaType)}
+              </span>
+            ) : null}
+          </div>
+
+          <p className="mt-3 whitespace-pre-wrap text-zinc-900 dark:text-zinc-50">
+            {truncateBody(moment.body)}
+          </p>
+
+          {moment.tags.length > 0 ? (
+            <ul className="mt-4 flex flex-wrap gap-2">
+              {moment.tags.map((tag) => (
+                <li
+                  key={tag.id}
+                  className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                >
+                  {tag.name}
+                </li>
+              ))}
+            </ul>
           ) : null}
         </div>
-
-        <p className="mt-3 whitespace-pre-wrap text-zinc-900 dark:text-zinc-50">
-          {truncateBody(moment.body)}
-        </p>
-
-        {moment.tags.length > 0 ? (
-          <ul className="mt-4 flex flex-wrap gap-2">
-            {moment.tags.map((tag) => (
-              <li
-                key={tag.id}
-                className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-              >
-                {tag.name}
-              </li>
-            ))}
-          </ul>
-        ) : null}
       </article>
     </Link>
   );

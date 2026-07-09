@@ -6,6 +6,11 @@ import {
   MEDIA_BUCKET,
   validateMediaFile,
 } from "@/lib/moments/media";
+import { createPhotoThumbnailBuffer } from "@/lib/moments/thumbnail-image";
+import {
+  shouldGenerateThumbnail,
+  thumbnailStoragePath,
+} from "@/lib/moments/thumbnails";
 
 type StorageSupabase = SupabaseClient;
 
@@ -15,7 +20,7 @@ export async function removeMediaAttachmentsForMoment(
 ): Promise<void> {
   const { data: attachments, error } = await supabase
     .from("media_attachments")
-    .select("id, storage_path")
+    .select("id, storage_path, thumbnail_path")
     .eq("moment_id", momentId);
 
   if (error) {
@@ -26,7 +31,14 @@ export async function removeMediaAttachmentsForMoment(
     return;
   }
 
-  const paths = attachments.map((attachment) => attachment.storage_path);
+  const paths = attachments.flatMap((attachment) => {
+    const list = [attachment.storage_path];
+    if (attachment.thumbnail_path) {
+      list.push(attachment.thumbnail_path);
+    }
+    return list;
+  });
+
   const { error: storageError } = await supabase.storage
     .from(MEDIA_BUCKET)
     .remove(paths);
@@ -43,6 +55,33 @@ export async function removeMediaAttachmentsForMoment(
   if (deleteError) {
     throw deleteError;
   }
+}
+
+async function uploadPhotoThumbnail(
+  supabase: StorageSupabase,
+  file: File,
+  storagePath: string,
+): Promise<string | null> {
+  const bytes = Buffer.from(await file.arrayBuffer());
+  const thumbnail = await createPhotoThumbnailBuffer(bytes);
+
+  if (!thumbnail) {
+    return null;
+  }
+
+  const thumbPath = thumbnailStoragePath(storagePath);
+  const { error } = await supabase.storage
+    .from(MEDIA_BUCKET)
+    .upload(thumbPath, thumbnail, {
+      contentType: "image/jpeg",
+      upsert: false,
+    });
+
+  if (error) {
+    return null;
+  }
+
+  return thumbPath;
 }
 
 export async function uploadMediaForMoment(
@@ -66,6 +105,7 @@ export async function uploadMediaForMoment(
   const attachmentId = crypto.randomUUID();
   const extension = extensionFromFile(file);
   const storagePath = `${userId}/${momentId}/${attachmentId}.${extension}`;
+  const uploadedPaths = [storagePath];
 
   const { error: uploadError } = await supabase.storage
     .from(MEDIA_BUCKET)
@@ -78,6 +118,15 @@ export async function uploadMediaForMoment(
     throw uploadError;
   }
 
+  let thumbnailPath: string | null = null;
+
+  if (shouldGenerateThumbnail(mediaType, file.type)) {
+    thumbnailPath = await uploadPhotoThumbnail(supabase, file, storagePath);
+    if (thumbnailPath) {
+      uploadedPaths.push(thumbnailPath);
+    }
+  }
+
   const { error: insertError } = await supabase
     .from("media_attachments")
     .insert({
@@ -86,13 +135,14 @@ export async function uploadMediaForMoment(
       user_id: userId,
       media_type: mediaType,
       storage_path: storagePath,
+      thumbnail_path: thumbnailPath,
       mime_type: file.type,
       file_size_bytes: file.size,
       original_filename: file.name,
     });
 
   if (insertError) {
-    await supabase.storage.from(MEDIA_BUCKET).remove([storagePath]);
+    await supabase.storage.from(MEDIA_BUCKET).remove(uploadedPaths);
     throw insertError;
   }
 }
