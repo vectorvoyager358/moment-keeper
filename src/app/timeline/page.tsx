@@ -1,18 +1,16 @@
 import Link from "next/link";
+import { Suspense } from "react";
 
 import { AppNav } from "@/components/AppNav";
-import { TimelineEmptyState } from "@/components/timeline/MomentCard";
-import { TimelineFeed } from "@/components/timeline/TimelineFeed";
 import {
-  TimelineSearchEmptyState,
-  TimelineSearchForm,
-} from "@/components/timeline/TimelineSearchForm";
-import { toUserErrorMessage } from "@/lib/errors";
-import { getTimelineMoments, getUserTags } from "@/lib/moments/queries";
+  TimelineResults,
+  TimelineSearchSection,
+} from "@/components/timeline/TimelinePageSections";
 import {
-  hasActiveSearchFilters,
-  parseSearchParams,
-} from "@/lib/moments/search";
+  TimelineFeedSkeleton,
+  TimelineSearchSkeleton,
+} from "@/components/ui/LoadingSkeleton";
+import { parseSearchParams } from "@/lib/moments/search";
 
 type TimelinePageProps = {
   searchParams: Promise<{
@@ -25,20 +23,6 @@ export default async function TimelinePage({
   searchParams,
 }: TimelinePageProps) {
   const filters = parseSearchParams(await searchParams);
-
-  let timelinePage;
-  let tags;
-
-  try {
-    [timelinePage, tags] = await Promise.all([
-      getTimelineMoments(filters),
-      getUserTags(),
-    ]);
-  } catch (error) {
-    throw new Error(toUserErrorMessage(error, "Could not load your timeline."));
-  }
-
-  const isSearching = hasActiveSearchFilters(filters);
 
   return (
     <div className="min-h-full bg-zinc-50 dark:bg-zinc-950">
@@ -62,23 +46,22 @@ export default async function TimelinePage({
         </div>
 
         <div className="mb-8">
-          <TimelineSearchForm filters={filters} tags={tags} />
+          <Suspense fallback={<TimelineSearchSkeleton />}>
+            <TimelineSearchSection filters={filters} />
+          </Suspense>
         </div>
 
-        {timelinePage.items.length === 0 ? (
-          isSearching ? (
-            <TimelineSearchEmptyState />
-          ) : (
-            <TimelineEmptyState />
-          )
-        ) : (
-          <TimelineFeed
-            key={`${filters.keyword}:${filters.tagIds.join(",")}`}
-            initialMoments={timelinePage.items}
-            initialHasMore={timelinePage.hasMore}
-            filters={filters}
-          />
-        )}
+        <Suspense
+          key={`${filters.keyword}:${filters.tagIds.join(",")}`}
+          fallback={
+            <>
+              <p className="sr-only">Loading moments</p>
+              <TimelineFeedSkeleton />
+            </>
+          }
+        >
+          <TimelineResults filters={filters} />
+        </Suspense>
       </main>
     </div>
   );

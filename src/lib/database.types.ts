@@ -36,6 +36,7 @@ export interface MediaAttachment {
   user_id: string;
   media_type: MediaType;
   storage_path: string;
+  thumbnail_path: string | null;
   mime_type: string;
   file_size_bytes: number;
   original_filename: string | null;
@@ -111,6 +112,7 @@ export type Database = {
           user_id: string;
           media_type: MediaType;
           storage_path: string;
+          thumbnail_path?: string | null;
           mime_type: string;
           file_size_bytes: number;
           original_filename?: string | null;
@@ -119,6 +121,7 @@ export type Database = {
         Update: {
           media_type?: MediaType;
           storage_path?: string;
+          thumbnail_path?: string | null;
           mime_type?: string;
           file_size_bytes?: number;
           original_filename?: string | null;

@@ -22,6 +22,10 @@ Significant technical decisions. Add a row when a choice is made — don't relit
 | 2026-07-08 | **Raise proxy body limit to 52mb**                  | Next.js defaults to buffering 10 MB through proxy/middleware. Audio/video under app limits still failed with "Unexpected end of form" until `proxyClientMaxBodySize` matched `serverActions.bodySizeLimit`. |
 | 2026-07-08 | **Capture/edit upload via XHR for real % progress** | `fetch`/server actions don't expose upload progress. Forms POST to `/api/moments` with `XMLHttpRequest.upload.onprogress`; shared save logic lives in `lib/moments/save.ts`.                                |
 | 2026-07-08 | **Documented Core Web Vitals budgets (Phase 2)**    | Measure before optimizing. Budgets below are the bar for timeline/capture/detail; Lighthouse CI can enforce later.                                                                                          |
+| 2026-07-08 | **Timeline streams via Suspense boundaries**        | Shell (nav/header) paints first; search tags and moment feed load in separate Suspense fallbacks so one slow query doesn't block the whole page.                                                            |
+| 2026-07-08 | **Photo thumbnails via sharp on upload**            | Stores `thumbnail_path` beside the original; timeline signs thumbnail URLs in batch. Avoids loading full photos on the list. Video/audio thumbnails deferred.                                               |
+| 2026-07-08 | **Sentry error tracking (opt-in via DSN)**          | `@sentry/nextjs` initializes only when `NEXT_PUBLIC_SENTRY_DSN` is set. Captures client/server/edge + route error boundaries; no Session Replay; `sendDefaultPii: false`.                                   |
+| 2026-07-08 | **Vercel Web Analytics for aggregate traffic**      | `@vercel/analytics` tracks page views only (no PII, no custom events). Cookie-free; disabled in dev; opt out via `NEXT_PUBLIC_ANALYTICS_DISABLED=true`. Documented in `docs/analytics.md`.                  |
 
 ---
 

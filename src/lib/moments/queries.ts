@@ -20,6 +20,7 @@ import {
   type TimelineMoment,
   type TimelineQueryRow,
 } from "@/lib/moments/timeline";
+import { MEDIA_BUCKET } from "@/lib/moments/media";
 import { createClient } from "@/lib/supabase/server";
 
 export type {
@@ -50,7 +51,8 @@ const MOMENT_SELECT = `
     media_type,
     mime_type,
     original_filename,
-    storage_path
+    storage_path,
+    thumbnail_path
   )
 `;
 
@@ -65,9 +67,50 @@ const TIMELINE_SELECT = `
     )
   ),
   media_attachments (
-    id
+    id,
+    media_type,
+    thumbnail_path
   )
 `;
+
+async function withSignedThumbnails(
+  rows: TimelineQueryRow[],
+): Promise<TimelineMoment[]> {
+  const supabase = await createClient();
+  const paths = [
+    ...new Set(
+      rows
+        .map((row) => mapTimelineRow(row).thumbnailPath)
+        .filter((path): path is string => Boolean(path)),
+    ),
+  ];
+
+  const urlByPath = new Map<string, string>();
+
+  if (paths.length > 0) {
+    const { data, error } = await supabase.storage
+      .from(MEDIA_BUCKET)
+      .createSignedUrls(paths, 60 * 60);
+
+    if (!error && data) {
+      for (const item of data) {
+        if (item.path && item.signedUrl) {
+          urlByPath.set(item.path, item.signedUrl);
+        }
+      }
+    }
+  }
+
+  return rows.map((row) => {
+    const mapped = mapTimelineRow(row);
+    return {
+      ...mapped,
+      thumbnailUrl: mapped.thumbnailPath
+        ? (urlByPath.get(mapped.thumbnailPath) ?? null)
+        : null,
+    };
+  });
+}
 
 export async function getUserTags(): Promise<UserTag[]> {
   const supabase = await createClient();
@@ -115,7 +158,7 @@ async function fetchAllTimelineMoments(
     throw error;
   }
 
-  const rows = ((data ?? []) as TimelineQueryRow[]).map(mapTimelineRow);
+  const rows = await withSignedThumbnails((data ?? []) as TimelineQueryRow[]);
 
   return paginateItems(rows, limit);
 }
@@ -161,7 +204,7 @@ async function searchTimelineMoments(
     }
 
     const rows = orderByIds(
-      ((data ?? []) as TimelineQueryRow[]).map(mapTimelineRow),
+      await withSignedThumbnails((data ?? []) as TimelineQueryRow[]),
       orderedIds,
     );
 
@@ -201,7 +244,7 @@ async function searchTimelineMoments(
     throw error;
   }
 
-  const rows = ((data ?? []) as TimelineQueryRow[]).map(mapTimelineRow);
+  const rows = await withSignedThumbnails((data ?? []) as TimelineQueryRow[]);
 
   return paginateItems(rows, limit);
 }

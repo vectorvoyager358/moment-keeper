@@ -103,6 +103,7 @@ Optional single photo, video, or audio file per moment (MVP: max one attachment)
 | `user_id`           | UUID      | FK → User; denormalized for storage path scoping       |
 | `media_type`        | enum      | `photo` \| `video` \| `audio`                          |
 | `storage_path`      | string    | Path/key in object storage (not a public URL)          |
+| `thumbnail_path`    | string    | Optional JPEG thumbnail path for timeline previews     |
 | `mime_type`         | string    | e.g. `image/jpeg`, `video/mp4`, `audio/mpeg`           |
 | `file_size_bytes`   | integer   | For display / upload limits                            |
 | `original_filename` | string    | Optional; for download display                         |
@@ -116,7 +117,8 @@ Optional single photo, video, or audio file per moment (MVP: max one attachment)
 
 **Client prep (capture / edit):** JPEG/PNG/WebP photos ≥ ~300 KB are downscaled (max edge 1920px) and re-encoded as JPEG before upload. GIFs, video, and audio are left unchanged.
 
-**Storage layout (suggested):** `{user_id}/{moment_id}/{attachment_id}.{ext}`
+**Storage layout (suggested):** `{user_id}/{moment_id}/{attachment_id}.{ext}`  
+**Thumbnails (photos):** `{user_id}/{moment_id}/{attachment_id}.thumb.jpg` generated with `sharp` on upload (max edge 480px). Video/audio have no thumbnail yet.
 
 ---
 

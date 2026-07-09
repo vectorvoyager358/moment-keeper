@@ -83,7 +83,9 @@ If it persists: `rm -rf node_modules .next && npm install`
 
 1. Open **SQL Editor** in the [Supabase dashboard](https://supabase.com/dashboard).
 2. Run the SQL in [`supabase/migrations/20260707143000_initial_schema.sql`](supabase/migrations/20260707143000_initial_schema.sql).
-3. Run later migrations in order, including [`supabase/migrations/20260708200000_search_moment_ids.sql`](supabase/migrations/20260708200000_search_moment_ids.sql) for full-text search.
+3. Run later migrations in order, including:
+   - [`supabase/migrations/20260708200000_search_moment_ids.sql`](supabase/migrations/20260708200000_search_moment_ids.sql) for full-text search
+   - [`supabase/migrations/20260708210000_media_thumbnail_path.sql`](supabase/migrations/20260708210000_media_thumbnail_path.sql) for photo thumbnails
 
 See [`supabase/README.md`](supabase/README.md) for verification steps.
 
@@ -115,6 +117,7 @@ On every push/PR to `main`, GitHub Actions runs lint, format check, tests, and b
    | ------------------------------- | ----------------------------- |
    | `NEXT_PUBLIC_SUPABASE_URL`      | Your Supabase project URL     |
    | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase publishable key |
+   | `NEXT_PUBLIC_SENTRY_DSN`        | Optional Sentry DSN           |
 
 4. Click **Deploy**.
 
@@ -135,6 +138,8 @@ vercel --prod
    - `https://your-app.vercel.app/**`
    - `https://your-app.vercel.app/auth/callback`
 2. Visit your deployed URL and sign up / log in. Password reset emails use `/auth/callback?next=/reset-password`.
+3. Optional: create a Sentry project, set `NEXT_PUBLIC_SENTRY_DSN` on Vercel, and redeploy to enable production error tracking.
+4. Optional: Vercel dashboard → **Analytics** → **Enable** for aggregate page-view metrics (see [`docs/analytics.md`](docs/analytics.md)).
 
 ## Project structure
 
@@ -157,4 +162,5 @@ supabase/
 - [`docs/data-model.md`](docs/data-model.md) — entities and schema
 - [`docs/mvp-backlog.md`](docs/mvp-backlog.md) — user stories and tickets
 - [`docs/decisions.md`](docs/decisions.md) — technical decisions + performance budgets
+- [`docs/analytics.md`](docs/analytics.md) — what analytics tracks (privacy)
 - [`docs/roadmap.md`](docs/roadmap.md) — post-MVP phases and epics

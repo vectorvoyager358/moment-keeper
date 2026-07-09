@@ -51,6 +51,13 @@ describe("getTimelineMoments keyword search", () => {
           in: inFilter,
         }),
       })),
+      storage: {
+        from: () => ({
+          createSignedUrls: vi
+            .fn()
+            .mockResolvedValue({ data: [], error: null }),
+        }),
+      },
     });
 
     const result = await getTimelineMoments(
