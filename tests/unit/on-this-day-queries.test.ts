@@ -55,7 +55,9 @@ describe("getOnThisDayMoments", () => {
       from,
       storage: {
         from: vi.fn(() => ({
-          createSignedUrls: vi.fn().mockResolvedValue({ data: [], error: null }),
+          createSignedUrls: vi
+            .fn()
+            .mockResolvedValue({ data: [], error: null }),
         })),
       },
     });

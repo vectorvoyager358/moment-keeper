@@ -138,11 +138,11 @@ Keyword results sorted by `ts_rank` DESC, then `occurred_at` DESC. Tag-only / un
 
 Read operation via `on_this_day_moment_ids` RPC:
 
-| Input | Behavior |
-| ----- | -------- |
+| Input                 | Behavior                                |
+| --------------------- | --------------------------------------- |
 | Today's UTC month/day | Match `occurred_at` month and day (UTC) |
-| Current UTC year | Exclude moments from the current year |
-| Limit | Default 12, newest `occurred_at` first |
+| Current UTC year      | Exclude moments from the current year   |
+| Limit                 | Default 12, newest `occurred_at` first  |
 
 Shown on `/timeline` when no search filters are active. Requires migration `20260708220000_on_this_day_moment_ids.sql`.
 

@@ -7,17 +7,20 @@ const highlights = [
   {
     icon: Camera,
     title: "Capture in seconds",
-    description: "A few words, a photo, or a voice note — save what mattered without a daily journaling ritual.",
+    description:
+      "A few words, a photo, or a voice note — save what mattered without a daily journaling ritual.",
   },
   {
     icon: Sparkles,
     title: "Revisit what lasts",
-    description: "Browse your timeline or see memories resurface on the same date in past years.",
+    description:
+      "Browse your timeline or see memories resurface on the same date in past years.",
   },
   {
     icon: Lock,
     title: "Private by default",
-    description: "Your moments stay yours. Sign in to access your personal archive.",
+    description:
+      "Your moments stay yours. Sign in to access your personal archive.",
   },
 ];
 
@@ -47,7 +50,8 @@ export function LandingPage() {
             A home for life&apos;s moments
           </p>
           <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight text-ink sm:text-5xl">
-            Keep the moments that matter — without the pressure of a daily diary.
+            Keep the moments that matter — without the pressure of a daily
+            diary.
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-muted sm:text-lg">
             Moment Keeper is a warm, private place to save meaningful memories

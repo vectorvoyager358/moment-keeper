@@ -15,10 +15,7 @@ export function getUtcCalendarParts(date: Date): OnThisDayCalendar {
   };
 }
 
-export function formatOnThisDayHeading(
-  date: Date,
-  locale = "en-US",
-): string {
+export function formatOnThisDayHeading(date: Date, locale = "en-US"): string {
   const label = new Intl.DateTimeFormat(locale, {
     month: "long",
     day: "numeric",
