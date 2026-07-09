@@ -1,15 +1,18 @@
 "use client";
 
-import { useActionState } from "react";
+import { useRouter } from "next/navigation";
+import { useState, type FormEvent } from "react";
 
-import { updateMoment } from "@/app/moments/[id]/actions";
 import { MediaFileInput } from "@/components/capture/MediaFileInput";
-import { SubmitButton } from "@/components/ui/SubmitButton";
+import { SaveProgress } from "@/components/ui/SaveProgress";
+import { toUserErrorMessage } from "@/lib/errors";
 import { toDatetimeLocalValueFromIso } from "@/lib/moments/dates";
 import type { MomentDetail } from "@/lib/moments/queries";
 import { formatTagInput } from "@/lib/moments/tags";
-
-const initialState = { error: undefined };
+import {
+  postFormDataWithProgress,
+  UploadRequestError,
+} from "@/lib/moments/upload-progress";
 
 type EditMomentFormProps = {
   moment: MomentDetail;
@@ -17,15 +20,58 @@ type EditMomentFormProps = {
 };
 
 export function EditMomentForm({ moment, onCancel }: EditMomentFormProps) {
-  const updateAction = updateMoment.bind(null, moment.id);
-  const [state, formAction] = useActionState(updateAction, initialState);
+  const router = useRouter();
+  const [mediaValid, setMediaValid] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  const [percent, setPercent] = useState<number | null>(null);
+  const [processing, setProcessing] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!mediaValid || pending) {
+      return;
+    }
+
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+
+    setError(null);
+    setPending(true);
+    setProcessing(false);
+    setPercent(0);
+
+    try {
+      const result = await postFormDataWithProgress(
+        `/api/moments/${moment.id}`,
+        formData,
+        {
+          onProgress: (progress) => {
+            setPercent(progress.percent);
+          },
+          onUploadComplete: () => {
+            setProcessing(true);
+          },
+        },
+      );
+
+      router.push(result.redirectTo ?? `/moments/${moment.id}`);
+      router.refresh();
+    } catch (submitError) {
+      setPending(false);
+      setProcessing(false);
+      setPercent(null);
+      setError(
+        submitError instanceof UploadRequestError
+          ? submitError.message
+          : toUserErrorMessage(submitError, "Could not update your moment."),
+      );
+    }
+  }
 
   return (
-    <form
-      action={formAction}
-      encType="multipart/form-data"
-      className="space-y-5"
-    >
+    <form onSubmit={handleSubmit} className="space-y-5">
       <div className="space-y-2">
         <label
           htmlFor="body"
@@ -80,24 +126,41 @@ export function EditMomentForm({ moment, onCancel }: EditMomentFormProps) {
       <MediaFileInput
         currentFilename={moment.media?.original_filename}
         showRemove={Boolean(moment.media)}
+        onValidityChange={setMediaValid}
       />
 
-      {state.error ? (
+      {error ? (
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
-          {state.error}
+          {error}
         </p>
       ) : null}
 
+      <SaveProgress
+        active={pending}
+        percent={percent}
+        processing={processing}
+        label={
+          processing ? "Upload complete — saving on server…" : "Uploading…"
+        }
+      />
+
       <div className="flex gap-3">
-        <SubmitButton
-          label="Save changes"
-          pendingLabel="Saving..."
+        <button
+          type="submit"
+          disabled={!mediaValid || pending}
           className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
-        />
+        >
+          {pending
+            ? processing
+              ? "Saving..."
+              : "Uploading..."
+            : "Save changes"}
+        </button>
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-900 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800"
+          disabled={pending}
+          className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-900 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800"
         >
           Cancel
         </button>

@@ -35,9 +35,13 @@ See [`docs/decisions.md`](docs/decisions.md) for architecture decisions and [`do
 
 4. In Supabase, enable email auth: **Authentication → Providers → Email** (enabled by default). For faster local testing, you can disable **Confirm email** so new accounts can log in immediately.
 
-5. Apply the database schema (one-time) — see [Database setup](#database-setup) below.
+5. In Supabase → **Authentication → URL Configuration**, set **Site URL** to `http://localhost:3000` and add these **Redirect URLs**:
+   - `http://localhost:3000/auth/callback`
+   - `http://localhost:3000/**`
 
-6. Start the dev server:
+6. Apply the database schema (one-time) — see [Database setup](#database-setup) below.
+
+7. Start the dev server:
 
    ```bash
    npm run dev
@@ -60,19 +64,26 @@ If it persists: `rm -rf node_modules .next && npm install`
 
 ## Routes
 
-| Route           | Access                               |
-| --------------- | ------------------------------------ |
-| `/login`        | Public                               |
-| `/signup`       | Public                               |
-| `/timeline`     | Authenticated (search + list)        |
-| `/capture`      | Authenticated                        |
-| `/moments/[id]` | Authenticated (view / edit / delete) |
-| `/settings`     | Authenticated                        |
+| Route               | Access                                             |
+| ------------------- | -------------------------------------------------- |
+| `/login`            | Public                                             |
+| `/signup`           | Public                                             |
+| `/forgot-password`  | Public (request reset email)                       |
+| `/auth/callback`    | Public (PKCE code exchange for email links)        |
+| `/reset-password`   | Authenticated (set new password after reset email) |
+| `/api/health`       | Public (uptime / readiness JSON)                   |
+| `/api/moments`      | Authenticated (create moment; XHR upload progress) |
+| `/api/moments/[id]` | Authenticated (update moment; XHR upload progress) |
+| `/timeline`         | Authenticated (search + list)                      |
+| `/capture`          | Authenticated                                      |
+| `/moments/[id]`     | Authenticated (view / edit / delete)               |
+| `/settings`         | Authenticated (account + change password)          |
 
 ## Database setup
 
 1. Open **SQL Editor** in the [Supabase dashboard](https://supabase.com/dashboard).
 2. Run the SQL in [`supabase/migrations/20260707143000_initial_schema.sql`](supabase/migrations/20260707143000_initial_schema.sql).
+3. Run later migrations in order, including [`supabase/migrations/20260708200000_search_moment_ids.sql`](supabase/migrations/20260708200000_search_moment_ids.sql) for full-text search.
 
 See [`supabase/README.md`](supabase/README.md) for verification steps.
 
@@ -120,8 +131,10 @@ vercel --prod
 
 ### After deploy
 
-1. In Supabase → **Authentication → URL Configuration**, add your Vercel URL to **Site URL** and **Redirect URLs** (e.g. `https://your-app.vercel.app/**`).
-2. Visit your deployed URL and sign up / log in.
+1. In Supabase → **Authentication → URL Configuration**, set **Site URL** to your Vercel URL and add **Redirect URLs** for:
+   - `https://your-app.vercel.app/**`
+   - `https://your-app.vercel.app/auth/callback`
+2. Visit your deployed URL and sign up / log in. Password reset emails use `/auth/callback?next=/reset-password`.
 
 ## Project structure
 
@@ -143,4 +156,5 @@ supabase/
 
 - [`docs/data-model.md`](docs/data-model.md) — entities and schema
 - [`docs/mvp-backlog.md`](docs/mvp-backlog.md) — user stories and tickets
-- [`docs/decisions.md`](docs/decisions.md) — technical decisions
+- [`docs/decisions.md`](docs/decisions.md) — technical decisions + performance budgets
+- [`docs/roadmap.md`](docs/roadmap.md) — post-MVP phases and epics

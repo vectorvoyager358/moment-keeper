@@ -114,6 +114,8 @@ Optional single photo, video, or audio file per moment (MVP: max one attachment)
 - Video: 50 MB
 - Audio: 25 MB
 
+**Client prep (capture / edit):** JPEG/PNG/WebP photos ≥ ~300 KB are downscaled (max edge 1920px) and re-encoded as JPEG before upload. GIFs, video, and audio are left unchanged.
+
 **Storage layout (suggested):** `{user_id}/{moment_id}/{attachment_id}.{ext}`
 
 ---
@@ -122,13 +124,13 @@ Optional single photo, video, or audio file per moment (MVP: max one attachment)
 
 MVP search is a read operation over `Moment` + `MomentTag` + `Tag`:
 
-| Input    | Behavior                                                            |
-| -------- | ------------------------------------------------------------------- |
-| Keyword  | Full-text or `ILIKE` match on `body`                                |
-| Tag(s)   | Filter moments linked to any/all selected tags (MVP: match any tag) |
-| Combined | Keyword AND tag filters applied together                            |
+| Input    | Behavior                                                                                          |
+| -------- | ------------------------------------------------------------------------------------------------- |
+| Keyword  | Postgres full-text on `search_vector` via `search_moment_ids` RPC (`plainto_tsquery` + `ts_rank`) |
+| Tag(s)   | Filter moments linked to any/all selected tags (MVP: match any tag)                               |
+| Combined | Keyword AND tag filters applied together                                                          |
 
-Results sorted by `occurred_at DESC`.
+Keyword results sorted by `ts_rank` DESC, then `occurred_at` DESC. Tag-only / unfiltered timeline stays `occurred_at` DESC.
 
 ---
 

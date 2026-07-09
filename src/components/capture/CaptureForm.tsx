@@ -1,26 +1,69 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState, type FormEvent } from "react";
 
-import { createMoment } from "@/app/capture/actions";
 import { MediaFileInput } from "@/components/capture/MediaFileInput";
-import { SubmitButton } from "@/components/ui/SubmitButton";
+import { SaveProgress } from "@/components/ui/SaveProgress";
+import { toUserErrorMessage } from "@/lib/errors";
 import { toDatetimeLocalValue } from "@/lib/moments/dates";
-
-const initialState = { error: undefined };
+import {
+  postFormDataWithProgress,
+  UploadRequestError,
+} from "@/lib/moments/upload-progress";
 
 export function CaptureForm() {
-  const [state, formAction] = useActionState(createMoment, initialState);
+  const router = useRouter();
   const [occurredAt, setOccurredAt] = useState(() =>
     toDatetimeLocalValue(new Date()),
   );
+  const [mediaValid, setMediaValid] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  const [percent, setPercent] = useState<number | null>(null);
+  const [processing, setProcessing] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!mediaValid || pending) {
+      return;
+    }
+
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+
+    setError(null);
+    setPending(true);
+    setProcessing(false);
+    setPercent(0);
+
+    try {
+      const result = await postFormDataWithProgress("/api/moments", formData, {
+        onProgress: (progress) => {
+          setPercent(progress.percent);
+        },
+        onUploadComplete: () => {
+          setProcessing(true);
+        },
+      });
+
+      router.push(result.redirectTo ?? "/timeline");
+      router.refresh();
+    } catch (submitError) {
+      setPending(false);
+      setProcessing(false);
+      setPercent(null);
+      setError(
+        submitError instanceof UploadRequestError
+          ? submitError.message
+          : toUserErrorMessage(submitError, "Could not save your moment."),
+      );
+    }
+  }
 
   return (
-    <form
-      action={formAction}
-      encType="multipart/form-data"
-      className="space-y-5"
-    >
+    <form onSubmit={handleSubmit} className="space-y-5">
       <div className="space-y-2">
         <label
           htmlFor="body"
@@ -75,19 +118,30 @@ export function CaptureForm() {
         </p>
       </div>
 
-      <MediaFileInput />
+      <MediaFileInput onValidityChange={setMediaValid} />
 
-      {state.error ? (
+      {error ? (
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
-          {state.error}
+          {error}
         </p>
       ) : null}
 
-      <SubmitButton
-        label="Save moment"
-        pendingLabel="Saving..."
-        className="w-full rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+      <SaveProgress
+        active={pending}
+        percent={percent}
+        processing={processing}
+        label={
+          processing ? "Upload complete — saving on server…" : "Uploading…"
+        }
       />
+
+      <button
+        type="submit"
+        disabled={!mediaValid || pending}
+        className="w-full rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+      >
+        {pending ? (processing ? "Saving..." : "Uploading...") : "Save moment"}
+      </button>
     </form>
   );
 }

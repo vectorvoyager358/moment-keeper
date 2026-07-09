@@ -1,61 +1,56 @@
 "use client";
 
-import Link from "next/link";
 import { useActionState } from "react";
 
-import { login } from "@/app/auth/actions";
+import { updatePassword } from "@/app/auth/actions";
 import { AuthCard } from "@/components/auth/AuthCard";
 
 const initialState = { error: undefined, message: undefined };
 
-export function LoginForm() {
-  const [state, formAction, pending] = useActionState(login, initialState);
+export function ResetPasswordForm() {
+  const [state, formAction, pending] = useActionState(
+    updatePassword,
+    initialState,
+  );
 
   return (
     <AuthCard
-      title="Welcome back"
-      description="Log in to revisit your moments."
-      alternateHref="/signup"
-      alternateLabel="Need an account? Sign up"
+      title="Choose a new password"
+      description="Enter a new password for your account."
+      alternateHref="/login"
+      alternateLabel="Back to log in"
     >
       <form action={formAction} className="space-y-4">
         <div className="space-y-2">
           <label
-            htmlFor="email"
+            htmlFor="password"
             className="text-sm font-medium text-zinc-800 dark:text-zinc-200"
           >
-            Email
+            New password
           </label>
           <input
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="email"
+            id="password"
+            name="password"
+            type="password"
+            autoComplete="new-password"
             required
+            minLength={8}
             className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50"
           />
         </div>
 
         <div className="space-y-2">
-          <div className="flex items-center justify-between gap-3">
-            <label
-              htmlFor="password"
-              className="text-sm font-medium text-zinc-800 dark:text-zinc-200"
-            >
-              Password
-            </label>
-            <Link
-              href="/forgot-password"
-              className="text-sm font-medium text-zinc-600 underline-offset-4 hover:underline dark:text-zinc-400"
-            >
-              Forgot password?
-            </Link>
-          </div>
+          <label
+            htmlFor="confirmPassword"
+            className="text-sm font-medium text-zinc-800 dark:text-zinc-200"
+          >
+            Confirm password
+          </label>
           <input
-            id="password"
-            name="password"
+            id="confirmPassword"
+            name="confirmPassword"
             type="password"
-            autoComplete="current-password"
+            autoComplete="new-password"
             required
             minLength={8}
             className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50"
@@ -68,18 +63,12 @@ export function LoginForm() {
           </p>
         ) : null}
 
-        {state.message ? (
-          <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
-            {state.message}
-          </p>
-        ) : null}
-
         <button
           type="submit"
           disabled={pending}
           className="w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
         >
-          {pending ? "Logging in..." : "Log in"}
+          {pending ? "Updating password..." : "Update password"}
         </button>
       </form>
     </AuthCard>

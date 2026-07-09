@@ -1,22 +1,30 @@
 "use client";
 
-import Link from "next/link";
 import { useActionState } from "react";
 
-import { login } from "@/app/auth/actions";
+import { requestPasswordReset } from "@/app/auth/actions";
 import { AuthCard } from "@/components/auth/AuthCard";
 
 const initialState = { error: undefined, message: undefined };
 
-export function LoginForm() {
-  const [state, formAction, pending] = useActionState(login, initialState);
+type ForgotPasswordFormProps = {
+  initialError?: string;
+};
+
+export function ForgotPasswordForm({ initialError }: ForgotPasswordFormProps) {
+  const [state, formAction, pending] = useActionState(
+    requestPasswordReset,
+    initialState,
+  );
+
+  const error = state.error ?? initialError;
 
   return (
     <AuthCard
-      title="Welcome back"
-      description="Log in to revisit your moments."
-      alternateHref="/signup"
-      alternateLabel="Need an account? Sign up"
+      title="Reset your password"
+      description="Enter your email and we'll send a reset link if an account exists."
+      alternateHref="/login"
+      alternateLabel="Back to log in"
     >
       <form action={formAction} className="space-y-4">
         <div className="space-y-2">
@@ -36,35 +44,9 @@ export function LoginForm() {
           />
         </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-3">
-            <label
-              htmlFor="password"
-              className="text-sm font-medium text-zinc-800 dark:text-zinc-200"
-            >
-              Password
-            </label>
-            <Link
-              href="/forgot-password"
-              className="text-sm font-medium text-zinc-600 underline-offset-4 hover:underline dark:text-zinc-400"
-            >
-              Forgot password?
-            </Link>
-          </div>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            required
-            minLength={8}
-            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50"
-          />
-        </div>
-
-        {state.error ? (
+        {error ? (
           <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
-            {state.error}
+            {error}
           </p>
         ) : null}
 
@@ -79,7 +61,7 @@ export function LoginForm() {
           disabled={pending}
           className="w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
         >
-          {pending ? "Logging in..." : "Log in"}
+          {pending ? "Sending link..." : "Send reset link"}
         </button>
       </form>
     </AuthCard>
