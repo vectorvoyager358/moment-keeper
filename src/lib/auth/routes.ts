@@ -1,4 +1,9 @@
-export const PUBLIC_ROUTES = ["/login", "/signup", "/forgot-password"] as const;
+export const PUBLIC_ROUTES = [
+  "/",
+  "/login",
+  "/signup",
+  "/forgot-password",
+] as const;
 
 /** PKCE callback must run without auth redirects interfering. */
 export function isAuthCallbackRoute(pathname: string): boolean {

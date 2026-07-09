@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { AppNav } from "@/components/AppNav";
 import { DeleteMomentButton } from "@/components/moments/DeleteMomentButton";
 import { MomentDetailPanel } from "@/components/moments/MomentDetailPanel";
+import { Card } from "@/components/ui/Card";
+import { PageShell } from "@/components/ui/PageShell";
 import { toUserErrorMessage } from "@/lib/errors";
 import { getMomentById } from "@/lib/moments/queries";
 
@@ -29,26 +31,26 @@ export default async function MomentDetailPage({
   }
 
   return (
-    <div className="min-h-full bg-zinc-50 dark:bg-zinc-950">
+    <PageShell>
       <AppNav current="timeline" />
       <main className="mx-auto max-w-2xl px-6 py-10">
         <p className="mb-6 text-sm">
           <Link
             href="/timeline"
-            className="text-zinc-600 underline-offset-4 hover:underline dark:text-zinc-400"
+            className="text-muted underline-offset-4 transition hover:text-accent hover:underline"
           >
             ← Back to timeline
           </Link>
         </p>
 
-        <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <Card padding="lg">
           <MomentDetailPanel moment={moment} />
-        </section>
+        </Card>
 
-        <div className="mt-8 border-t border-zinc-200 pt-6 dark:border-zinc-800">
+        <div className="mt-8 border-t border-border pt-6">
           <DeleteMomentButton momentId={moment.id} />
         </div>
       </main>
-    </div>
+    </PageShell>
   );
 }

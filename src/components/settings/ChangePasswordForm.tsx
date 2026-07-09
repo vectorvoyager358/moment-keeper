@@ -3,11 +3,11 @@
 import { useActionState } from "react";
 
 import { changePassword } from "@/app/auth/actions";
+import { Alert } from "@/components/ui/Alert";
+import { Button } from "@/components/ui/Button";
+import { Input, Label } from "@/components/ui/Input";
 
 const initialState = { error: undefined, message: undefined };
-
-const inputClassName =
-  "w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50";
 
 export function ChangePasswordForm() {
   const [state, formAction, pending] = useActionState(
@@ -18,78 +18,47 @@ export function ChangePasswordForm() {
   return (
     <form action={formAction} className="space-y-4">
       <div className="space-y-2">
-        <label
-          htmlFor="currentPassword"
-          className="text-sm font-medium text-zinc-800 dark:text-zinc-200"
-        >
-          Current password
-        </label>
-        <input
+        <Label htmlFor="currentPassword">Current password</Label>
+        <Input
           id="currentPassword"
           name="currentPassword"
           type="password"
           autoComplete="current-password"
           required
           minLength={8}
-          className={inputClassName}
         />
       </div>
 
       <div className="space-y-2">
-        <label
-          htmlFor="password"
-          className="text-sm font-medium text-zinc-800 dark:text-zinc-200"
-        >
-          New password
-        </label>
-        <input
+        <Label htmlFor="password">New password</Label>
+        <Input
           id="password"
           name="password"
           type="password"
           autoComplete="new-password"
           required
           minLength={8}
-          className={inputClassName}
         />
       </div>
 
       <div className="space-y-2">
-        <label
-          htmlFor="confirmPassword"
-          className="text-sm font-medium text-zinc-800 dark:text-zinc-200"
-        >
-          Confirm new password
-        </label>
-        <input
+        <Label htmlFor="confirmPassword">Confirm new password</Label>
+        <Input
           id="confirmPassword"
           name="confirmPassword"
           type="password"
           autoComplete="new-password"
           required
           minLength={8}
-          className={inputClassName}
         />
       </div>
 
-      {state.error ? (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
-          {state.error}
-        </p>
-      ) : null}
+      {state.error ? <Alert variant="error">{state.error}</Alert> : null}
+      {state.message ? <Alert variant="success">{state.message}</Alert> : null}
 
-      {state.message ? (
-        <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
-          {state.message}
-        </p>
-      ) : null}
-
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
-      >
+      <Button type="submit" disabled={pending}>
         {pending ? "Updating password..." : "Update password"}
-      </button>
+      </Button>
     </form>
   );
 }

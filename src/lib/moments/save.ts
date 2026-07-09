@@ -102,7 +102,7 @@ export async function saveNewMoment(
   }
 
   revalidatePath("/timeline");
-  return { ok: true, redirectTo: "/timeline" };
+  return { ok: true, redirectTo: "/timeline?saved=1" };
 }
 
 export async function saveUpdatedMoment(

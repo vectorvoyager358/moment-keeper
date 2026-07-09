@@ -16,6 +16,10 @@ import {
   type TimelineSearchFilters,
 } from "@/lib/moments/search";
 import {
+  getUtcCalendarParts,
+  ON_THIS_DAY_LIMIT,
+} from "@/lib/moments/on-this-day";
+import {
   mapTimelineRow,
   type TimelineMoment,
   type TimelineQueryRow,
@@ -125,6 +129,52 @@ export async function getUserTags(): Promise<UserTag[]> {
   }
 
   return data ?? [];
+}
+
+export async function getOnThisDayMoments(
+  referenceDate: Date = new Date(),
+): Promise<TimelineMoment[]> {
+  const supabase = await createClient();
+  const { month, day, year } = getUtcCalendarParts(referenceDate);
+
+  const { data: ranked, error: rpcError } = await supabase.rpc(
+    "on_this_day_moment_ids",
+    {
+      p_month: month,
+      p_day: day,
+      p_year: year,
+      p_limit: ON_THIS_DAY_LIMIT,
+    },
+  );
+
+  if (rpcError) {
+    throw rpcError;
+  }
+
+  const ordered = (ranked ?? []) as Array<{
+    id: string;
+    occurred_at: string;
+  }>;
+
+  if (ordered.length === 0) {
+    return [];
+  }
+
+  const orderedIds = ordered.map((row) => row.id);
+
+  const { data, error } = await supabase
+    .from("moments")
+    .select(TIMELINE_SELECT)
+    .in("id", orderedIds);
+
+  if (error) {
+    throw error;
+  }
+
+  return orderByIds(
+    await withSignedThumbnails((data ?? []) as TimelineQueryRow[]),
+    orderedIds,
+  );
 }
 
 export async function getTimelineMoments(

@@ -1,43 +1,36 @@
-"use client";
-
 type SaveProgressProps = {
-  label?: string;
-  percent?: number | null;
-  active?: boolean;
-  /** When true, show a full bar with pulse (server still working after upload). */
-  processing?: boolean;
+  active: boolean;
+  percent: number | null;
+  processing: boolean;
+  label: string;
 };
 
 export function SaveProgress({
-  label = "Saving your moment…",
-  percent = null,
-  active = false,
-  processing = false,
+  active,
+  percent,
+  processing,
+  label,
 }: SaveProgressProps) {
   if (!active) {
     return null;
   }
 
-  const hasPercent = typeof percent === "number" && !processing;
-  const width = processing ? "100%" : hasPercent ? `${percent}%` : "33%";
+  const width =
+    percent === null ? (processing ? 100 : 0) : Math.min(100, percent);
 
   return (
-    <div
-      className="space-y-2"
-      role="status"
-      aria-live="polite"
-      aria-busy="true"
-    >
-      <div className="h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
+    <div className="space-y-2" aria-live="polite">
+      <div className="h-2 overflow-hidden rounded-full bg-border">
         <div
-          className={`h-full rounded-full bg-zinc-900 transition-[width] duration-150 dark:bg-zinc-100 ${
-            hasPercent && !processing ? "" : "animate-pulse"
+          className={`h-full rounded-full bg-accent transition-[width] duration-150 ${
+            processing && percent === 100 ? "animate-pulse" : ""
           }`}
-          style={{ width }}
+          style={{ width: `${width}%` }}
         />
       </div>
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">
-        {hasPercent ? `${label} ${percent}%` : label}
+      <p className="text-sm text-muted">
+        {label}
+        {percent !== null && !processing ? ` ${percent}%` : null}
       </p>
     </div>
   );

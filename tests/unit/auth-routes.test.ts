@@ -9,7 +9,8 @@ import {
 } from "@/lib/auth/routes";
 
 describe("isPublicRoute", () => {
-  it("returns true for login, signup, and forgot-password", () => {
+  it("returns true for landing and auth pages", () => {
+    expect(isPublicRoute("/")).toBe(true);
     expect(isPublicRoute("/login")).toBe(true);
     expect(isPublicRoute("/signup")).toBe(true);
     expect(isPublicRoute("/forgot-password")).toBe(true);
@@ -61,6 +62,7 @@ describe("getAuthRedirect", () => {
   });
 
   it("redirects authenticated users away from public auth pages", () => {
+    expect(getAuthRedirect("/", true)).toBe("/timeline");
     expect(getAuthRedirect("/login", true)).toBe("/timeline");
     expect(getAuthRedirect("/signup", true)).toBe("/timeline");
     expect(getAuthRedirect("/forgot-password", true)).toBe("/timeline");
@@ -74,6 +76,10 @@ describe("getAuthRedirect", () => {
 
   it("allows authenticated users on reset-password", () => {
     expect(getAuthRedirect("/reset-password", true)).toBeNull();
+  });
+
+  it("allows unauthenticated users on the landing page", () => {
+    expect(getAuthRedirect("/", false)).toBeNull();
   });
 
   it("returns null when no redirect is needed", () => {

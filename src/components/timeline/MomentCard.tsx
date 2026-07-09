@@ -1,69 +1,95 @@
+import { ImageIcon, Mic, Video } from "lucide-react";
 import Link from "next/link";
 
+import { buttonClassName } from "@/components/ui/Button";
+import { Tag } from "@/components/ui/Tag";
 import { formatMomentDate, truncateBody } from "@/lib/moments/dates";
+import { cn } from "@/lib/cn";
 import type { TimelineMoment } from "@/lib/moments/queries";
 
 type MomentCardProps = {
   moment: TimelineMoment;
+  yearsAgo?: string;
 };
 
-function mediaLabel(mediaType: TimelineMoment["mediaType"]): string {
+function MediaBadge({ mediaType }: { mediaType: TimelineMoment["mediaType"] }) {
   if (mediaType === "photo") {
-    return "Photo";
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-accent-subtle px-2 py-0.5 text-xs font-medium text-accent">
+        <ImageIcon className="h-3 w-3" aria-hidden />
+        Photo
+      </span>
+    );
   }
+
   if (mediaType === "video") {
-    return "Video";
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-accent-subtle px-2 py-0.5 text-xs font-medium text-accent">
+        <Video className="h-3 w-3" aria-hidden />
+        Video
+      </span>
+    );
   }
+
   if (mediaType === "audio") {
-    return "Audio";
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-accent-subtle px-2 py-0.5 text-xs font-medium text-accent">
+        <Mic className="h-3 w-3" aria-hidden />
+        Audio
+      </span>
+    );
   }
-  return "Media";
+
+  return null;
 }
 
-export function MomentCard({ moment }: MomentCardProps) {
+export function MomentCard({ moment, yearsAgo }: MomentCardProps) {
   return (
     <Link
       href={`/moments/${moment.id}`}
-      className="block overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
+      className="group block overflow-hidden rounded-2xl border border-border bg-surface shadow-card transition duration-[var(--duration-fast)] hover:-translate-y-0.5 hover:border-border-strong hover:shadow-card-hover"
     >
       <article>
         {moment.thumbnailUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URLs
-          <img
-            src={moment.thumbnailUrl}
-            alt=""
-            loading="lazy"
-            className="aspect-[16/9] w-full object-cover"
-          />
+          <div className="relative overflow-hidden bg-accent-subtle">
+            {/* eslint-disable-next-line @next/next/no-img-element -- signed Supabase URLs */}
+            <img
+              src={moment.thumbnailUrl}
+              alt=""
+              loading="lazy"
+              className="aspect-[16/9] w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+            />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/20 to-transparent" />
+          </div>
         ) : null}
 
         <div className="p-5">
+          {yearsAgo ? (
+            <p className="mb-2 font-display text-sm font-semibold text-accent">
+              {yearsAgo}
+            </p>
+          ) : null}
           <div className="flex items-start justify-between gap-4">
             <time
               dateTime={moment.occurred_at}
-              className="text-sm text-zinc-500 dark:text-zinc-400"
+              className="font-display text-sm font-medium text-muted"
             >
               {formatMomentDate(moment.occurred_at)}
             </time>
             {moment.hasMedia ? (
-              <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                {mediaLabel(moment.mediaType)}
-              </span>
+              <MediaBadge mediaType={moment.mediaType} />
             ) : null}
           </div>
 
-          <p className="mt-3 whitespace-pre-wrap text-zinc-900 dark:text-zinc-50">
+          <p className="mt-3 whitespace-pre-wrap leading-relaxed text-ink">
             {truncateBody(moment.body)}
           </p>
 
           {moment.tags.length > 0 ? (
             <ul className="mt-4 flex flex-wrap gap-2">
               {moment.tags.map((tag) => (
-                <li
-                  key={tag.id}
-                  className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-                >
-                  {tag.name}
+                <li key={tag.id}>
+                  <Tag>{tag.name}</Tag>
                 </li>
               ))}
             </ul>
@@ -81,18 +107,18 @@ type TimelineEmptyStateProps = {
 export function TimelineEmptyState({ className }: TimelineEmptyStateProps) {
   return (
     <div
-      className={`rounded-2xl border border-dashed border-zinc-300 bg-white p-8 text-center dark:border-zinc-700 dark:bg-zinc-900 ${className ?? ""}`}
+      className={cn(
+        "rounded-2xl border border-dashed border-border-strong bg-surface p-10 text-center",
+        className,
+      )}
     >
-      <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-50">
-        No moments yet
+      <h2 className="font-display text-xl font-semibold text-ink">
+        Your journal is waiting
       </h2>
-      <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-        Save your first meaningful moment — it only takes a few seconds.
+      <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted">
+        Save your first meaningful moment — a few words is enough to start.
       </p>
-      <Link
-        href="/capture"
-        className="mt-6 inline-flex rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
-      >
+      <Link href="/capture" className={buttonClassName({ className: "mt-6" })}>
         Capture a moment
       </Link>
     </div>

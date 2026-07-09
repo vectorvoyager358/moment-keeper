@@ -4,6 +4,8 @@ import { useState, useTransition } from "react";
 
 import { loadMoreTimelineMoments } from "@/app/timeline/actions";
 import { MomentCard } from "@/components/timeline/MomentCard";
+import { Alert } from "@/components/ui/Alert";
+import { Button } from "@/components/ui/Button";
 import type { TimelineMoment } from "@/lib/moments/queries";
 import type { TimelineSearchFilters } from "@/lib/moments/search";
 
@@ -12,6 +14,9 @@ type TimelineFeedProps = {
   initialHasMore: boolean;
   filters: TimelineSearchFilters;
 };
+
+const MAX_STAGGER_INDEX = 8;
+const STAGGER_MS = 50;
 
 export function TimelineFeed({
   initialMoments,
@@ -42,29 +47,35 @@ export function TimelineFeed({
   return (
     <>
       <ul className="space-y-4">
-        {moments.map((moment) => (
-          <li key={moment.id}>
+        {moments.map((moment, index) => (
+          <li
+            key={moment.id}
+            className="animate-fade-in-up"
+            style={{
+              animationDelay: `${Math.min(index, MAX_STAGGER_INDEX) * STAGGER_MS}ms`,
+            }}
+          >
             <MomentCard moment={moment} />
           </li>
         ))}
       </ul>
 
       {error ? (
-        <p className="mt-6 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
+        <Alert variant="error" className="mt-6">
           {error}
-        </p>
+        </Alert>
       ) : null}
 
       {hasMore ? (
         <div className="mt-8 flex justify-center">
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={handleLoadMore}
             disabled={isPending}
-            className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-900 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:hover:bg-zinc-800"
           >
             {isPending ? "Loading..." : "Load more"}
-          </button>
+          </Button>
         </div>
       ) : null}
     </>

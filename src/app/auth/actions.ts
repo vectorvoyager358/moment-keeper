@@ -70,7 +70,7 @@ export async function signup(
 
   if (data.session) {
     revalidatePath("/", "layout");
-    redirect("/timeline");
+    redirect("/capture?welcome=1");
   }
 
   return {
