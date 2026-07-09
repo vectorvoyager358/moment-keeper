@@ -18,9 +18,9 @@ describe("getUtcCalendarParts", () => {
 
 describe("formatOnThisDayHeading", () => {
   it("formats the on-this-day heading in UTC", () => {
-    expect(
-      formatOnThisDayHeading(new Date("2026-07-08T12:00:00.000Z")),
-    ).toBe("On this day · July 8");
+    expect(formatOnThisDayHeading(new Date("2026-07-08T12:00:00.000Z"))).toBe(
+      "On this day · July 8",
+    );
   });
 });
 

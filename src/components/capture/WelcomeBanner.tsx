@@ -41,8 +41,8 @@ export function WelcomeBanner({ initialVisible }: WelcomeBannerProps) {
           Welcome to Moment Keeper
         </p>
         <p className="mt-1 text-sm leading-relaxed text-muted">
-          Capture your first moment below — a few words is enough. You can always
-          add photos, tags, or edits later.
+          Capture your first moment below — a few words is enough. You can
+          always add photos, tags, or edits later.
         </p>
       </div>
       <button
