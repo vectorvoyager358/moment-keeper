@@ -24,10 +24,11 @@ export function toDatetimeLocalValueFromIso(iso: string): string {
   return toDatetimeLocalValue(new Date(iso));
 }
 
-export function formatMomentDate(iso: string): string {
+export function formatMomentDate(iso: string, timeZone?: string): string {
   return new Intl.DateTimeFormat(undefined, {
     dateStyle: "medium",
     timeStyle: "short",
+    timeZone,
   }).format(new Date(iso));
 }
 

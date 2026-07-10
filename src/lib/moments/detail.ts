@@ -1,4 +1,4 @@
-import type { MediaType } from "@/lib/database.types";
+import type { MediaType, MemoryTheme } from "@/lib/database.types";
 import { normalizeRelationItems } from "@/lib/moments/relations";
 
 export type MomentMedia = {
@@ -13,6 +13,7 @@ export type MomentDetail = {
   id: string;
   body: string;
   occurred_at: string;
+  themes: MemoryTheme[];
   tags: { id: string; name: string }[];
   media: MomentMedia | null;
 };
@@ -21,6 +22,7 @@ type MomentDetailQueryRow = {
   id: string;
   body: string;
   occurred_at: string;
+  themes: MemoryTheme[];
   moment_tags:
     | {
         tags:
@@ -70,6 +72,7 @@ export function mapMomentDetailRow(
     id: moment.id,
     body: moment.body,
     occurred_at: moment.occurred_at,
+    themes: moment.themes ?? [],
     tags: extractTags(moment.moment_tags),
     media:
       attachment && signedUrl

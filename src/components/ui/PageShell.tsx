@@ -8,7 +8,9 @@ type PageShellProps = {
 };
 
 export function PageShell({ children, className }: PageShellProps) {
-  return <div className={cn("min-h-full bg-paper", className)}>{children}</div>;
+  return (
+    <div className={cn("min-h-full pb-24 sm:pb-0", className)}>{children}</div>
+  );
 }
 
 type PageHeaderProps = {
@@ -29,7 +31,7 @@ export function PageHeader({
       className={cn("mb-8 flex items-start justify-between gap-4", className)}
     >
       <div>
-        <h1 className="font-display text-2xl font-semibold text-ink">
+        <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">
           {title}
         </h1>
         {description ? (

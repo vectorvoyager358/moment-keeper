@@ -4,11 +4,13 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 import { MediaFileInput } from "@/components/capture/MediaFileInput";
+import { MemoryThemePicker } from "@/components/capture/MemoryThemePicker";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { FieldHint, Input, Label, Textarea } from "@/components/ui/Input";
 import { SaveProgress } from "@/components/ui/SaveProgress";
 import { toUserErrorMessage } from "@/lib/errors";
+import type { MemoryTheme } from "@/lib/database.types";
 import { toDatetimeLocalValueFromIso } from "@/lib/moments/dates";
 import type { MomentDetail } from "@/lib/moments/queries";
 import { formatTagInput } from "@/lib/moments/tags";
@@ -24,6 +26,8 @@ type EditMomentFormProps = {
 
 export function EditMomentForm({ moment, onCancel }: EditMomentFormProps) {
   const router = useRouter();
+  const [themes, setThemes] = useState<MemoryTheme[]>(moment.themes);
+  const [preparedMediaFile, setPreparedMediaFile] = useState<File | null>(null);
   const [mediaValid, setMediaValid] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -39,6 +43,10 @@ export function EditMomentForm({ moment, onCancel }: EditMomentFormProps) {
 
     const form = event.currentTarget;
     const formData = new FormData(form);
+
+    if (preparedMediaFile) {
+      formData.set("media", preparedMediaFile);
+    }
 
     setError(null);
     setPending(true);
@@ -86,6 +94,12 @@ export function EditMomentForm({ moment, onCancel }: EditMomentFormProps) {
         />
       </div>
 
+      <MemoryThemePicker
+        selected={themes}
+        onChange={setThemes}
+        disabled={pending}
+      />
+
       <div className="space-y-2">
         <Label htmlFor="occurred_at">When did it happen?</Label>
         <Input
@@ -115,6 +129,7 @@ export function EditMomentForm({ moment, onCancel }: EditMomentFormProps) {
         currentFilename={moment.media?.original_filename}
         showRemove={Boolean(moment.media)}
         onValidityChange={setMediaValid}
+        onPreparedFileChange={setPreparedMediaFile}
       />
 
       {error ? <Alert variant="error">{error}</Alert> : null}

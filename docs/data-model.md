@@ -36,19 +36,21 @@ A trigger creates a `profiles` row automatically when a user signs up.
 
 A single captured life moment. Text is required; media is optional.
 
-| Field         | Type      | Notes                                                             |
-| ------------- | --------- | ----------------------------------------------------------------- |
-| `id`          | UUID      | Primary key                                                       |
-| `user_id`     | UUID      | FK → User; indexed                                                |
-| `body`        | text      | Required; the moment description (min 1 char)                     |
-| `occurred_at` | timestamp | When the moment happened; user-editable; defaults to `created_at` |
-| `created_at`  | timestamp | When the record was saved                                         |
-| `updated_at`  | timestamp | Last edit                                                         |
+| Field         | Type             | Notes                                                             |
+| ------------- | ---------------- | ----------------------------------------------------------------- |
+| `id`          | UUID             | Primary key                                                       |
+| `user_id`     | UUID             | FK → User; indexed                                                |
+| `body`        | text             | Required; the moment description (min 1 char)                     |
+| `themes`      | `memory_theme[]` | Up to three system themes; empty for unclassified moments         |
+| `occurred_at` | timestamp        | When the moment happened; user-editable; defaults to `created_at` |
+| `created_at`  | timestamp        | When the record was saved                                         |
+| `updated_at`  | timestamp        | Last edit                                                         |
 
 **Indexes:**
 
 - `(user_id, occurred_at DESC)` — timeline feed
 - Full-text index on `body` — keyword search (e.g. Postgres `tsvector`)
+- GIN index on `themes` — structured memory resurfacing
 
 **Validation:**
 
@@ -145,6 +147,17 @@ Read operation via `on_this_day_moment_ids` RPC:
 | Limit                 | Default 12, newest `occurred_at` first  |
 
 Shown on `/timeline` when no search filters are active. Requires migration `20260708220000_on_this_day_moment_ids.sql`.
+
+### Theme and content resurfacing
+
+`memory_theme` is a fixed system vocabulary: `joy`, `achievement`, `growth`,
+`gratitude`, `connection`, `adventure`, and `calm`. A moment can have zero to
+three themes; these are separate from user-defined tags.
+
+`resurface_moment_ids` accepts one or more themes plus an optional media type.
+It ranks explicit theme matches first, then falls back to curated full-text
+terms over the moment body. This provides private, no-AI content matching while
+keeping the retrieval layer ready for semantic embeddings later.
 
 ---
 

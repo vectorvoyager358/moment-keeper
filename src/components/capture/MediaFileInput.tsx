@@ -1,6 +1,7 @@
 "use client";
 
-import { useId, useRef, useState, type ChangeEvent } from "react";
+import { X } from "lucide-react";
+import { useEffect, useId, useRef, useState, type ChangeEvent } from "react";
 
 import { PhotoCapture } from "@/components/capture/PhotoCapture";
 import { VoiceMemoRecorder } from "@/components/capture/VoiceMemoRecorder";
@@ -9,13 +10,15 @@ import {
   formatFileSize,
   shouldCompressImage,
 } from "@/lib/moments/compress-image";
-import { validateMediaFile } from "@/lib/moments/media";
+import { getMediaTypeFromMime, validateMediaFile } from "@/lib/moments/media";
+import type { MediaType } from "@/lib/database.types";
 
 type MediaFileInputProps = {
   id?: string;
   currentFilename?: string | null;
   showRemove?: boolean;
   onValidityChange?: (isValid: boolean) => void;
+  onPreparedFileChange: (file: File | null) => void;
 };
 
 type PrepareState =
@@ -31,15 +34,23 @@ type PrepareState =
     }
   | { status: "error"; message: string };
 
+type MediaPreview = {
+  url: string;
+  type: MediaType;
+};
+
 export function MediaFileInput({
   id,
   currentFilename,
   showRemove = false,
   onValidityChange,
+  onPreparedFileChange,
 }: MediaFileInputProps) {
   const generatedId = useId();
   const inputId = id ?? generatedId;
   const inputRef = useRef<HTMLInputElement>(null);
+  const previewUrlRef = useRef<string | null>(null);
+  const [preview, setPreview] = useState<MediaPreview | null>(null);
   const [prepareState, setPrepareState] = useState<PrepareState>({
     status: "idle",
   });
@@ -49,28 +60,46 @@ export function MediaFileInput({
   const mediaBusy =
     isRecording || isCameraActive || prepareState.status === "compressing";
 
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+      }
+    };
+  }, []);
+
+  function clearPreview() {
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+
+    setPreview(null);
+  }
+
+  function showPreview(file: File, type: MediaType) {
+    clearPreview();
+    const url = URL.createObjectURL(file);
+    previewUrlRef.current = url;
+    setPreview({ url, type });
+  }
+
   function setIdle() {
+    clearPreview();
+    onPreparedFileChange(null);
     setPrepareState({ status: "idle" });
     onValidityChange?.(true);
   }
 
   function setError(message: string) {
+    clearPreview();
+    onPreparedFileChange(null);
     setPrepareState({ status: "error", message });
     onValidityChange?.(true);
 
     if (inputRef.current) {
       inputRef.current.value = "";
     }
-  }
-
-  function assignFileToInput(file: File) {
-    if (!inputRef.current) {
-      return;
-    }
-
-    const transfer = new DataTransfer();
-    transfer.items.add(file);
-    inputRef.current.files = transfer.files;
   }
 
   function markReady(
@@ -81,6 +110,15 @@ export function MediaFileInput({
       source: "file" | "voice" | "camera";
     },
   ) {
+    const mediaType = getMediaTypeFromMime(file.type);
+
+    if (!mediaType) {
+      setError("Unsupported file type. Use a photo, video, or audio file.");
+      return;
+    }
+
+    showPreview(file, mediaType);
+    onPreparedFileChange(file);
     setPrepareState({
       status: "ready",
       fileName: file.name,
@@ -90,6 +128,14 @@ export function MediaFileInput({
       source: options.source,
     });
     onValidityChange?.(true);
+  }
+
+  function removeSelectedMedia() {
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
+
+    setIdle();
   }
 
   async function attachMediaFile(
@@ -118,7 +164,6 @@ export function MediaFileInput({
           return;
         }
 
-        assignFileToInput(prepared);
         markReady(prepared, {
           originalBytes: file.size,
           compressed: prepared.size < file.size,
@@ -131,7 +176,6 @@ export function MediaFileInput({
       return;
     }
 
-    assignFileToInput(file);
     markReady(file, {
       originalBytes: file.size,
       compressed: false,
@@ -240,6 +284,48 @@ export function MediaFileInput({
               ? " · camera"
               : ""}
         </p>
+      ) : null}
+
+      {prepareState.status === "ready" && preview ? (
+        <div className="overflow-hidden rounded-2xl border border-border bg-surface">
+          {preview.type === "photo" ? (
+            // eslint-disable-next-line @next/next/no-img-element -- local object URL
+            <img
+              src={preview.url}
+              alt={`Preview of ${prepareState.fileName}`}
+              className="max-h-80 w-full bg-accent-subtle object-contain"
+            />
+          ) : null}
+          {preview.type === "video" ? (
+            <video
+              controls
+              src={preview.url}
+              className="max-h-80 w-full bg-black object-contain"
+            >
+              Your browser does not support video previews.
+            </video>
+          ) : null}
+          {preview.type === "audio" ? (
+            <div className="p-4">
+              <audio controls src={preview.url} className="w-full">
+                Your browser does not support audio previews.
+              </audio>
+            </div>
+          ) : null}
+          <div className="flex items-center justify-between gap-3 border-t border-border px-4 py-3">
+            <p className="min-w-0 truncate text-sm text-muted">
+              {prepareState.fileName}
+            </p>
+            <button
+              type="button"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-danger transition hover:bg-danger-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/30"
+              onClick={removeSelectedMedia}
+            >
+              <X className="h-4 w-4" aria-hidden />
+              Remove
+            </button>
+          </div>
+        </div>
       ) : null}
 
       {prepareState.status === "error" ? (

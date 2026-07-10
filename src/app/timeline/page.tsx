@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PenLine } from "lucide-react";
 import { Suspense } from "react";
 
 import { AppNav } from "@/components/AppNav";
@@ -7,6 +8,7 @@ import {
   TimelineSearchSection,
 } from "@/components/timeline/TimelinePageSections";
 import { OnThisDaySection } from "@/components/timeline/OnThisDaySection";
+import { ResurfacingSection } from "@/components/timeline/ResurfacingSection";
 import { buttonClassName } from "@/components/ui/Button";
 import {
   TimelineFeedSkeleton,
@@ -15,12 +17,15 @@ import {
 import { PageHeader, PageShell } from "@/components/ui/PageShell";
 import { SavedToast } from "@/components/ui/SavedToast";
 import { parseSearchParams } from "@/lib/moments/search";
+import { parseResurfacingParams } from "@/lib/moments/themes";
 
 type TimelinePageProps = {
   searchParams: Promise<{
     q?: string | string[];
     tag?: string | string[];
     saved?: string | string[];
+    theme?: string | string[];
+    media?: string | string[];
   }>;
 };
 
@@ -29,23 +34,40 @@ export default async function TimelinePage({
 }: TimelinePageProps) {
   const rawParams = await searchParams;
   const filters = parseSearchParams(rawParams);
+  const resurfacingFilters = parseResurfacingParams(rawParams);
   const showSavedToast = rawParams.saved === "1";
 
   return (
     <PageShell>
       <AppNav current="timeline" />
-      <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
         <PageHeader
-          title="Timeline"
-          description="Your moments, newest first."
+          title="Your journal"
+          description="A quiet place for the moments you want to keep."
           action={
             <Link href="/capture" className={buttonClassName({ size: "sm" })}>
-              + Capture
+              <PenLine className="h-4 w-4" aria-hidden />
+              New moment
             </Link>
           }
         />
 
         <SavedToast initialVisible={showSavedToast} />
+
+        <Suspense
+          key={`${resurfacingFilters.themes.join(",")}:${resurfacingFilters.mediaType ?? "all"}`}
+          fallback={
+            <div
+              className="mb-8 h-44 animate-pulse rounded-2xl border border-border bg-surface"
+              aria-hidden="true"
+            />
+          }
+        >
+          <ResurfacingSection
+            searchFilters={filters}
+            resurfacingFilters={resurfacingFilters}
+          />
+        </Suspense>
 
         <Suspense
           fallback={

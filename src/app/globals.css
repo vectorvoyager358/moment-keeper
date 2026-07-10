@@ -81,7 +81,19 @@
 }
 
 body {
-  background: var(--paper);
+  background-color: var(--paper);
+  background-image:
+    radial-gradient(
+      circle at 15% 0%,
+      color-mix(in srgb, var(--accent) 7%, transparent),
+      transparent 30rem
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--surface) 35%, transparent),
+      transparent 28rem
+    );
+  background-attachment: fixed;
   color: var(--ink);
   font-family: var(--font-sans);
 }
