@@ -7,10 +7,12 @@ import { Tag } from "@/components/ui/Tag";
 import { truncateBody } from "@/lib/moments/dates";
 import { cn } from "@/lib/cn";
 import type { TimelineMoment } from "@/lib/moments/queries";
+import { getHighlightedSegments } from "@/lib/moments/search";
 
 type MomentCardProps = {
   moment: TimelineMoment;
   yearsAgo?: string;
+  highlightQuery?: string;
 };
 
 function MediaBadge({ mediaType }: { mediaType: TimelineMoment["mediaType"] }) {
@@ -66,7 +68,16 @@ function MediaTile({ mediaType }: { mediaType: TimelineMoment["mediaType"] }) {
   );
 }
 
-export function MomentCard({ moment, yearsAgo }: MomentCardProps) {
+export function MomentCard({
+  moment,
+  yearsAgo,
+  highlightQuery = "",
+}: MomentCardProps) {
+  const bodySegments = getHighlightedSegments(
+    truncateBody(moment.body),
+    highlightQuery,
+  );
+
   return (
     <article className="group overflow-hidden rounded-[1.5rem] border border-border/80 bg-surface shadow-card transition duration-[var(--duration-normal)] hover:-translate-y-1 hover:border-border-strong hover:shadow-card-hover">
       <Link
@@ -105,7 +116,18 @@ export function MomentCard({ moment, yearsAgo }: MomentCardProps) {
           </div>
 
           <p className="mt-3 whitespace-pre-wrap font-display text-[1.05rem] leading-7 text-ink">
-            {truncateBody(moment.body)}
+            {bodySegments.map((segment, index) =>
+              segment.highlighted ? (
+                <mark
+                  key={`${segment.text}-${index}`}
+                  className="rounded bg-accent-subtle px-0.5 text-ink"
+                >
+                  {segment.text}
+                </mark>
+              ) : (
+                segment.text
+              ),
+            )}
           </p>
         </div>
       </Link>

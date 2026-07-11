@@ -3,6 +3,11 @@ export type TimelineSearchFilters = {
   tagIds: string[];
 };
 
+export type HighlightSegment = {
+  text: string;
+  highlighted: boolean;
+};
+
 export function parseSearchParams(params: {
   q?: string | string[];
   tag?: string | string[];
@@ -25,6 +30,48 @@ export function hasActiveSearchFilters(
   filters: TimelineSearchFilters,
 ): boolean {
   return filters.keyword.length > 0 || filters.tagIds.length > 0;
+}
+
+export function buildTimelineSearchUrl(filters: TimelineSearchFilters): string {
+  const params = new URLSearchParams();
+
+  if (filters.keyword) {
+    params.set("q", filters.keyword);
+  }
+
+  filters.tagIds.forEach((tagId) => params.append("tag", tagId));
+  const query = params.toString();
+  return query ? `/timeline?${query}` : "/timeline";
+}
+
+export function getHighlightedSegments(
+  text: string,
+  query: string,
+): HighlightSegment[] {
+  const terms = [
+    ...new Set(
+      query
+        .trim()
+        .split(/\s+/)
+        .map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+        .filter(Boolean),
+    ),
+  ].sort((a, b) => b.length - a.length);
+
+  if (terms.length === 0) {
+    return [{ text, highlighted: false }];
+  }
+
+  const matcher = new RegExp(`(${terms.join("|")})`, "gi");
+  const exactMatch = new RegExp(`^(?:${terms.join("|")})$`, "i");
+
+  return text
+    .split(matcher)
+    .filter(Boolean)
+    .map((part) => ({
+      text: part,
+      highlighted: exactMatch.test(part),
+    }));
 }
 
 /** Preserve RPC / query result order when hydrating full moment rows. */

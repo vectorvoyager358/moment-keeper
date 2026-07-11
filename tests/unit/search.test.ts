@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildTimelineSearchUrl,
+  getHighlightedSegments,
   hasActiveSearchFilters,
   orderByIds,
   parseSearchParams,
@@ -24,6 +26,34 @@ describe("parseSearchParams", () => {
       keyword: "",
       tagIds: ["tag-1"],
     });
+  });
+});
+
+describe("buildTimelineSearchUrl", () => {
+  it("preserves keyword and repeated tag parameters", () => {
+    expect(
+      buildTimelineSearchUrl({
+        keyword: "family trip",
+        tagIds: ["tag-1", "tag-2"],
+      }),
+    ).toBe("/timeline?q=family+trip&tag=tag-1&tag=tag-2");
+  });
+});
+
+describe("getHighlightedSegments", () => {
+  it("marks keyword terms without changing their casing", () => {
+    expect(
+      getHighlightedSegments(
+        "A Proud presentation today",
+        "proud presentation",
+      ),
+    ).toEqual([
+      { text: "A ", highlighted: false },
+      { text: "Proud", highlighted: true },
+      { text: " ", highlighted: false },
+      { text: "presentation", highlighted: true },
+      { text: " today", highlighted: false },
+    ]);
   });
 });
 

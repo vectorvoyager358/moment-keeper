@@ -55,7 +55,7 @@ export function TimelineFeed({
               animationDelay: `${Math.min(index, MAX_STAGGER_INDEX) * STAGGER_MS}ms`,
             }}
           >
-            <MomentCard moment={moment} />
+            <MomentCard moment={moment} highlightQuery={filters.keyword} />
           </li>
         ))}
       </ul>

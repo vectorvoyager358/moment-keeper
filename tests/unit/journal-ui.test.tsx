@@ -28,6 +28,26 @@ describe("MomentCard", () => {
       screen.getByRole("link", { name: "Filter timeline by travel" }),
     ).toHaveAttribute("href", "/timeline?tag=tag-1");
   });
+
+  it("highlights matching search terms in the body", () => {
+    const { container } = render(
+      <MomentCard
+        highlightQuery="proud"
+        moment={{
+          id: "moment-2",
+          body: "A proud day",
+          occurred_at: "2026-07-09T12:00:00.000Z",
+          tags: [],
+          hasMedia: false,
+          mediaType: null,
+          thumbnailPath: null,
+          thumbnailUrl: null,
+        }}
+      />,
+    );
+
+    expect(container.querySelector("mark")).toHaveTextContent("proud");
+  });
 });
 
 describe("MomentDetailView", () => {

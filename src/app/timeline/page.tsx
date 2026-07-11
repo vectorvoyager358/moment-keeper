@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PenLine } from "lucide-react";
+import { PenLine, Shuffle } from "lucide-react";
 import { Suspense } from "react";
 
 import { AppNav } from "@/components/AppNav";
@@ -9,6 +9,7 @@ import {
 } from "@/components/timeline/TimelinePageSections";
 import { OnThisDaySection } from "@/components/timeline/OnThisDaySection";
 import { ResurfacingSection } from "@/components/timeline/ResurfacingSection";
+import { Alert } from "@/components/ui/Alert";
 import { buttonClassName } from "@/components/ui/Button";
 import {
   TimelineFeedSkeleton,
@@ -26,6 +27,7 @@ type TimelinePageProps = {
     saved?: string | string[];
     theme?: string | string[];
     media?: string | string[];
+    surprise?: string | string[];
   }>;
 };
 
@@ -45,14 +47,32 @@ export default async function TimelinePage({
           title="Your journal"
           description="A quiet place for the moments you want to keep."
           action={
-            <Link href="/capture" className={buttonClassName({ size: "sm" })}>
-              <PenLine className="h-4 w-4" aria-hidden />
-              New moment
-            </Link>
+            <div className="flex flex-wrap justify-end gap-2">
+              <Link
+                href="/timeline/surprise"
+                className={buttonClassName({
+                  variant: "secondary",
+                  size: "sm",
+                })}
+              >
+                <Shuffle className="h-4 w-4" aria-hidden />
+                Surprise me
+              </Link>
+              <Link href="/capture" className={buttonClassName({ size: "sm" })}>
+                <PenLine className="h-4 w-4" aria-hidden />
+                New moment
+              </Link>
+            </div>
           }
         />
 
         <SavedToast initialVisible={showSavedToast} />
+
+        {rawParams.surprise === "empty" ? (
+          <Alert className="mb-8">
+            Capture your first moment, then “Surprise me” can bring it back.
+          </Alert>
+        ) : null}
 
         <Suspense
           key={`${resurfacingFilters.themes.join(",")}:${resurfacingFilters.mediaType ?? "all"}`}
