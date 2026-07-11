@@ -1,11 +1,14 @@
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 
 import { Button, buttonClassName } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input, Label } from "@/components/ui/Input";
 import { cn } from "@/lib/cn";
-import type { TimelineSearchFilters } from "@/lib/moments/search";
+import {
+  buildTimelineSearchUrl,
+  type TimelineSearchFilters,
+} from "@/lib/moments/search";
 import type { UserTag } from "@/lib/moments/queries";
 
 type TimelineSearchFormProps = {
@@ -15,6 +18,7 @@ type TimelineSearchFormProps = {
 
 export function TimelineSearchForm({ filters, tags }: TimelineSearchFormProps) {
   const selectedTagIds = new Set(filters.tagIds);
+  const selectedTags = tags.filter((tag) => selectedTagIds.has(tag.id));
 
   return (
     <form action="/timeline" method="get" className="space-y-4">
@@ -72,14 +76,50 @@ export function TimelineSearchForm({ filters, tags }: TimelineSearchFormProps) {
           </fieldset>
         ) : null}
 
-        {filters.keyword || filters.tagIds.length > 0 ? (
-          <div>
-            <Link
-              href="/timeline"
-              className={buttonClassName({ variant: "ghost", size: "sm" })}
-            >
-              Clear search and filters
-            </Link>
+        {filters.keyword || selectedTags.length > 0 ? (
+          <div className="border-t border-border pt-3">
+            <p className="mb-2 text-xs font-semibold tracking-wide text-muted uppercase">
+              Active filters
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              {filters.keyword ? (
+                <Link
+                  href={buildTimelineSearchUrl({
+                    keyword: "",
+                    tagIds: filters.tagIds,
+                  })}
+                  className="inline-flex items-center gap-1 rounded-full bg-accent-subtle px-3 py-1 text-xs font-medium text-accent transition hover:bg-accent/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  aria-label={`Remove keyword filter ${filters.keyword}`}
+                >
+                  “{filters.keyword}”
+                  <X className="h-3 w-3" aria-hidden />
+                </Link>
+              ) : null}
+              {selectedTags.map((tag) => (
+                <Link
+                  key={tag.id}
+                  href={buildTimelineSearchUrl({
+                    keyword: filters.keyword,
+                    tagIds: filters.tagIds.filter((tagId) => tagId !== tag.id),
+                  })}
+                  className="inline-flex items-center gap-1 rounded-full bg-tag px-3 py-1 text-xs font-medium text-tag-text transition hover:bg-accent-subtle hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  aria-label={`Remove tag filter ${tag.name}`}
+                >
+                  {tag.name}
+                  <X className="h-3 w-3" aria-hidden />
+                </Link>
+              ))}
+              <Link
+                href="/timeline"
+                className={buttonClassName({
+                  variant: "ghost",
+                  size: "sm",
+                  className: "ml-auto",
+                })}
+              >
+                Clear all
+              </Link>
+            </div>
           </div>
         ) : null}
       </Card>

@@ -134,6 +134,35 @@ export async function getUserTags(): Promise<UserTag[]> {
   return data ?? [];
 }
 
+export async function getRandomMomentId(): Promise<string | null> {
+  const supabase = await createClient();
+  const { count, error: countError } = await supabase
+    .from("moments")
+    .select("id", { count: "exact", head: true });
+
+  if (countError) {
+    throw countError;
+  }
+
+  if (!count) {
+    return null;
+  }
+
+  const offset = Math.floor(Math.random() * count);
+  const { data, error } = await supabase
+    .from("moments")
+    .select("id")
+    .order("occurred_at", { ascending: false })
+    .range(offset, offset)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return data?.id ?? null;
+}
+
 export async function getOnThisDayMoments(
   referenceDate: Date = new Date(),
 ): Promise<TimelineMoment[]> {
