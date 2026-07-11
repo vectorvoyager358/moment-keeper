@@ -55,16 +55,17 @@ export async function OnThisDaySection({ filters }: OnThisDaySectionProps) {
       </div>
 
       {moments.length > 0 ? (
-        <ul className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2">
+        <ul className="-mx-4 flex snap-x snap-mandatory items-stretch gap-4 overflow-x-auto px-4 pb-2">
           {moments.map((moment, index) => (
             <li
               key={moment.id}
-              className="w-[min(100%,18rem)] shrink-0 snap-start animate-fade-in-up sm:w-72"
+              className="h-full w-[min(100%,18rem)] shrink-0 snap-start animate-fade-in-up sm:w-72"
               style={{ animationDelay: `${Math.min(index, 6) * 50}ms` }}
             >
               <MomentCard
                 moment={moment}
                 yearsAgo={yearsAgoLabel(moment.occurred_at, today)}
+                balanceLayout
               />
             </li>
           ))}

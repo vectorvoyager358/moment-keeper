@@ -1,11 +1,12 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useState, useSyncExternalStore, type ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
 
 const STORAGE_PREFIX = "moment-keeper:timeline-panel:";
+const storageListeners = new Map<string, Set<() => void>>();
 
 function readPanelOpen(storageKey: string): boolean {
   try {
@@ -21,6 +22,27 @@ function writePanelOpen(storageKey: string, open: boolean): void {
   } catch {
     // Session storage can be unavailable in restricted browser modes.
   }
+}
+
+function subscribePanel(storageKey: string, onStoreChange: () => void) {
+  let listeners = storageListeners.get(storageKey);
+
+  if (!listeners) {
+    listeners = new Set();
+    storageListeners.set(storageKey, listeners);
+  }
+
+  listeners.add(onStoreChange);
+
+  return () => {
+    listeners?.delete(onStoreChange);
+  };
+}
+
+function notifyPanel(storageKey: string) {
+  storageListeners.get(storageKey)?.forEach((listener) => {
+    listener();
+  });
 }
 
 type TimelineCollapsiblePanelProps = {
@@ -41,9 +63,13 @@ export function TimelineCollapsiblePanel({
   children,
 }: TimelineCollapsiblePanelProps) {
   const storageKey = `${STORAGE_PREFIX}${panelId}`;
-  const [expanded, setExpanded] = useState(() => readPanelOpen(storageKey));
+  const storedExpanded = useSyncExternalStore(
+    (onStoreChange) => subscribePanel(storageKey, onStoreChange),
+    () => readPanelOpen(storageKey),
+    () => false,
+  );
   const [userCollapsed, setUserCollapsed] = useState(false);
-  const isOpen = initialOpen ? !userCollapsed : expanded;
+  const isOpen = initialOpen ? !userCollapsed : storedExpanded;
 
   function toggle() {
     if (initialOpen) {
@@ -51,11 +77,9 @@ export function TimelineCollapsiblePanel({
       return;
     }
 
-    setExpanded((current) => {
-      const next = !current;
-      writePanelOpen(storageKey, next);
-      return next;
-    });
+    const next = !storedExpanded;
+    writePanelOpen(storageKey, next);
+    notifyPanel(storageKey);
   }
 
   return (
