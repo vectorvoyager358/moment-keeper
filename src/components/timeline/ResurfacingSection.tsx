@@ -83,14 +83,14 @@ export async function ResurfacingSection({
       </div>
 
       {moments.length > 0 ? (
-        <ul className="grid gap-4 sm:grid-cols-2">
+        <ul className="grid auto-rows-fr gap-4 sm:grid-cols-2">
           {moments.map((moment, index) => (
             <li
               key={moment.id}
-              className="animate-fade-in-up"
+              className="h-full animate-fade-in-up"
               style={{ animationDelay: `${Math.min(index, 6) * 50}ms` }}
             >
-              <MomentCard moment={moment} />
+              <MomentCard moment={moment} balanceLayout />
             </li>
           ))}
         </ul>

@@ -14,6 +14,8 @@ type MomentCardProps = {
   moment: TimelineMoment;
   yearsAgo?: string;
   highlightQuery?: string;
+  /** Reserve a media-sized header so text-only cards align in grids/carousels. */
+  balanceLayout?: boolean;
 };
 
 function MediaBadge({
@@ -77,13 +79,44 @@ function MediaTile({ mediaType }: { mediaType: TimelineMoment["mediaType"] }) {
   );
 }
 
+const balancedMediaAspect =
+  "relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-accent-subtle to-tag sm:aspect-[3/2]";
+
+function BalancedMediaPlaceholder({
+  mediaType,
+}: {
+  mediaType: TimelineMoment["mediaType"];
+}) {
+  const Icon =
+    mediaType === "video" ? Video : mediaType === "audio" ? Mic : ImageIcon;
+
+  return (
+    <div className={balancedMediaAspect} aria-hidden>
+      {mediaType ? (
+        <div className="flex h-full items-center justify-center text-accent/70">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-surface/80 shadow-sm">
+            <Icon className="h-5 w-5" strokeWidth={1.8} aria-hidden />
+          </span>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function previewBody(body: string): string {
+  const firstLine =
+    body.split(/\r?\n/).find((line) => line.trim().length > 0) ?? body;
+  return firstLine.replace(/\s+/g, " ").trim();
+}
+
 export function MomentCard({
   moment,
   yearsAgo,
   highlightQuery = "",
+  balanceLayout = false,
 }: MomentCardProps) {
   const bodySegments = getHighlightedSegments(
-    truncateBody(moment.body),
+    truncateBody(previewBody(moment.body), 120),
     highlightQuery,
   );
   const imageSrc = moment.thumbnailUrl ?? moment.photoUrl;
@@ -95,13 +128,21 @@ export function MomentCard({
       : null;
 
   return (
-    <article className="group overflow-hidden rounded-[1.5rem] border border-border/80 bg-surface shadow-card transition duration-[var(--duration-normal)] hover:-translate-y-1 hover:border-border-strong hover:shadow-card-hover">
+    <article
+      className={cn(
+        "group overflow-hidden rounded-[1.5rem] border border-border/80 bg-surface shadow-card transition duration-[var(--duration-normal)] hover:-translate-y-1 hover:border-border-strong hover:shadow-card-hover",
+        balanceLayout && "h-full",
+      )}
+    >
       <Link
         href={`/moments/${moment.id}`}
-        className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40"
+        className={cn(
+          "block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40",
+          balanceLayout && "flex h-full flex-col",
+        )}
       >
         {imageSrc ? (
-          <div className="relative aspect-[4/3] overflow-hidden bg-accent-subtle sm:aspect-[3/2]">
+          <div className={cn(balancedMediaAspect, "bg-accent-subtle")}>
             <TimelineMediaImage
               src={imageSrc}
               fallbackSrc={imageFallbackSrc}
@@ -109,11 +150,15 @@ export function MomentCard({
             />
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/20 to-transparent" />
           </div>
+        ) : balanceLayout ? (
+          <BalancedMediaPlaceholder
+            mediaType={moment.hasMedia ? moment.mediaType : null}
+          />
         ) : moment.hasMedia ? (
           <MediaTile mediaType={moment.mediaType} />
         ) : null}
 
-        <div className="p-5 sm:p-6">
+        <div className={cn("p-5 sm:p-6", balanceLayout && "flex-1")}>
           {yearsAgo ? (
             <p className="mb-2 font-display text-sm font-semibold text-accent">
               {yearsAgo}
@@ -143,7 +188,7 @@ export function MomentCard({
             </span>
           </div>
 
-          <p className="mt-3 whitespace-pre-wrap font-display text-[1.05rem] leading-7 text-ink">
+          <p className="mt-3 min-w-0 truncate font-display text-[1.05rem] leading-7 text-ink">
             {bodySegments.map((segment, index) =>
               segment.highlighted ? (
                 <mark
