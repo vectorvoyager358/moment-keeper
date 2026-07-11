@@ -14,6 +14,11 @@ import {
 
 type StorageSupabase = SupabaseClient;
 
+type UploadedAttachment = {
+  id: string;
+  paths: string[];
+};
+
 export async function removeMediaAttachmentsForMoment(
   supabase: StorageSupabase,
   momentId: string,
@@ -89,7 +94,8 @@ export async function uploadMediaForMoment(
   userId: string,
   momentId: string,
   file: File,
-): Promise<void> {
+  displayOrder = 0,
+): Promise<UploadedAttachment> {
   const validationError = validateMediaFile(file);
 
   if (validationError) {
@@ -134,6 +140,7 @@ export async function uploadMediaForMoment(
       moment_id: momentId,
       user_id: userId,
       media_type: mediaType,
+      display_order: displayOrder,
       storage_path: storagePath,
       thumbnail_path: thumbnailPath,
       mime_type: file.type,
@@ -145,14 +152,96 @@ export async function uploadMediaForMoment(
     await supabase.storage.from(MEDIA_BUCKET).remove(uploadedPaths);
     throw insertError;
   }
+
+  return { id: attachmentId, paths: uploadedPaths };
 }
 
-export async function replaceMediaForMoment(
+export async function uploadMediaFilesForMoment(
   supabase: StorageSupabase,
   userId: string,
   momentId: string,
-  file: File,
+  files: File[],
+  startOrder = 0,
+  displayOrders?: number[],
 ): Promise<void> {
-  await removeMediaAttachmentsForMoment(supabase, momentId);
-  await uploadMediaForMoment(supabase, userId, momentId, file);
+  const uploaded: UploadedAttachment[] = [];
+
+  try {
+    for (const [index, file] of files.entries()) {
+      uploaded.push(
+        await uploadMediaForMoment(
+          supabase,
+          userId,
+          momentId,
+          file,
+          displayOrders?.[index] ?? startOrder + index,
+        ),
+      );
+    }
+  } catch (error) {
+    if (uploaded.length > 0) {
+      await supabase.storage
+        .from(MEDIA_BUCKET)
+        .remove(uploaded.flatMap((attachment) => attachment.paths));
+      await supabase
+        .from("media_attachments")
+        .delete()
+        .in(
+          "id",
+          uploaded.map((attachment) => attachment.id),
+        );
+    }
+
+    throw error;
+  }
+}
+
+export async function removeMediaAttachmentsById(
+  supabase: StorageSupabase,
+  momentId: string,
+  attachmentIds: string[],
+): Promise<void> {
+  if (attachmentIds.length === 0) {
+    return;
+  }
+
+  const { data: attachments, error } = await supabase
+    .from("media_attachments")
+    .select("id, storage_path, thumbnail_path")
+    .eq("moment_id", momentId)
+    .in("id", attachmentIds);
+
+  if (error) {
+    throw error;
+  }
+
+  if (!attachments?.length) {
+    return;
+  }
+
+  const paths = attachments.flatMap((attachment) =>
+    attachment.thumbnail_path
+      ? [attachment.storage_path, attachment.thumbnail_path]
+      : [attachment.storage_path],
+  );
+  const { error: storageError } = await supabase.storage
+    .from(MEDIA_BUCKET)
+    .remove(paths);
+
+  if (storageError) {
+    throw storageError;
+  }
+
+  const { error: deleteError } = await supabase
+    .from("media_attachments")
+    .delete()
+    .eq("moment_id", momentId)
+    .in(
+      "id",
+      attachments.map((attachment) => attachment.id),
+    );
+
+  if (deleteError) {
+    throw deleteError;
+  }
 }

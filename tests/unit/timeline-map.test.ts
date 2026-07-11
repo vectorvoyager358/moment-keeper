@@ -18,6 +18,7 @@ describe("mapTimelineRow", () => {
       occurred_at: "2026-07-07T12:00:00.000Z",
       tags: [],
       hasMedia: false,
+      attachmentCount: 0,
       mediaType: null,
       thumbnailPath: null,
       thumbnailUrl: null,
@@ -35,12 +36,14 @@ describe("mapTimelineRow", () => {
           id: "media-1",
           media_type: "photo",
           thumbnail_path: "user/m/a.thumb.jpg",
+          display_order: 0,
         },
       ],
     });
 
     expect(result.tags).toEqual([{ id: "tag-1", name: "work" }]);
     expect(result.hasMedia).toBe(true);
+    expect(result.attachmentCount).toBe(1);
     expect(result.mediaType).toBe("photo");
     expect(result.thumbnailPath).toBe("user/m/a.thumb.jpg");
   });
@@ -56,6 +59,7 @@ describe("mapTimelineRow", () => {
           id: "media-2",
           media_type: "video",
           thumbnail_path: null,
+          display_order: 0,
         },
       },
       null,
@@ -64,5 +68,32 @@ describe("mapTimelineRow", () => {
     expect(result.hasMedia).toBe(true);
     expect(result.mediaType).toBe("video");
     expect(result.thumbnailUrl).toBeNull();
+  });
+
+  it("uses the first photo thumbnail while preserving attachment order", () => {
+    const result = mapTimelineRow({
+      id: "moment-4",
+      body: "Mixed media.",
+      occurred_at: "2026-07-07T15:00:00.000Z",
+      moment_tags: [],
+      media_attachments: [
+        {
+          id: "video-1",
+          media_type: "video",
+          thumbnail_path: null,
+          display_order: 0,
+        },
+        {
+          id: "photo-1",
+          media_type: "photo",
+          thumbnail_path: "user/m/photo.thumb.jpg",
+          display_order: 1,
+        },
+      ],
+    });
+
+    expect(result.mediaType).toBe("video");
+    expect(result.attachmentCount).toBe(2);
+    expect(result.thumbnailPath).toBe("user/m/photo.thumb.jpg");
   });
 });

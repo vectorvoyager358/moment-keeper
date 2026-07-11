@@ -1,6 +1,8 @@
 import type { MediaType } from "@/lib/database.types";
 
 export const MEDIA_BUCKET = "moment-media";
+export const MAX_MEDIA_ATTACHMENTS = 5;
+export const MAX_TOTAL_MEDIA_BYTES = 50 * 1024 * 1024;
 
 export const MEDIA_SIZE_LIMITS: Record<MediaType, number> = {
   photo: 10 * 1024 * 1024,
@@ -71,14 +73,10 @@ export function extensionFromFile(file: Pick<File, "name" | "type">): string {
   return MIME_TO_EXTENSION[file.type] ?? "bin";
 }
 
-export function getMediaFileFromFormData(formData: FormData): File | null {
-  const entry = formData.get("media");
-
-  if (!(entry instanceof File) || entry.size === 0) {
-    return null;
-  }
-
-  return entry;
+export function getMediaFilesFromFormData(formData: FormData): File[] {
+  return formData
+    .getAll("media")
+    .filter((entry): entry is File => entry instanceof File && entry.size > 0);
 }
 
 export function validateMediaFile(file: File): string | null {
@@ -98,6 +96,37 @@ export function validateMediaFile(file: File): string | null {
   return null;
 }
 
-export function shouldRemoveMedia(formData: FormData): boolean {
-  return formData.get("remove_media") === "on";
+export function validateMediaFiles(
+  files: File[],
+  existingCount = 0,
+): string | null {
+  if (existingCount + files.length > MAX_MEDIA_ATTACHMENTS) {
+    return `Keep up to ${MAX_MEDIA_ATTACHMENTS} media attachments per moment.`;
+  }
+
+  for (const file of files) {
+    const error = validateMediaFile(file);
+    if (error) {
+      return error;
+    }
+  }
+
+  const totalBytes = files.reduce((total, file) => total + file.size, 0);
+  if (totalBytes > MAX_TOTAL_MEDIA_BYTES) {
+    return "Combined media upload must be 50 MB or less.";
+  }
+
+  return null;
+}
+
+export function getRemovedMediaIds(formData: FormData): string[] {
+  return [
+    ...new Set(
+      formData
+        .getAll("remove_media_id")
+        .filter((entry): entry is string => typeof entry === "string")
+        .map((entry) => entry.trim())
+        .filter(Boolean),
+    ),
+  ];
 }

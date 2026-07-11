@@ -41,7 +41,7 @@ export function CaptureForm({ userId }: CaptureFormProps) {
   );
   const [tags, setTags] = useState("");
   const [themes, setThemes] = useState<MemoryTheme[]>([]);
-  const [preparedMediaFile, setPreparedMediaFile] = useState<File | null>(null);
+  const [preparedMediaFiles, setPreparedMediaFiles] = useState<File[]>([]);
   const [draftLoaded, setDraftLoaded] = useState(false);
   const [draftSaved, setDraftSaved] = useState(false);
   const [mediaValid, setMediaValid] = useState(true);
@@ -99,9 +99,8 @@ export function CaptureForm({ userId }: CaptureFormProps) {
     const form = event.currentTarget;
     const formData = new FormData(form);
 
-    if (preparedMediaFile) {
-      formData.set("media", preparedMediaFile);
-    }
+    formData.delete("media");
+    preparedMediaFiles.forEach((file) => formData.append("media", file));
 
     setError(null);
     setPending(true);
@@ -227,7 +226,7 @@ export function CaptureForm({ userId }: CaptureFormProps) {
 
       <MediaFileInput
         onValidityChange={setMediaValid}
-        onPreparedFileChange={setPreparedMediaFile}
+        onPreparedFilesChange={setPreparedMediaFiles}
       />
 
       {error ? <Alert variant="error">{error}</Alert> : null}

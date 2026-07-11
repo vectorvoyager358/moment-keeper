@@ -25,16 +25,16 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/components/capture/MediaFileInput", () => ({
   MediaFileInput: ({
-    onPreparedFileChange,
+    onPreparedFilesChange,
   }: {
-    onPreparedFileChange: (file: File | null) => void;
+    onPreparedFilesChange: (files: File[]) => void;
   }) => (
     <button
       type="button"
       onClick={() =>
-        onPreparedFileChange(
+        onPreparedFilesChange([
           new File(["photo"], "camera.jpg", { type: "image/jpeg" }),
-        )
+        ])
       }
     >
       Attach generated photo

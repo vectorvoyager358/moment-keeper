@@ -2,9 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import {
   extensionFromFile,
+  getMediaFilesFromFormData,
   getMediaTypeFromMime,
+  MAX_MEDIA_ATTACHMENTS,
   MEDIA_SIZE_LIMITS,
   validateMediaFile,
+  validateMediaFiles,
 } from "@/lib/moments/media";
 
 function makeFile(name: string, type: string, size: number): File {
@@ -50,6 +53,38 @@ describe("validateMediaFile", () => {
   it("accepts valid files", () => {
     const file = makeFile("moment.jpg", "image/jpeg", 1024);
     expect(validateMediaFile(file)).toBeNull();
+  });
+});
+
+describe("multiple media validation", () => {
+  it("reads repeated media fields", () => {
+    const formData = new FormData();
+    const files = [
+      makeFile("one.jpg", "image/jpeg", 10),
+      makeFile("two.jpg", "image/jpeg", 10),
+    ];
+    files.forEach((file) => formData.append("media", file));
+
+    expect(getMediaFilesFromFormData(formData)).toEqual(files);
+  });
+
+  it("enforces the attachment count across existing and new media", () => {
+    const file = makeFile("new.jpg", "image/jpeg", 10);
+
+    expect(validateMediaFiles([file], MAX_MEDIA_ATTACHMENTS)).toBe(
+      "Keep up to 5 media attachments per moment.",
+    );
+  });
+
+  it("rejects uploads over 50 MB combined", () => {
+    const files = [
+      { name: "one.mp4", type: "video/mp4", size: 30 * 1024 * 1024 },
+      { name: "two.mp4", type: "video/mp4", size: 25 * 1024 * 1024 },
+    ] as File[];
+
+    expect(validateMediaFiles(files)).toBe(
+      "Combined media upload must be 50 MB or less.",
+    );
   });
 });
 

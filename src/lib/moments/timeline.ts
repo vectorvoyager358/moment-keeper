@@ -6,6 +6,7 @@ export type TimelineMoment = {
   occurred_at: string;
   tags: { id: string; name: string }[];
   hasMedia: boolean;
+  attachmentCount: number;
   mediaType: "photo" | "video" | "audio" | null;
   thumbnailPath: string | null;
   thumbnailUrl: string | null;
@@ -28,11 +29,13 @@ export type TimelineQueryRow = {
         id: string;
         media_type: "photo" | "video" | "audio";
         thumbnail_path: string | null;
+        display_order: number;
       }
     | {
         id: string;
         media_type: "photo" | "video" | "audio";
         thumbnail_path: string | null;
+        display_order: number;
       }[]
     | null;
 };
@@ -49,8 +52,14 @@ export function mapTimelineRow(
     return Array.isArray(link.tags) ? link.tags : [link.tags];
   });
 
-  const attachments = normalizeRelationItems(moment.media_attachments);
+  const attachments = normalizeRelationItems(moment.media_attachments).sort(
+    (a, b) => a.display_order - b.display_order,
+  );
   const attachment = attachments[0] ?? null;
+  const primaryVisual =
+    attachments.find(
+      (item) => item.media_type === "photo" && item.thumbnail_path,
+    ) ?? attachment;
 
   return {
     id: moment.id,
@@ -58,8 +67,9 @@ export function mapTimelineRow(
     occurred_at: moment.occurred_at,
     tags,
     hasMedia: Boolean(attachment),
+    attachmentCount: attachments.length,
     mediaType: attachment?.media_type ?? null,
-    thumbnailPath: attachment?.thumbnail_path ?? null,
+    thumbnailPath: primaryVisual?.thumbnail_path ?? null,
     thumbnailUrl,
   };
 }

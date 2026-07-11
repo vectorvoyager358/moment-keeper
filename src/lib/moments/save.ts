@@ -3,14 +3,14 @@ import { revalidatePath } from "next/cache";
 import { toUserErrorMessage } from "@/lib/errors";
 import { validateOccurredAt } from "@/lib/moments/dates";
 import {
-  getMediaFileFromFormData,
-  shouldRemoveMedia,
-  validateMediaFile,
+  getMediaFilesFromFormData,
+  getRemovedMediaIds,
+  MAX_MEDIA_ATTACHMENTS,
+  validateMediaFiles,
 } from "@/lib/moments/media";
 import {
-  removeMediaAttachmentsForMoment,
-  replaceMediaForMoment,
-  uploadMediaForMoment,
+  removeMediaAttachmentsById,
+  uploadMediaFilesForMoment,
 } from "@/lib/moments/media-storage";
 import {
   findOrCreateTagIds,
@@ -33,7 +33,7 @@ export async function saveNewMoment(
   const occurredAtRaw = String(formData.get("occurred_at") ?? "");
   const tagsRaw = String(formData.get("tags") ?? "");
   const themeInput = parseMemoryThemeFormData(formData);
-  const mediaFile = getMediaFileFromFormData(formData);
+  const mediaFiles = getMediaFilesFromFormData(formData);
 
   if (themeInput.error) {
     return { ok: false, error: themeInput.error, status: 400 };
@@ -49,11 +49,9 @@ export async function saveNewMoment(
     return { ok: false, error: occurredAtError, status: 400 };
   }
 
-  if (mediaFile) {
-    const mediaError = validateMediaFile(mediaFile);
-    if (mediaError) {
-      return { ok: false, error: mediaError, status: 400 };
-    }
+  const mediaError = validateMediaFiles(mediaFiles);
+  if (mediaError) {
+    return { ok: false, error: mediaError, status: 400 };
   }
 
   const supabase = await createClient();
@@ -95,8 +93,8 @@ export async function saveNewMoment(
     const tagIds = await findOrCreateTagIds(supabase, user.id, tagNames);
     await linkMomentTags(supabase, moment.id, tagIds);
 
-    if (mediaFile) {
-      await uploadMediaForMoment(supabase, user.id, moment.id, mediaFile);
+    if (mediaFiles.length > 0) {
+      await uploadMediaFilesForMoment(supabase, user.id, moment.id, mediaFiles);
     }
   } catch (error) {
     await supabase.from("moments").delete().eq("id", moment.id);
@@ -120,12 +118,11 @@ export async function saveUpdatedMoment(
   const occurredAtRaw = String(formData.get("occurred_at") ?? "");
   const tagsRaw = String(formData.get("tags") ?? "");
   const themeInput = parseMemoryThemeFormData(formData);
-  const mediaFile = getMediaFileFromFormData(formData);
+  const mediaFiles = getMediaFilesFromFormData(formData);
+  const removedMediaIds = getRemovedMediaIds(formData);
   if (themeInput.error) {
     return { ok: false, error: themeInput.error, status: 400 };
   }
-
-  const removeMedia = shouldRemoveMedia(formData);
 
   const bodyError = validateMomentBody(body);
   if (bodyError) {
@@ -135,13 +132,6 @@ export async function saveUpdatedMoment(
   const occurredAtError = validateOccurredAt(occurredAtRaw);
   if (occurredAtError) {
     return { ok: false, error: occurredAtError, status: 400 };
-  }
-
-  if (mediaFile) {
-    const mediaError = validateMediaFile(mediaFile);
-    if (mediaError) {
-      return { ok: false, error: mediaError, status: 400 };
-    }
   }
 
   const supabase = await createClient();
@@ -155,6 +145,36 @@ export async function saveUpdatedMoment(
       error: "You must be logged in to edit a moment.",
       status: 401,
     };
+  }
+
+  const { data: existingMedia, error: existingMediaError } = await supabase
+    .from("media_attachments")
+    .select("id, display_order")
+    .eq("moment_id", momentId)
+    .order("display_order", { ascending: true });
+
+  if (existingMediaError) {
+    return {
+      ok: false,
+      error: toUserErrorMessage(
+        existingMediaError,
+        "Could not load this moment's media.",
+      ),
+      status: 500,
+    };
+  }
+
+  const existingIds = new Set(
+    (existingMedia ?? []).map((attachment) => attachment.id),
+  );
+  const validRemovedIds = removedMediaIds.filter((id) => existingIds.has(id));
+  const remainingMedia = (existingMedia ?? []).filter(
+    (attachment) => !validRemovedIds.includes(attachment.id),
+  );
+  const mediaError = validateMediaFiles(mediaFiles, remainingMedia.length);
+
+  if (mediaError) {
+    return { ok: false, error: mediaError, status: 400 };
   }
 
   const occurredAt = new Date(occurredAtRaw).toISOString();
@@ -184,10 +204,27 @@ export async function saveUpdatedMoment(
       parseTagInput(tagsRaw),
     );
 
-    if (removeMedia) {
-      await removeMediaAttachmentsForMoment(supabase, momentId);
-    } else if (mediaFile) {
-      await replaceMediaForMoment(supabase, user.id, momentId, mediaFile);
+    if (validRemovedIds.length > 0) {
+      await removeMediaAttachmentsById(supabase, momentId, validRemovedIds);
+    }
+
+    if (mediaFiles.length > 0) {
+      const occupiedOrders = new Set(
+        remainingMedia.map((attachment) => attachment.display_order),
+      );
+      const availableOrders = Array.from(
+        { length: MAX_MEDIA_ATTACHMENTS },
+        (_, index) => index,
+      ).filter((order) => !occupiedOrders.has(order));
+
+      await uploadMediaFilesForMoment(
+        supabase,
+        user.id,
+        momentId,
+        mediaFiles,
+        0,
+        availableOrders,
+      );
     }
   } catch (error) {
     return {

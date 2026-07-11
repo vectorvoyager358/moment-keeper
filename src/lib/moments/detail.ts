@@ -7,6 +7,7 @@ export type MomentMedia = {
   mime_type: string;
   original_filename: string | null;
   signedUrl: string;
+  display_order: number;
 };
 
 export type MomentDetail = {
@@ -15,7 +16,7 @@ export type MomentDetail = {
   occurred_at: string;
   themes: MemoryTheme[];
   tags: { id: string; name: string }[];
-  media: MomentMedia | null;
+  media: MomentMedia[];
 };
 
 type MomentDetailQueryRow = {
@@ -38,6 +39,7 @@ type MomentDetailQueryRow = {
         mime_type: string;
         original_filename: string | null;
         storage_path: string;
+        display_order: number;
       }
     | {
         id: string;
@@ -45,6 +47,7 @@ type MomentDetailQueryRow = {
         mime_type: string;
         original_filename: string | null;
         storage_path: string;
+        display_order: number;
       }[]
     | null;
 };
@@ -63,10 +66,11 @@ export function extractTags(
 
 export function mapMomentDetailRow(
   moment: MomentDetailQueryRow,
-  signedUrl: string | null,
+  signedUrlByPath: Map<string, string> = new Map(),
 ): MomentDetail {
-  const attachment =
-    normalizeRelationItems(moment.media_attachments)[0] ?? null;
+  const attachments = normalizeRelationItems(moment.media_attachments).sort(
+    (a, b) => a.display_order - b.display_order,
+  );
 
   return {
     id: moment.id,
@@ -74,16 +78,21 @@ export function mapMomentDetailRow(
     occurred_at: moment.occurred_at,
     themes: moment.themes ?? [],
     tags: extractTags(moment.moment_tags),
-    media:
-      attachment && signedUrl
-        ? {
-            id: attachment.id,
-            media_type: attachment.media_type,
-            mime_type: attachment.mime_type,
-            original_filename: attachment.original_filename,
-            signedUrl,
-          }
-        : null,
+    media: attachments.flatMap((attachment) => {
+      const signedUrl = signedUrlByPath.get(attachment.storage_path);
+      return signedUrl
+        ? [
+            {
+              id: attachment.id,
+              media_type: attachment.media_type,
+              mime_type: attachment.mime_type,
+              original_filename: attachment.original_filename,
+              signedUrl,
+              display_order: attachment.display_order,
+            },
+          ]
+        : [];
+    }),
   };
 }
 

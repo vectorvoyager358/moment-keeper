@@ -11,7 +11,7 @@ User stories and implementation tickets for Phase 1. Organized by screen/area.
 ### Capture
 
 - As a user, I want to quickly write down what happened in a moment, so that I can preserve it before I forget.
-- As a user, I want to attach an optional photo, video, or audio clip to a moment, so that I can capture richer memories when I have media.
+- As a user, I want to attach up to five photos, videos, or audio clips to a moment, so that I can preserve a richer memory in one entry.
 - As a user, I want to set or edit when a moment occurred, so that I can backdate moments I log later.
 - As a user, I want to add custom tags while creating a moment, so that I can organize moments my own way.
 - As a user, I want to save a moment in under 30 seconds, so that capturing never feels like a chore.
@@ -56,13 +56,13 @@ User stories and implementation tickets for Phase 1. Organized by screen/area.
 
 ### Capture
 
-| ID     | Title                    | Description                                                              | Acceptance criteria                                                                  |
-| ------ | ------------------------ | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
-| CAP-01 | Capture form UI          | Text input (required), date picker (default now), tag input, save button | Form validates required text; date defaults to now; mobile-friendly layout           |
-| CAP-02 | Create moment API        | Persist moment with `body`, `occurred_at`, `user_id`                     | Moment saved to DB; returns created record                                           |
-| CAP-03 | Tag assignment on create | Create new tags or link existing tags when saving                        | Tags created if new; duplicates reuse existing tag (case-insensitive)                |
-| CAP-04 | Media upload             | Optional single file: photo, video, or audio                             | File uploaded to private storage; `MediaAttachment` row created; type/size validated |
-| CAP-05 | Fast-save UX             | Minimal steps, clear success feedback, redirect to timeline or detail    | Happy path completable in <30s; loading/error states handled                         |
+| ID     | Title                    | Description                                                              | Acceptance criteria                                                                   |
+| ------ | ------------------------ | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| CAP-01 | Capture form UI          | Text input (required), date picker (default now), tag input, save button | Form validates required text; date defaults to now; mobile-friendly layout            |
+| CAP-02 | Create moment API        | Persist moment with `body`, `occurred_at`, `user_id`                     | Moment saved to DB; returns created record                                            |
+| CAP-03 | Tag assignment on create | Create new tags or link existing tags when saving                        | Tags created if new; duplicates reuse existing tag (case-insensitive)                 |
+| CAP-04 | Media upload             | Up to five ordered photos, videos, or audio clips                        | Files upload to private storage; count, type, per-file, and combined limits validated |
+| CAP-05 | Fast-save UX             | Minimal steps, clear success feedback, redirect to timeline or detail    | Happy path completable in <30s; loading/error states handled                          |
 
 ### Timeline
 

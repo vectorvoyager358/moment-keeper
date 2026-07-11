@@ -14,9 +14,12 @@ type MomentDetailViewProps = {
 };
 
 export function MomentDetailView({ moment, onEdit }: MomentDetailViewProps) {
-  const visualMedia =
-    moment.media?.media_type === "photo" ||
-    moment.media?.media_type === "video";
+  const visualMedia = moment.media.filter(
+    (media) => media.media_type === "photo" || media.media_type === "video",
+  );
+  const audioMedia = moment.media.filter(
+    (media) => media.media_type === "audio",
+  );
 
   return (
     <article className="space-y-6">
@@ -30,16 +33,26 @@ export function MomentDetailView({ moment, onEdit }: MomentDetailViewProps) {
         </Button>
       </div>
 
-      {visualMedia && moment.media ? (
-        <MomentMediaDisplay media={moment.media} />
+      {visualMedia.length > 0 ? (
+        <div
+          className={visualMedia.length > 1 ? "grid gap-3 sm:grid-cols-2" : ""}
+        >
+          {visualMedia.map((media) => (
+            <MomentMediaDisplay key={media.id} media={media} />
+          ))}
+        </div>
       ) : null}
 
       <p className="whitespace-pre-wrap font-display text-xl leading-8 text-ink">
         {moment.body}
       </p>
 
-      {moment.media?.media_type === "audio" ? (
-        <MomentMediaDisplay media={moment.media} />
+      {audioMedia.length > 0 ? (
+        <div className="space-y-3">
+          {audioMedia.map((media) => (
+            <MomentMediaDisplay key={media.id} media={media} />
+          ))}
+        </div>
       ) : null}
 
       {moment.themes.length > 0 ? (
