@@ -26,6 +26,10 @@ export type SaveMomentResult =
   | { ok: true; redirectTo: string }
   | { ok: false; error: string; status?: number };
 
+function parseFavoriteFormData(formData: FormData): boolean {
+  return formData.get("favorite") === "1";
+}
+
 export async function saveNewMoment(
   formData: FormData,
 ): Promise<SaveMomentResult> {
@@ -76,6 +80,7 @@ export async function saveNewMoment(
       body: body.trim(),
       themes: themeInput.themes,
       occurred_at: occurredAt,
+      is_favorite: parseFavoriteFormData(formData),
     })
     .select("id")
     .single();
@@ -185,6 +190,7 @@ export async function saveUpdatedMoment(
       body: body.trim(),
       themes: themeInput.themes,
       occurred_at: occurredAt,
+      is_favorite: parseFavoriteFormData(formData),
     })
     .eq("id", momentId);
 

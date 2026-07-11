@@ -14,6 +14,7 @@ describe("MomentCard", () => {
           id: "moment-1",
           body: "A video memory",
           occurred_at: "2026-07-09T12:00:00.000Z",
+          isFavorite: true,
           tags: [{ id: "tag-1", name: "travel" }],
           hasMedia: true,
           attachmentCount: 1,
@@ -38,6 +39,7 @@ describe("MomentCard", () => {
           id: "moment-2",
           body: "A proud day",
           occurred_at: "2026-07-09T12:00:00.000Z",
+          isFavorite: false,
           tags: [],
           hasMedia: false,
           attachmentCount: 0,
@@ -60,6 +62,7 @@ describe("MomentDetailView", () => {
           id: "moment-1",
           body: "A photo memory",
           occurred_at: "2026-07-09T12:00:00.000Z",
+          is_favorite: true,
           themes: ["joy"],
           tags: [{ id: "tag-1", name: "family" }],
           media: [

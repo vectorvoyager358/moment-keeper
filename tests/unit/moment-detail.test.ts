@@ -9,6 +9,7 @@ describe("mapMomentDetailRow", () => {
         id: "moment-1",
         body: "A proud moment.",
         occurred_at: "2026-07-07T12:00:00.000Z",
+        is_favorite: false,
         themes: ["achievement"],
         moment_tags: [{ tags: { id: "tag-1", name: "work" } }],
         media_attachments: null,
@@ -27,6 +28,7 @@ describe("mapMomentDetailRow", () => {
         id: "moment-2",
         body: "Photo moment.",
         occurred_at: "2026-07-07T12:00:00.000Z",
+        is_favorite: true,
         themes: [],
         moment_tags: null,
         media_attachments: [
@@ -53,6 +55,7 @@ describe("mapMomentDetailRow", () => {
         display_order: 0,
       },
     ]);
+    expect(result.is_favorite).toBe(true);
   });
 
   it("handles Supabase one-to-one media attachment objects", () => {
@@ -61,6 +64,7 @@ describe("mapMomentDetailRow", () => {
         id: "moment-3",
         body: "Video moment.",
         occurred_at: "2026-07-07T12:00:00.000Z",
+        is_favorite: false,
         themes: [],
         moment_tags: null,
         media_attachments: {
@@ -95,6 +99,7 @@ describe("mapMomentDetailRow", () => {
         id: "moment-4",
         body: "Mixed moment.",
         occurred_at: "2026-07-07T12:00:00.000Z",
+        is_favorite: false,
         themes: [],
         moment_tags: null,
         media_attachments: [

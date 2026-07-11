@@ -61,7 +61,7 @@ describe("getTimelineMoments keyword search", () => {
     });
 
     const result = await getTimelineMoments(
-      { keyword: "walk", tagIds: [] },
+      { keyword: "walk", tagIds: [], favoriteOnly: true },
       { limit: 20, offset: 0 },
     );
 
@@ -70,6 +70,7 @@ describe("getTimelineMoments keyword search", () => {
       p_tag_ids: null,
       p_limit: 21,
       p_offset: 0,
+      p_favorite_only: true,
     });
     expect(result.items.map((item) => item.id)).toEqual([
       "moment-2",
@@ -92,6 +93,7 @@ describe("getTimelineMoments keyword search", () => {
     const result = await getTimelineMoments({
       keyword: "park",
       tagIds: ["tag-1"],
+      favoriteOnly: false,
     });
 
     expect(rpc).toHaveBeenCalledWith("search_moment_ids", {
@@ -99,6 +101,7 @@ describe("getTimelineMoments keyword search", () => {
       p_tag_ids: ["tag-1"],
       p_limit: 21,
       p_offset: 0,
+      p_favorite_only: false,
     });
     expect(result).toEqual({ items: [], hasMore: false });
   });

@@ -24,6 +24,7 @@ type TimelinePageProps = {
   searchParams: Promise<{
     q?: string | string[];
     tag?: string | string[];
+    favorite?: string | string[];
     saved?: string | string[];
     theme?: string | string[];
     media?: string | string[];
@@ -107,7 +108,7 @@ export default async function TimelinePage({
         </div>
 
         <Suspense
-          key={`${filters.keyword}:${filters.tagIds.join(",")}`}
+          key={`${filters.keyword}:${filters.tagIds.join(",")}:${filters.favoriteOnly}`}
           fallback={
             <>
               <p className="sr-only">Loading moments</p>

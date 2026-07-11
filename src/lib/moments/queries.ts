@@ -47,6 +47,7 @@ const MOMENT_SELECT = `
   id,
   body,
   occurred_at,
+  is_favorite,
   themes,
   moment_tags (
     tags (
@@ -69,6 +70,7 @@ const TIMELINE_SELECT = `
   id,
   body,
   occurred_at,
+  is_favorite,
   moment_tags (
     tags (
       id,
@@ -87,6 +89,7 @@ const MEDIA_GALLERY_SELECT = `
   id,
   body,
   occurred_at,
+  is_favorite,
   moment_tags (
     tags (
       id,
@@ -366,7 +369,11 @@ export async function getResurfacedMoments(
 }
 
 export async function getTimelineMoments(
-  filters: TimelineSearchFilters = { keyword: "", tagIds: [] },
+  filters: TimelineSearchFilters = {
+    keyword: "",
+    tagIds: [],
+    favoriteOnly: false,
+  },
   pagination: TimelinePagination = {},
 ): Promise<TimelinePageResult<TimelineMoment>> {
   const limit = pagination.limit ?? TIMELINE_PAGE_SIZE;
@@ -417,6 +424,7 @@ async function searchTimelineMoments(
         p_tag_ids: filters.tagIds.length > 0 ? filters.tagIds : null,
         p_limit: fetchSize,
         p_offset: offset,
+        p_favorite_only: filters.favoriteOnly,
       },
     );
 
@@ -472,6 +480,10 @@ async function searchTimelineMoments(
 
   if (momentIds) {
     query = query.in("id", momentIds);
+  }
+
+  if (filters.favoriteOnly) {
+    query = query.eq("is_favorite", true);
   }
 
   const { data, error } = await query

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { Heart } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
 import { MediaFileInput } from "@/components/capture/MediaFileInput";
@@ -14,6 +15,7 @@ import type { MemoryTheme } from "@/lib/database.types";
 import { toDatetimeLocalValueFromIso } from "@/lib/moments/dates";
 import type { MomentDetail } from "@/lib/moments/queries";
 import { formatTagInput } from "@/lib/moments/tags";
+import { cn } from "@/lib/cn";
 import {
   postFormDataWithProgress,
   UploadRequestError,
@@ -27,6 +29,7 @@ type EditMomentFormProps = {
 export function EditMomentForm({ moment, onCancel }: EditMomentFormProps) {
   const router = useRouter();
   const [themes, setThemes] = useState<MemoryTheme[]>(moment.themes);
+  const [isFavorite, setIsFavorite] = useState(moment.is_favorite);
   const [preparedMediaFiles, setPreparedMediaFiles] = useState<File[]>([]);
   const [mediaValid, setMediaValid] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -123,6 +126,32 @@ export function EditMomentForm({ moment, onCancel }: EditMomentFormProps) {
         />
         <FieldHint>Separate tags with commas.</FieldHint>
       </div>
+
+      <label
+        className={cn(
+          "inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition",
+          isFavorite
+            ? "border-accent bg-accent text-white"
+            : "border-border-strong bg-surface text-muted hover:border-accent/50 hover:text-accent",
+          pending && "pointer-events-none opacity-60",
+        )}
+      >
+        <input
+          type="checkbox"
+          name="favorite"
+          value="1"
+          checked={isFavorite}
+          disabled={pending}
+          aria-label="Keep close"
+          onChange={(event) => setIsFavorite(event.target.checked)}
+          className="sr-only"
+        />
+        <Heart
+          className={cn("h-3.5 w-3.5", isFavorite && "fill-current")}
+          aria-hidden
+        />
+        {isFavorite ? null : <span aria-hidden="true">Keep close</span>}
+      </label>
 
       <MediaFileInput
         existingMedia={moment.media}

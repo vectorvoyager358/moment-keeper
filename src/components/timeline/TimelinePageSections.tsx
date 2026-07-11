@@ -48,7 +48,7 @@ export async function TimelineResults({
 
   return (
     <TimelineFeed
-      key={`${filters.keyword}:${filters.tagIds.join(",")}`}
+      key={`${filters.keyword}:${filters.tagIds.join(",")}:${filters.favoriteOnly}`}
       initialMoments={timelinePage.items}
       initialHasMore={timelinePage.hasMore}
       filters={filters}

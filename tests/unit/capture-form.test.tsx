@@ -67,6 +67,7 @@ describe("CaptureForm drafts", () => {
       occurredAt: "2026-07-08T09:15",
       tags: "family",
       themes: ["joy"],
+      isFavorite: true,
     });
 
     render(<CaptureForm userId="user-1" />);
@@ -75,6 +76,7 @@ describe("CaptureForm drafts", () => {
     expect(screen.getByDisplayValue("2026-07-08T09:15")).toBeVisible();
     expect(screen.getByDisplayValue("family")).toBeVisible();
     expect(screen.getByRole("checkbox", { name: "Joy" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Keep close" })).toBeChecked();
   });
 
   it("adds an optional reflection prompt to the entry", () => {
@@ -131,5 +133,22 @@ describe("CaptureForm drafts", () => {
     expect(formData.get("media")).toEqual(
       expect.objectContaining({ name: "camera.jpg", type: "image/jpeg" }),
     );
+  });
+
+  it("submits the favorite flag when marked during capture", async () => {
+    postFormDataWithProgress.mockResolvedValue({ redirectTo: "/timeline" });
+    render(<CaptureForm userId="user-1" />);
+
+    fireEvent.change(screen.getByLabelText("What happened?"), {
+      target: { value: "A special memory" },
+    });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Keep close" }));
+    fireEvent.submit(screen.getByRole("button", { name: "Keep this moment" }));
+
+    await waitFor(() => {
+      expect(postFormDataWithProgress).toHaveBeenCalled();
+    });
+    const formData = postFormDataWithProgress.mock.calls[0][1] as FormData;
+    expect(formData.get("favorite")).toBe("1");
   });
 });

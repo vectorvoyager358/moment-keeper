@@ -23,6 +23,28 @@ export async function updateMoment(
   redirect(result.redirectTo);
 }
 
+export async function setMomentFavorite(
+  momentId: string,
+  isFavorite: boolean,
+): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("moments")
+    .update({ is_favorite: isFavorite })
+    .eq("id", momentId);
+
+  if (error) {
+    return {
+      error: toUserErrorMessage(error, "Could not update this favorite."),
+    };
+  }
+
+  revalidatePath("/timeline");
+  revalidatePath("/browse");
+  revalidatePath(`/moments/${momentId}`);
+  return { error: null };
+}
+
 export async function deleteMoment(momentId: string): Promise<void> {
   const supabase = await createClient();
 

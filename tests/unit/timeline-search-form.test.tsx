@@ -12,6 +12,7 @@ describe("TimelineSearchForm active filters", () => {
         filters={{
           keyword: "presentation",
           tagIds: ["tag-1", "tag-2"],
+          favoriteOnly: true,
         }}
         tags={[
           { id: "tag-1", name: "work" },
@@ -24,9 +25,12 @@ describe("TimelineSearchForm active filters", () => {
       screen.getByRole("link", {
         name: "Remove keyword filter presentation",
       }),
-    ).toHaveAttribute("href", "/timeline?tag=tag-1&tag=tag-2");
+    ).toHaveAttribute("href", "/timeline?tag=tag-1&tag=tag-2&favorite=1");
     expect(
       screen.getByRole("link", { name: "Remove tag filter work" }),
-    ).toHaveAttribute("href", "/timeline?q=presentation&tag=tag-2");
+    ).toHaveAttribute("href", "/timeline?q=presentation&tag=tag-2&favorite=1");
+    expect(
+      screen.getByRole("link", { name: "Remove favorites filter" }),
+    ).toHaveAttribute("href", "/timeline?q=presentation&tag=tag-1&tag=tag-2");
   });
 });

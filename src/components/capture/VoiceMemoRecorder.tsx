@@ -165,7 +165,7 @@ export function VoiceMemoRecorder({
 
   return (
     <div className="rounded-xl border border-border bg-accent-subtle/30 p-4">
-      <p className="text-sm font-medium text-ink">Or say it out loud</p>
+      <p className="text-sm font-medium text-ink">Or record a voice memo.</p>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
         {!isRecording ? (

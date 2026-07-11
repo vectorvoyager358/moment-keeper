@@ -7,7 +7,7 @@ Source of truth for entities, fields, and relationships. Update this file whenev
 ```
 User 1──* Moment *──* Tag (via MomentTag)
               │
-              └──0..1 MediaAttachment
+              └──0..5 MediaAttachment
 ```
 
 All tables are scoped to a single `user_id`. No sharing or multi-user access in MVP.
@@ -42,6 +42,7 @@ A single captured life moment. Text is required; media is optional.
 | `user_id`     | UUID             | FK → User; indexed                                                |
 | `body`        | text             | Required; the moment description (min 1 char)                     |
 | `themes`      | `memory_theme[]` | Up to three system themes; empty for unclassified moments         |
+| `is_favorite` | boolean          | User-controlled favorite marker; defaults to `false`              |
 | `occurred_at` | timestamp        | When the moment happened; user-editable; defaults to `created_at` |
 | `created_at`  | timestamp        | When the record was saved                                         |
 | `updated_at`  | timestamp        | Last edit                                                         |
@@ -51,6 +52,7 @@ A single captured life moment. Text is required; media is optional.
 - `(user_id, occurred_at DESC)` — timeline feed
 - Full-text index on `body` — keyword search (e.g. Postgres `tsvector`)
 - GIN index on `themes` — structured memory resurfacing
+- Partial `(user_id, occurred_at DESC)` index for favorite moments
 
 **Validation:**
 
