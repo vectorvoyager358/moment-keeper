@@ -541,3 +541,56 @@ export async function getMomentById(id: string): Promise<MomentDetail | null> {
 
   return mapMomentDetailRow(row, signedUrlByPath);
 }
+
+export async function getUserMomentCount(): Promise<number> {
+  const supabase = await createClient();
+  const { count, error } = await supabase
+    .from("moments")
+    .select("id", { count: "exact", head: true });
+
+  if (error) {
+    throw error;
+  }
+
+  return count ?? 0;
+}
+
+export async function getAdjacentMomentIds(momentId: string): Promise<{
+  earlierId: string | null;
+  laterId: string | null;
+}> {
+  const supabase = await createClient();
+
+  const { data: current, error } = await supabase
+    .from("moments")
+    .select("occurred_at")
+    .eq("id", momentId)
+    .maybeSingle();
+
+  if (error || !current) {
+    if (error) {
+      throw error;
+    }
+    return { earlierId: null, laterId: null };
+  }
+
+  const [{ data: earlier }, { data: later }] = await Promise.all([
+    supabase
+      .from("moments")
+      .select("id")
+      .lt("occurred_at", current.occurred_at)
+      .order("occurred_at", { ascending: false })
+      .limit(1),
+    supabase
+      .from("moments")
+      .select("id")
+      .gt("occurred_at", current.occurred_at)
+      .order("occurred_at", { ascending: true })
+      .limit(1),
+  ]);
+
+  return {
+    earlierId: earlier?.[0]?.id ?? null,
+    laterId: later?.[0]?.id ?? null,
+  };
+}

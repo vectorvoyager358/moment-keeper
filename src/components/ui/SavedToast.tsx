@@ -6,9 +6,10 @@ import { useEffect, useState } from "react";
 
 type SavedToastProps = {
   initialVisible: boolean;
+  hint?: string | null;
 };
 
-export function SavedToast({ initialVisible }: SavedToastProps) {
+export function SavedToast({ initialVisible, hint = null }: SavedToastProps) {
   const router = useRouter();
   const [visible, setVisible] = useState(initialVisible);
 
@@ -44,9 +45,12 @@ export function SavedToast({ initialVisible }: SavedToastProps) {
       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-success/15">
         <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden />
       </span>
-      <p className="text-sm font-medium">
-        Kept — it&apos;s now part of your journal.
-      </p>
+      <div className="min-w-0">
+        <p className="text-sm font-medium">
+          Kept — it&apos;s now part of your journal.
+        </p>
+        {hint ? <p className="mt-1 text-sm text-success/90">{hint}</p> : null}
+      </div>
       <button
         type="button"
         onClick={() => setVisible(false)}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { MomentCard } from "@/components/timeline/MomentCard";
 import { buttonClassName } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Input, Label, Select } from "@/components/ui/Input";
 import { cn } from "@/lib/cn";
 import { toUserErrorMessage } from "@/lib/errors";
 import {
@@ -82,7 +83,7 @@ export async function CalendarView({
 
   return (
     <div className="space-y-8">
-      <Card padding="md" className="overflow-hidden rounded-[1.5rem]">
+      <Card padding="md" className="rounded-[1.5rem]">
         <div className="mb-5 flex items-center justify-between gap-3">
           <Link
             href={monthUrl(previousMonth)}
@@ -117,77 +118,88 @@ export async function CalendarView({
           </Link>
         </div>
 
-        <div className="mb-5 grid gap-3 rounded-2xl bg-accent-subtle/45 p-3 sm:grid-cols-2">
-          <form
-            action="/browse"
-            method="get"
-            className="flex min-w-0 items-end gap-2"
-          >
-            <input type="hidden" name="view" value="calendar" />
-            <label className="min-w-0 flex-1 text-xs font-semibold text-muted">
-              Month
-              <select
-                name="month"
-                defaultValue={month}
-                className="mt-1 block h-9 w-full rounded-lg border border-border-strong bg-surface px-2 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
-              >
-                {MONTHS.map((label, index) => (
-                  <option key={label} value={index + 1}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="w-24 text-xs font-semibold text-muted">
-              Year
-              <input
-                type="number"
-                name="year"
-                min="1900"
-                max="2100"
-                defaultValue={year}
-                required
-                inputMode="numeric"
-                className="mt-1 block h-9 w-full rounded-lg border border-border-strong bg-surface px-2 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
-              />
-            </label>
-            <button
-              type="submit"
-              className={buttonClassName({ size: "sm", className: "h-9" })}
+        <div className="mb-5 rounded-2xl bg-accent-subtle/45 p-3">
+          <div className="grid gap-4 md:grid-cols-2 md:items-stretch">
+            <form
+              action="/browse"
+              method="get"
+              className="flex min-w-0 flex-col gap-3"
             >
-              Open month
-            </button>
-          </form>
+              <input type="hidden" name="view" value="calendar" />
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_5.5rem] sm:items-end sm:gap-2">
+                <Label className="block min-w-0 text-xs font-semibold text-muted">
+                  Month
+                  <Select
+                    name="month"
+                    defaultValue={month}
+                    className="mt-1 h-10"
+                  >
+                    {MONTHS.map((label, index) => (
+                      <option key={label} value={index + 1}>
+                        {label}
+                      </option>
+                    ))}
+                  </Select>
+                </Label>
+                <Label className="block min-w-0 text-xs font-semibold text-muted">
+                  Year
+                  <Input
+                    type="number"
+                    name="year"
+                    min="1900"
+                    max="2100"
+                    defaultValue={year}
+                    required
+                    inputMode="numeric"
+                    className="mt-1 h-10"
+                  />
+                </Label>
+              </div>
+              <div className="mt-auto">
+                <button
+                  type="submit"
+                  className={buttonClassName({
+                    size: "sm",
+                    className: "h-10 w-full",
+                  })}
+                >
+                  Open month
+                </button>
+              </div>
+            </form>
 
-          <form
-            action="/browse"
-            method="get"
-            className="flex min-w-0 items-end gap-2"
-          >
-            <input type="hidden" name="view" value="calendar" />
-            <label className="min-w-0 flex-1 text-xs font-semibold text-muted">
-              Choose a date
-              <input
-                type="date"
-                name="date"
-                min="1900-01-01"
-                max="2100-12-31"
-                defaultValue={selectedDay ?? ""}
-                required
-                className="mt-1 block h-9 w-full rounded-lg border border-border-strong bg-surface px-2 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
-              />
-            </label>
-            <button
-              type="submit"
-              className={buttonClassName({
-                variant: "secondary",
-                size: "sm",
-                className: "h-9",
-              })}
+            <form
+              action="/browse"
+              method="get"
+              className="flex min-w-0 flex-col gap-3"
             >
-              Relive
-            </button>
-          </form>
+              <input type="hidden" name="view" value="calendar" />
+              <Label className="block min-w-0 text-xs font-semibold text-muted">
+                Choose a date
+                <Input
+                  type="date"
+                  name="date"
+                  min="1900-01-01"
+                  max="2100-12-31"
+                  defaultValue={selectedDay ?? ""}
+                  required
+                  className="date-field mt-1 box-border h-10 py-2"
+                />
+              </Label>
+              <div className="mt-auto">
+                <button
+                  type="submit"
+                  className={buttonClassName({
+                    variant: "secondary",
+                    size: "sm",
+                    className: "h-10 w-full",
+                  })}
+                >
+                  Relive
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
 
         <div className="grid grid-cols-7 gap-1 sm:gap-2">

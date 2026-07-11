@@ -121,6 +121,7 @@ describe("CaptureForm drafts", () => {
     fireEvent.change(screen.getByLabelText("What happened?"), {
       target: { value: "Captured on my phone" },
     });
+    fireEvent.click(screen.getByRole("button", { name: "Add more" }));
     fireEvent.click(
       screen.getByRole("button", { name: "Attach generated photo" }),
     );
@@ -142,6 +143,7 @@ describe("CaptureForm drafts", () => {
     fireEvent.change(screen.getByLabelText("What happened?"), {
       target: { value: "A special memory" },
     });
+    fireEvent.click(screen.getByRole("button", { name: "Add more" }));
     fireEvent.click(screen.getByRole("checkbox", { name: "Keep close" }));
     fireEvent.submit(screen.getByRole("button", { name: "Keep this moment" }));
 
@@ -150,5 +152,30 @@ describe("CaptureForm drafts", () => {
     });
     const formData = postFormDataWithProgress.mock.calls[0][1] as FormData;
     expect(formData.get("favorite")).toBe("1");
+  });
+
+  it("keeps optional fields behind Add more until expanded", () => {
+    render(<CaptureForm userId="user-1" />);
+
+    expect(
+      screen.getByRole("button", { name: "Keep this moment" }),
+    ).toBeVisible();
+    expect(screen.getByRole("button", { name: "Add more" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    expect(screen.queryByLabelText("When did it happen?")).not.toBeVisible();
+  });
+
+  it("reveals optional fields when Add more is opened", () => {
+    render(<CaptureForm userId="user-1" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Add more" }));
+
+    expect(screen.getByRole("button", { name: "Add more" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    expect(screen.getByLabelText("When did it happen?")).toBeVisible();
   });
 });

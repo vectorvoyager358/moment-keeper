@@ -2,6 +2,7 @@ import type {
   InputHTMLAttributes,
   LabelHTMLAttributes,
   ReactNode,
+  SelectHTMLAttributes,
   TextareaHTMLAttributes,
 } from "react";
 
@@ -25,6 +26,12 @@ type InputProps = InputHTMLAttributes<HTMLInputElement>;
 
 export function Input({ className, ...props }: InputProps) {
   return <input className={cn(fieldClassName, className)} {...props} />;
+}
+
+type SelectProps = SelectHTMLAttributes<HTMLSelectElement>;
+
+export function Select({ className, ...props }: SelectProps) {
+  return <select className={cn(fieldClassName, className)} {...props} />;
 }
 
 type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement>;

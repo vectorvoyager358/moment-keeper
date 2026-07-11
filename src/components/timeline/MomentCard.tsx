@@ -122,10 +122,10 @@ export function MomentCard({
               {moment.isFavorite ? (
                 <span
                   className="inline-flex items-center gap-1 text-xs font-medium text-accent"
-                  title="Saved to favorites"
+                  title="Kept close"
                 >
                   <Heart className="h-3.5 w-3.5 fill-current" aria-hidden />
-                  <span className="sr-only">Saved to favorites</span>
+                  <span className="sr-only">Kept close</span>
                 </span>
               ) : null}
               {moment.hasMedia ? (

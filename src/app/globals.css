@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@variant dark (false);
+
 :root {
   --paper: #faf6f0;
   --surface: #fffdf9;
@@ -27,29 +29,6 @@
   --shadow-card-hover: 0 4px 16px rgba(42, 33, 24, 0.1);
   --duration-fast: 150ms;
   --duration-normal: 300ms;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #14110e;
-    --surface: #1f1a15;
-    --surface-elevated: #2a231c;
-    --ink: #f5ede3;
-    --muted: #a89b8c;
-    --accent: #d4a054;
-    --accent-hover: #e8b86a;
-    --accent-subtle: #2e261c;
-    --border: #3d3429;
-    --border-strong: #524638;
-    --tag: #342c22;
-    --tag-text: #d4c5b0;
-    --danger: #e57373;
-    --danger-subtle: #3d2020;
-    --success: #81c784;
-    --success-subtle: #1a2e22;
-    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15);
-    --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.25);
-  }
 }
 
 @theme inline {
@@ -80,6 +59,11 @@
   --shadow-card-hover: var(--shadow-card-hover);
 }
 
+html {
+  color-scheme: light only;
+  background-color: var(--paper);
+}
+
 body {
   background-color: var(--paper);
   background-image:
@@ -100,6 +84,15 @@ body {
 
 ::selection {
   background: color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+input[type="date"].date-field {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  line-height: 1.25rem;
 }
 
 @keyframes fade-in-up {

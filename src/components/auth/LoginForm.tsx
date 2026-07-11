@@ -16,10 +16,10 @@ export function LoginForm() {
 
   return (
     <AuthCard
-      title="Welcome back"
+      title="Welcome back to your journal"
       description="Log in to revisit your moments."
       alternateHref="/signup"
-      alternateLabel="Need an account? Sign up"
+      alternateLabel="Need a journal? Create one"
     >
       <form action={formAction} className="space-y-4">
         <div className="space-y-2">
@@ -59,7 +59,7 @@ export function LoginForm() {
         ) : null}
 
         <Button type="submit" disabled={pending} className="w-full">
-          {pending ? "Logging in..." : "Log in"}
+          {pending ? "Logging in..." : "Log in to your journal"}
         </Button>
       </form>
     </AuthCard>

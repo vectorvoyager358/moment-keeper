@@ -33,6 +33,7 @@ export function MomentDetailView({ moment, onEdit }: MomentDetailViewProps) {
           <FavoriteMomentButton
             momentId={moment.id}
             initialFavorite={moment.is_favorite}
+            showLabel
           />
           <Button type="button" variant="secondary" size="sm" onClick={onEdit}>
             Edit

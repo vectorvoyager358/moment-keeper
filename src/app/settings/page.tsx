@@ -23,7 +23,7 @@ export default async function SettingsPage() {
       <main className="mx-auto max-w-3xl px-6 py-10">
         <PageHeader
           title="Your account"
-          description="Sign-in details for your private journal."
+          description="Sign-in details for your private journal. Your moments are private to you — we don't share or sell your journal."
         />
 
         <Card padding="lg" className="space-y-4">

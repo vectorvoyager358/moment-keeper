@@ -8,7 +8,11 @@ vi.mock("@/lib/supabase/server", () => ({
   createClient: createClientMock,
 }));
 
-import { getTimelineMoments } from "@/lib/moments/queries";
+import {
+  getTimelineMoments,
+  getUserMomentCount,
+  getAdjacentMomentIds,
+} from "@/lib/moments/queries";
 
 describe("getTimelineMoments keyword search", () => {
   beforeEach(() => {
@@ -104,5 +108,76 @@ describe("getTimelineMoments keyword search", () => {
       p_favorite_only: false,
     });
     expect(result).toEqual({ items: [], hasMore: false });
+  });
+});
+
+describe("getUserMomentCount", () => {
+  beforeEach(() => {
+    createClientMock.mockReset();
+  });
+
+  it("returns the authenticated user's moment count", async () => {
+    const select = vi.fn().mockResolvedValue({ count: 3, error: null });
+    createClientMock.mockResolvedValue({
+      from: vi.fn(() => ({ select })),
+    });
+
+    await expect(getUserMomentCount()).resolves.toBe(3);
+    expect(select).toHaveBeenCalledWith("id", {
+      count: "exact",
+      head: true,
+    });
+  });
+});
+
+describe("getAdjacentMomentIds", () => {
+  beforeEach(() => {
+    createClientMock.mockReset();
+  });
+
+  it("returns earlier and later moments by occurred_at", async () => {
+    const lt = vi.fn(() => ({
+      order: vi.fn(() => ({
+        limit: vi.fn().mockResolvedValue({ data: [{ id: "earlier-1" }] }),
+      })),
+    }));
+    const gt = vi.fn(() => ({
+      order: vi.fn(() => ({
+        limit: vi.fn().mockResolvedValue({ data: [{ id: "later-1" }] }),
+      })),
+    }));
+
+    createClientMock.mockResolvedValue({
+      from: vi.fn((table: string) => {
+        if (table !== "moments") {
+          throw new Error(`Unexpected table ${table}`);
+        }
+
+        return {
+          select: vi.fn((columns: string) => {
+            if (columns === "occurred_at") {
+              return {
+                eq: vi.fn(() => ({
+                  maybeSingle: vi.fn().mockResolvedValue({
+                    data: { occurred_at: "2026-07-09T12:00:00.000Z" },
+                    error: null,
+                  }),
+                })),
+              };
+            }
+
+            return {
+              lt,
+              gt,
+            };
+          }),
+        };
+      }),
+    });
+
+    await expect(getAdjacentMomentIds("moment-1")).resolves.toEqual({
+      earlierId: "earlier-1",
+      laterId: "later-1",
+    });
   });
 });

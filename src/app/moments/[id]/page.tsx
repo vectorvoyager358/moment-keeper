@@ -3,11 +3,12 @@ import { notFound } from "next/navigation";
 
 import { AppNav } from "@/components/AppNav";
 import { DeleteMomentButton } from "@/components/moments/DeleteMomentButton";
+import { MomentDetailNav } from "@/components/moments/MomentDetailNav";
 import { MomentDetailPanel } from "@/components/moments/MomentDetailPanel";
 import { Card } from "@/components/ui/Card";
 import { PageShell } from "@/components/ui/PageShell";
 import { toUserErrorMessage } from "@/lib/errors";
-import { getMomentById } from "@/lib/moments/queries";
+import { getAdjacentMomentIds, getMomentById } from "@/lib/moments/queries";
 
 type MomentDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -30,6 +31,8 @@ export default async function MomentDetailPage({
     notFound();
   }
 
+  const adjacent = await getAdjacentMomentIds(id);
+
   return (
     <PageShell>
       <AppNav current="timeline" />
@@ -46,6 +49,11 @@ export default async function MomentDetailPage({
         <Card padding="lg" className="rounded-[1.5rem]">
           <MomentDetailPanel moment={moment} />
         </Card>
+
+        <MomentDetailNav
+          earlierId={adjacent.earlierId}
+          laterId={adjacent.laterId}
+        />
 
         <div className="mt-8 border-t border-border pt-6">
           <DeleteMomentButton momentId={moment.id} />

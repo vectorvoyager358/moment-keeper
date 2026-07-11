@@ -96,7 +96,7 @@ export function TimelineSearchForm({ filters, tags }: TimelineSearchFormProps) {
             )}
             aria-hidden
           />
-          Favorites
+          Keep close
         </label>
 
         {filters.keyword || selectedTags.length > 0 || filters.favoriteOnly ? (
@@ -142,9 +142,9 @@ export function TimelineSearchForm({ filters, tags }: TimelineSearchFormProps) {
                     favoriteOnly: false,
                   })}
                   className="inline-flex items-center gap-1 rounded-full bg-accent-subtle px-3 py-1 text-xs font-medium text-accent transition hover:bg-accent/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-                  aria-label="Remove favorites filter"
+                  aria-label="Remove keep close filter"
                 >
-                  Favorites
+                  Keep close
                   <X className="h-3 w-3" aria-hidden />
                 </Link>
               ) : null}

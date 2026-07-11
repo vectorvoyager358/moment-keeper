@@ -33,36 +33,38 @@ export async function MediaGallery({ mediaType }: MediaGalleryProps) {
 
   return (
     <div>
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-muted">
+      <div className="mb-5 flex items-center gap-3">
+        <p className="shrink-0 text-sm whitespace-nowrap text-muted">
           {moments.length} {moments.length === 1 ? "attachment" : "attachments"}
         </p>
-        <div
-          className="flex flex-wrap gap-1 rounded-xl border border-border bg-surface p-1"
-          aria-label="Filter media"
-        >
-          {FILTERS.map((filter) => {
-            const active = filter.value === mediaType;
-            const href = filter.value
-              ? `/browse?view=media&media=${filter.value}`
-              : "/browse?view=media";
+        <div className="min-w-0 flex-1 overflow-x-auto">
+          <div
+            className="flex w-max gap-1 rounded-xl border border-border bg-surface p-1"
+            aria-label="Filter media"
+          >
+            {FILTERS.map((filter) => {
+              const active = filter.value === mediaType;
+              const href = filter.value
+                ? `/browse?view=media&media=${filter.value}`
+                : "/browse?view=media";
 
-            return (
-              <Link
-                key={filter.label}
-                href={href}
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  "rounded-lg px-3 py-1.5 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40",
-                  active
-                    ? "bg-accent text-white"
-                    : "text-muted hover:bg-accent-subtle hover:text-ink",
-                )}
-              >
-                {filter.label}
-              </Link>
-            );
-          })}
+              return (
+                <Link
+                  key={filter.label}
+                  href={href}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "rounded-lg px-3 py-1.5 text-xs font-medium whitespace-nowrap transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40",
+                    active
+                      ? "bg-accent text-white"
+                      : "text-muted hover:bg-accent-subtle hover:text-ink",
+                  )}
+                >
+                  {filter.label}
+                </Link>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -105,12 +107,12 @@ export async function MediaGallery({ mediaType }: MediaGalleryProps) {
                   )}
 
                   <span className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/5 to-transparent" />
-                  <span className="relative z-10 mt-auto min-w-0 p-3 text-white sm:p-4">
+                  <span className="relative z-10 mt-auto w-full min-w-0 overflow-hidden p-3 text-white sm:p-4">
                     <span className="mb-1 flex items-center gap-1.5 text-[0.65rem] font-semibold tracking-wide uppercase opacity-85 sm:text-xs">
-                      <Icon className="h-3 w-3" aria-hidden />
-                      {mediaLabel}
+                      <Icon className="h-3 w-3 shrink-0" aria-hidden />
+                      <span className="truncate">{mediaLabel}</span>
                     </span>
-                    <span className="line-clamp-2 block font-display text-sm leading-snug sm:text-base">
+                    <span className="line-clamp-2 block overflow-hidden font-display text-sm leading-snug break-words sm:text-base">
                       {truncateBody(moment.body, 70)}
                     </span>
                     <MomentDate

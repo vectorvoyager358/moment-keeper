@@ -1,9 +1,9 @@
 "use client";
 
-import { RotateCcw, X } from "lucide-react";
+import { RotateCcw, Upload, X } from "lucide-react";
 import { useEffect, useId, useRef, useState, type ChangeEvent } from "react";
 
-import { PhotoCapture } from "@/components/capture/PhotoCapture";
+import { MediaCapture } from "@/components/capture/MediaCapture";
 import { VoiceMemoRecorder } from "@/components/capture/VoiceMemoRecorder";
 import type { MediaType } from "@/lib/database.types";
 import {
@@ -11,6 +11,7 @@ import {
   formatFileSize,
   shouldCompressImage,
 } from "@/lib/moments/compress-image";
+import { cn } from "@/lib/cn";
 import {
   getMediaTypeFromMime,
   MAX_MEDIA_ATTACHMENTS,
@@ -118,8 +119,9 @@ export function MediaFileInput({
 
         setPreparingName(file.name);
         const shouldPrepareImage =
-          source === "camera" ||
-          (source === "file" && shouldCompressImage(file));
+          getMediaTypeFromMime(file.type) === "photo" &&
+          (source === "camera" ||
+            (source === "file" && shouldCompressImage(file)));
         const prepared = shouldPrepareImage
           ? await compressImageFile(file)
           : file;
@@ -179,32 +181,48 @@ export function MediaFileInput({
     <div className="space-y-4">
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-3">
-          <label htmlFor={inputId} className="text-sm font-medium text-ink">
-            Add photos, videos, or voice memos{" "}
+          <p className="text-sm font-medium text-ink">
+            Photos, videos, or voice{" "}
             <span className="font-normal text-muted">(optional)</span>
-          </label>
+          </p>
           <span className="text-xs font-medium text-muted">
             {totalCount}/{MAX_MEDIA_ATTACHMENTS}
           </span>
         </div>
-        <input
-          ref={inputRef}
-          id={inputId}
-          name="media"
-          type="file"
-          multiple
-          accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,video/quicktime,audio/mpeg,audio/mp4,audio/wav,audio/webm,audio/ogg"
-          onChange={handleChange}
-          disabled={mediaBusy || totalCount >= MAX_MEDIA_ATTACHMENTS}
-          className="block w-full text-sm text-muted file:mr-4 file:rounded-lg file:border-0 file:bg-accent-subtle file:px-3 file:py-2 file:text-sm file:font-medium file:text-accent hover:file:bg-accent/20 disabled:cursor-not-allowed disabled:opacity-60"
-        />
-        <p className="text-xs text-muted">
-          Up to five attachments and 50 MB combined. Individual limits still
-          apply.
-        </p>
+
+        <label
+          htmlFor={inputId}
+          className={cn(
+            "flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-border-strong bg-accent-subtle/35 px-4 py-8 text-center transition hover:border-accent/50 hover:bg-accent-subtle/60 focus-within:ring-2 focus-within:ring-accent/20",
+            (mediaBusy || totalCount >= MAX_MEDIA_ATTACHMENTS) &&
+              "pointer-events-none opacity-60",
+          )}
+        >
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-accent shadow-sm">
+            <Upload className="h-5 w-5" aria-hidden />
+          </span>
+          <span className="mt-3 text-sm font-medium text-ink">
+            Add from your device
+          </span>
+          <span className="mt-1 max-w-xs text-xs leading-relaxed text-muted">
+            Photos, videos, or voice files. Up to five attachments and 50 MB
+            combined.
+          </span>
+          <input
+            ref={inputRef}
+            id={inputId}
+            name="media"
+            type="file"
+            multiple
+            accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,video/quicktime,audio/mpeg,audio/mp4,audio/wav,audio/webm,audio/ogg"
+            onChange={handleChange}
+            disabled={mediaBusy || totalCount >= MAX_MEDIA_ATTACHMENTS}
+            className="sr-only"
+          />
+        </label>
       </div>
 
-      <PhotoCapture
+      <MediaCapture
         disabled={mediaBusy || totalCount >= MAX_MEDIA_ATTACHMENTS}
         onCameraActiveChange={(active) => {
           setIsCameraActive(active);
