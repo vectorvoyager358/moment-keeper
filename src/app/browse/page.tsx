@@ -6,6 +6,7 @@ import { CalendarView } from "@/components/browse/CalendarView";
 import { MediaGallery } from "@/components/browse/MediaGallery";
 import { KeepMomentLink } from "@/components/KeepMomentLink";
 import { PageHeader, PageShell } from "@/components/ui/PageShell";
+import { ScrollToTopButton } from "@/components/ui/ScrollToTopButton";
 import type { MediaType } from "@/lib/database.types";
 import { parseCalendarParams } from "@/lib/moments/calendar";
 
@@ -72,6 +73,7 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
           </Suspense>
         </div>
       </main>
+      <ScrollToTopButton />
     </PageShell>
   );
 }

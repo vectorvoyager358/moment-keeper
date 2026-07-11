@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/LoadingSkeleton";
 import { PageHeader, PageShell } from "@/components/ui/PageShell";
 import { SavedToast } from "@/components/ui/SavedToast";
+import { ScrollToTopButton } from "@/components/ui/ScrollToTopButton";
 import {
   hasActiveSearchFilters,
   parseSearchParams,
@@ -134,6 +135,7 @@ export default async function TimelinePage({
           <TimelineResults filters={filters} />
         </Suspense>
       </main>
+      <ScrollToTopButton />
     </PageShell>
   );
 }
