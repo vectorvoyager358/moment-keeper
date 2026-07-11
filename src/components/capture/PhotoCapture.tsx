@@ -133,7 +133,7 @@ export function PhotoCapture({
     <div className="rounded-xl border border-border bg-accent-subtle/30 p-4">
       <p className="text-sm font-medium text-ink">Or take a photo</p>
       <p className="mt-1 text-xs text-muted">
-        Uses your device camera in the browser — free, no app to open.
+        Snap one right here — no other app needed.
       </p>
 
       {!isPreview ? (

@@ -45,6 +45,14 @@ export async function ResurfacingSection({
   }
 
   const themeLabels = resurfacingFilters.themes.map(memoryThemeLabel);
+  const mediaLabel =
+    resurfacingFilters.mediaType === "audio"
+      ? "Voice memos"
+      : resurfacingFilters.mediaType === "photo"
+        ? "Photos"
+        : resurfacingFilters.mediaType === "video"
+          ? "Videos"
+          : null;
 
   return (
     <section className="mb-8" aria-labelledby="resurfacing-heading">
@@ -58,13 +66,11 @@ export async function ResurfacingSection({
               id="resurfacing-heading"
               className="font-display text-xl font-semibold text-ink"
             >
-              Memories for you
+              Worth revisiting
             </h2>
             <p className="mt-1 text-sm text-muted">
               {themeLabels.join(" · ")}
-              {resurfacingFilters.mediaType
-                ? ` · ${resurfacingFilters.mediaType}`
-                : ""}
+              {mediaLabel ? ` · ${mediaLabel}` : ""}
             </p>
           </div>
         </div>
@@ -72,7 +78,7 @@ export async function ResurfacingSection({
           href="/timeline"
           className="shrink-0 rounded-lg px-2 py-1 text-sm font-medium text-accent transition hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
         >
-          Change
+          Pick different themes
         </Link>
       </div>
 
@@ -94,18 +100,18 @@ export async function ResurfacingSection({
           className="border-dashed border-border-strong bg-accent-subtle/35 text-center"
         >
           <p className="font-display text-lg font-semibold text-ink">
-            No matching memories yet
+            Nothing here yet for those themes
           </p>
           <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-muted">
-            Add themes while capturing or editing moments. We&apos;ll also match
-            related words from what you wrote.
+            Add themes while keeping or editing moments. We&apos;ll also notice
+            similar words in what you wrote.
           </p>
           <div className="mt-4 flex justify-center gap-4 text-sm font-medium">
             <Link href="/capture" className="text-accent hover:underline">
-              Capture a moment
+              Keep a moment
             </Link>
             <Link href="/timeline" className="text-muted hover:text-ink">
-              Choose something else
+              Try other themes
             </Link>
           </div>
         </Card>

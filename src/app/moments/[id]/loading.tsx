@@ -1,5 +1,5 @@
 import { PageLoading } from "@/components/ui/LoadingSkeleton";
 
 export default function MomentDetailLoading() {
-  return <PageLoading label="Loading moment" />;
+  return <PageLoading label="Opening this moment" />;
 }

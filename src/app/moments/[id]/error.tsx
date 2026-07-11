@@ -44,7 +44,7 @@ export default function MomentDetailError({
               href="/timeline"
               className={buttonClassName({ variant: "secondary" })}
             >
-              Back to timeline
+              Back to your journal
             </Link>
           </div>
         </Card>

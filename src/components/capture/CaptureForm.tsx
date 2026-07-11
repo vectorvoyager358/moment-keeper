@@ -220,7 +220,8 @@ export function CaptureForm({ userId }: CaptureFormProps) {
 
       {draftSaved ? (
         <p className="text-xs text-muted" role="status">
-          Draft saved on this device. Media attachments aren&apos;t included.
+          Saved on this device for now — photos and voice memos aren&apos;t
+          included.
         </p>
       ) : null}
 
@@ -236,7 +237,9 @@ export function CaptureForm({ userId }: CaptureFormProps) {
         percent={percent}
         processing={processing}
         label={
-          processing ? "Upload complete — saving on server…" : "Uploading…"
+          processing
+            ? "Almost there — keeping your moment…"
+            : "Sending your moment…"
         }
       />
 
@@ -245,7 +248,7 @@ export function CaptureForm({ userId }: CaptureFormProps) {
         disabled={!mediaValid || pending}
         className="w-full py-2.5"
       >
-        {pending ? (processing ? "Saving..." : "Uploading...") : "Save moment"}
+        {pending ? "Keeping…" : "Keep this moment"}
       </Button>
     </form>
   );

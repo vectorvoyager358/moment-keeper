@@ -60,7 +60,7 @@ export default async function TimelinePage({
               </Link>
               <Link href="/capture" className={buttonClassName({ size: "sm" })}>
                 <PenLine className="h-4 w-4" aria-hidden />
-                New moment
+                Keep a moment
               </Link>
             </div>
           }
@@ -70,7 +70,7 @@ export default async function TimelinePage({
 
         {rawParams.surprise === "empty" ? (
           <Alert className="mb-8">
-            Capture your first moment, then “Surprise me” can bring it back.
+            Keep your first moment, then “Surprise me” can bring one back.
           </Alert>
         ) : null}
 

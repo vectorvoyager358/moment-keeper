@@ -38,11 +38,10 @@ export function WelcomeBanner({ initialVisible }: WelcomeBannerProps) {
       </span>
       <div className="min-w-0 flex-1">
         <p className="font-display text-base font-semibold">
-          Welcome to Moment Keeper
+          Welcome — your journal is ready
         </p>
         <p className="mt-1 text-sm leading-relaxed text-muted">
-          Capture your first moment below — a few words is enough. You can
-          always add photos, tags, or edits later.
+          Start with a few words below. Photos, tags, and edits can wait.
         </p>
       </div>
       <button

@@ -104,7 +104,7 @@ describe("CaptureForm drafts", () => {
       { timeout: 1_000 },
     );
 
-    fireEvent.submit(screen.getByRole("button", { name: "Save moment" }));
+    fireEvent.submit(screen.getByRole("button", { name: "Keep this moment" }));
 
     await waitFor(() => {
       expect(push).toHaveBeenCalledWith("/timeline");
@@ -122,7 +122,7 @@ describe("CaptureForm drafts", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Attach generated photo" }),
     );
-    fireEvent.submit(screen.getByRole("button", { name: "Save moment" }));
+    fireEvent.submit(screen.getByRole("button", { name: "Keep this moment" }));
 
     await waitFor(() => {
       expect(postFormDataWithProgress).toHaveBeenCalled();

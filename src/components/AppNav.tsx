@@ -1,24 +1,25 @@
-import { BookOpen, Camera, LayoutList, Settings } from "lucide-react";
+import { BookOpen, Camera, Images, LayoutList, Settings } from "lucide-react";
 import Link from "next/link";
 
 import { cn } from "@/lib/cn";
 
 type AppNavProps = {
-  current: "timeline" | "capture" | "settings";
+  current: "timeline" | "capture" | "browse" | "settings";
 };
 
 const navItems = [
   {
     id: "timeline" as const,
     href: "/timeline",
-    label: "Timeline",
+    label: "Journal",
     icon: LayoutList,
   },
-  { id: "capture" as const, href: "/capture", label: "Capture", icon: Camera },
+  { id: "capture" as const, href: "/capture", label: "Keep", icon: Camera },
+  { id: "browse" as const, href: "/browse", label: "Look back", icon: Images },
   {
     id: "settings" as const,
     href: "/settings",
-    label: "Settings",
+    label: "Account",
     icon: Settings,
   },
 ];
@@ -40,7 +41,7 @@ export function AppNav({ current }: AppNavProps) {
         </Link>
 
         <nav
-          className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-3 border-t border-border/80 bg-surface/95 px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(42,33,24,0.08)] backdrop-blur-xl sm:static sm:flex sm:items-center sm:gap-1.5 sm:rounded-xl sm:border sm:bg-surface sm:p-1 sm:shadow-none"
+          className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-border/80 bg-surface/95 px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(42,33,24,0.08)] backdrop-blur-xl sm:static sm:flex sm:items-center sm:gap-1.5 sm:rounded-xl sm:border sm:bg-surface sm:p-1 sm:shadow-none"
           aria-label="Main"
         >
           {navItems.map(({ id, href, label, icon: Icon }) => {

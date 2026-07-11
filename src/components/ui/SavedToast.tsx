@@ -45,7 +45,7 @@ export function SavedToast({ initialVisible }: SavedToastProps) {
         <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden />
       </span>
       <p className="text-sm font-medium">
-        Moment saved — it&apos;s on your timeline.
+        Kept — it&apos;s now part of your journal.
       </p>
       <button
         type="button"

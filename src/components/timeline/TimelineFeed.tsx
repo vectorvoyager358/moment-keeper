@@ -74,7 +74,7 @@ export function TimelineFeed({
             onClick={handleLoadMore}
             disabled={isPending}
           >
-            {isPending ? "Loading..." : "Load more"}
+            {isPending ? "Finding more…" : "Show earlier moments"}
           </Button>
         </div>
       ) : null}

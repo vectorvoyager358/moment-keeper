@@ -49,7 +49,7 @@ export async function OnThisDaySection({ filters }: OnThisDaySectionProps) {
             {heading}
           </h2>
           <p className="mt-1 text-sm text-muted">
-            Memories from this date in past years.
+            A look back at this date, year by year.
           </p>
         </div>
       </div>
@@ -92,17 +92,17 @@ function OnThisDayEmptyState({ month }: { month: number }) {
       className="border-dashed border-border-strong bg-accent-subtle/40 text-center"
     >
       <p className="font-display text-base font-semibold text-ink">
-        No memories from this day yet
+        Nothing from this day — yet
       </p>
       <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted">
-        Keep capturing through the {season} — future you will love seeing what
-        happened on this date in years past.
+        Keep a few moments through the {season} — future you will love finding
+        them here.
       </p>
       <Link
         href="/capture"
         className="mt-4 inline-flex text-sm font-medium text-accent underline-offset-4 transition hover:text-accent-hover hover:underline"
       >
-        Capture today&apos;s moment
+        Keep today&apos;s moment
       </Link>
     </Card>
   );

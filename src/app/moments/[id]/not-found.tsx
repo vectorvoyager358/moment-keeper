@@ -10,11 +10,11 @@ export default function MomentNotFound() {
       <AppNav current="timeline" />
       <main className="mx-auto max-w-2xl px-6 py-10 text-center">
         <PageHeader
-          title="Moment not found"
-          description="This moment may have been deleted or you do not have access to it."
+          title="This moment isn’t here"
+          description="It may have been removed, or it might belong to another account."
         />
         <Link href="/timeline" className={buttonClassName()}>
-          Back to timeline
+          Back to your journal
         </Link>
       </main>
     </PageShell>

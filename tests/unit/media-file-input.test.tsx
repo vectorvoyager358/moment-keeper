@@ -32,7 +32,7 @@ describe("MediaFileInput", () => {
     const { container } = render(
       <MediaFileInput onPreparedFileChange={onPreparedFileChange} />,
     );
-    const input = screen.getByLabelText(/Photo, video, or audio/);
+    const input = screen.getByLabelText(/Add a photo, video, or voice memo/);
     const file = new File(["voice"], "memory.webm", { type: "audio/webm" });
 
     fireEvent.change(input, { target: { files: [file] } });

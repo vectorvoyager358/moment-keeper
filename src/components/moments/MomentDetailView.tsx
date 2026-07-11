@@ -63,7 +63,7 @@ export function MomentDetailView({ moment, onEdit }: MomentDetailViewProps) {
             <li key={tag.id}>
               <Link
                 href={`/timeline?tag=${encodeURIComponent(tag.id)}`}
-                aria-label={`Filter timeline by ${tag.name}`}
+                aria-label={`See moments tagged ${tag.name}`}
                 className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 <Tag className="hover:bg-accent-subtle hover:text-accent">

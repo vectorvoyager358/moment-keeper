@@ -165,7 +165,7 @@ export function VoiceMemoRecorder({
 
   return (
     <div className="rounded-xl border border-border bg-accent-subtle/30 p-4">
-      <p className="text-sm font-medium text-ink">Or record a voice memo</p>
+      <p className="text-sm font-medium text-ink">Or say it out loud</p>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
         {!isRecording ? (
@@ -177,7 +177,7 @@ export function VoiceMemoRecorder({
             onClick={() => void startRecording()}
           >
             <Mic className="h-4 w-4" aria-hidden />
-            {isProcessing ? "Saving recording…" : "Start recording"}
+            {isProcessing ? "Getting your voice memo ready…" : "Start talking"}
           </Button>
         ) : (
           <Button

@@ -4,6 +4,7 @@ import {
   type MomentDetailQueryRow,
 } from "@/lib/moments/detail";
 import type { MediaType, MemoryTheme } from "@/lib/database.types";
+import { getCalendarMonthRange } from "@/lib/moments/calendar";
 import {
   paginateItems,
   TIMELINE_PAGE_SIZE,
@@ -79,6 +80,25 @@ const TIMELINE_SELECT = `
     thumbnail_path
   )
 `;
+
+const MEDIA_GALLERY_SELECT = `
+  id,
+  body,
+  occurred_at,
+  moment_tags (
+    tags (
+      id,
+      name
+    )
+  ),
+  media_attachments!inner (
+    id,
+    media_type,
+    thumbnail_path
+  )
+`;
+
+export const MEDIA_GALLERY_LIMIT = 60;
 
 async function withSignedThumbnails(
   rows: TimelineQueryRow[],
@@ -161,6 +181,47 @@ export async function getRandomMomentId(): Promise<string | null> {
   }
 
   return data?.id ?? null;
+}
+
+export async function getCalendarMoments(
+  year: number,
+  month: number,
+): Promise<TimelineMoment[]> {
+  const supabase = await createClient();
+  const { start, end } = getCalendarMonthRange({ year, month });
+  const { data, error } = await supabase
+    .from("moments")
+    .select(TIMELINE_SELECT)
+    .gte("occurred_at", start)
+    .lt("occurred_at", end)
+    .order("occurred_at", { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  return withSignedThumbnails((data ?? []) as TimelineQueryRow[]);
+}
+
+export async function getMediaGalleryMoments(
+  mediaType: MediaType | null = null,
+): Promise<TimelineMoment[]> {
+  const supabase = await createClient();
+  let query = supabase.from("moments").select(MEDIA_GALLERY_SELECT);
+
+  if (mediaType) {
+    query = query.eq("media_attachments.media_type", mediaType);
+  }
+
+  const { data, error } = await query
+    .order("occurred_at", { ascending: false })
+    .limit(MEDIA_GALLERY_LIMIT);
+
+  if (error) {
+    throw error;
+  }
+
+  return withSignedThumbnails((data ?? []) as TimelineQueryRow[]);
 }
 
 export async function getOnThisDayMoments(
