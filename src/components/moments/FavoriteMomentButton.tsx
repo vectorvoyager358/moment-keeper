@@ -37,7 +37,7 @@ export function FavoriteMomentButton({
   }
 
   return (
-    <div className="text-right">
+    <div>
       <Button
         type="button"
         variant="secondary"
@@ -60,13 +60,13 @@ export function FavoriteMomentButton({
           aria-hidden
         />
         {showLabel ? (
-          <span className="text-sm font-medium">
+          <span className="hidden text-sm font-medium sm:inline">
             {favorite ? "Kept close" : "Keep close"}
           </span>
         ) : null}
       </Button>
       {error ? (
-        <p className="mt-1 text-xs text-danger" role="alert">
+        <p className="mt-1 text-right text-xs text-danger" role="alert">
           {error}
         </p>
       ) : null}

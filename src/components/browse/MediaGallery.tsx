@@ -2,6 +2,7 @@ import { ImageIcon, Mic, Video } from "lucide-react";
 import Link from "next/link";
 
 import { MomentDate } from "@/components/moments/MomentDate";
+import { TimelineMediaImage } from "@/components/timeline/TimelineMediaImage";
 import { Card } from "@/components/ui/Card";
 import { cn } from "@/lib/cn";
 import type { MediaType } from "@/lib/database.types";
@@ -90,12 +91,16 @@ export async function MediaGallery({ mediaType }: MediaGalleryProps) {
                   href={`/moments/${moment.momentId}`}
                   className="group relative flex aspect-square overflow-hidden rounded-2xl border border-border bg-accent-subtle shadow-card transition hover:-translate-y-0.5 hover:border-border-strong hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 >
-                  {moment.thumbnailUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URL
-                    <img
-                      src={moment.thumbnailUrl}
-                      alt=""
-                      loading="lazy"
+                  {moment.thumbnailUrl || moment.photoUrl ? (
+                    <TimelineMediaImage
+                      src={moment.thumbnailUrl ?? moment.photoUrl ?? ""}
+                      fallbackSrc={
+                        moment.thumbnailUrl &&
+                        moment.photoUrl &&
+                        moment.thumbnailUrl !== moment.photoUrl
+                          ? moment.photoUrl
+                          : null
+                      }
                       className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
                     />
                   ) : (

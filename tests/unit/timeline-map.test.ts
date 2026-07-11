@@ -24,6 +24,8 @@ describe("mapTimelineRow", () => {
       mediaType: null,
       thumbnailPath: null,
       thumbnailUrl: null,
+      photoStoragePath: null,
+      photoUrl: null,
     });
   });
 
@@ -100,6 +102,28 @@ describe("mapTimelineRow", () => {
 
     expect(result.mediaType).toBe("video");
     expect(result.attachmentCount).toBe(2);
+    expect(result.thumbnailPath).toBe("user/m/photo.thumb.jpg");
+  });
+
+  it("tracks the original photo path for timeline fallbacks", () => {
+    const result = mapTimelineRow({
+      id: "moment-5",
+      body: "Phone photo.",
+      occurred_at: "2026-07-07T16:00:00.000Z",
+      is_favorite: false,
+      moment_tags: [],
+      media_attachments: [
+        {
+          id: "photo-1",
+          media_type: "photo",
+          storage_path: "user/m/photo.jpg",
+          thumbnail_path: "user/m/photo.thumb.jpg",
+          display_order: 0,
+        },
+      ],
+    });
+
+    expect(result.photoStoragePath).toBe("user/m/photo.jpg");
     expect(result.thumbnailPath).toBe("user/m/photo.thumb.jpg");
   });
 });

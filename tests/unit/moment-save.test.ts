@@ -32,6 +32,7 @@ function validFormData(): FormData {
   const formData = new FormData();
   formData.set("body", "A meaningful memory");
   formData.set("occurred_at", "2026-07-09T12:00");
+  formData.set("occurred_at_offset", "300");
   formData.set("tags", "");
   return formData;
 }
@@ -71,6 +72,31 @@ describe("moment theme saving", () => {
       expect.objectContaining({
         themes: ["joy", "connection"],
         is_favorite: false,
+      }),
+    );
+  });
+
+  it("stores occurred_at using the submitted timezone offset", async () => {
+    const insert = vi.fn(() => ({
+      select: () => ({
+        single: vi.fn().mockResolvedValue({
+          data: { id: "moment-1" },
+          error: null,
+        }),
+      }),
+    }));
+    createClientMock.mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: "u1" } } }),
+      },
+      from: vi.fn(() => ({ insert })),
+    });
+
+    await saveNewMoment(validFormData());
+
+    expect(insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        occurred_at: "2026-07-09T17:00:00.000Z",
       }),
     );
   });
@@ -189,7 +215,7 @@ describe("moment theme saving", () => {
 
     expect(await saveUpdatedMoment("moment-1", formData)).toEqual({
       ok: true,
-      redirectTo: "/moments/moment-1",
+      redirectTo: "/moments/moment-1?updated=1",
     });
     expect(update).toHaveBeenCalledWith(
       expect.objectContaining({ is_favorite: true }),
@@ -229,7 +255,7 @@ describe("moment theme saving", () => {
 
     expect(await saveUpdatedMoment("moment-1", formData)).toEqual({
       ok: true,
-      redirectTo: "/moments/moment-1",
+      redirectTo: "/moments/moment-1?updated=1",
     });
     expect(removeMediaAttachmentsById).toHaveBeenCalledWith(
       supabase,

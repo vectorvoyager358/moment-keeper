@@ -2,35 +2,49 @@
 
 import { Check } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+const AUTO_DISMISS_MS = 5000;
 
 type SavedToastProps = {
   initialVisible: boolean;
+  message?: string;
+  queryParam?: string;
   hint?: string | null;
 };
 
-export function SavedToast({ initialVisible, hint = null }: SavedToastProps) {
+const DEFAULT_MESSAGE = "Kept — it's now part of your journal.";
+
+export function SavedToast({
+  initialVisible,
+  message = DEFAULT_MESSAGE,
+  queryParam = "saved",
+  hint = null,
+}: SavedToastProps) {
   const router = useRouter();
+  const shouldShowRef = useRef(initialVisible);
   const [visible, setVisible] = useState(initialVisible);
 
   useEffect(() => {
-    if (!initialVisible) {
+    if (!shouldShowRef.current) {
       return;
     }
 
     const url = new URL(window.location.href);
-    url.searchParams.delete("saved");
-    const nextUrl = `${url.pathname}${url.search}${url.hash}`;
-    router.replace(nextUrl, { scroll: false });
+    if (url.searchParams.has(queryParam)) {
+      url.searchParams.delete(queryParam);
+      const nextUrl = `${url.pathname}${url.search}${url.hash}`;
+      router.replace(nextUrl, { scroll: false });
+    }
 
     const timer = window.setTimeout(() => {
       setVisible(false);
-    }, 4000);
+    }, AUTO_DISMISS_MS);
 
     return () => {
       window.clearTimeout(timer);
     };
-  }, [initialVisible, router]);
+  }, [queryParam, router]);
 
   if (!visible) {
     return null;
@@ -46,9 +60,7 @@ export function SavedToast({ initialVisible, hint = null }: SavedToastProps) {
         <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden />
       </span>
       <div className="min-w-0">
-        <p className="text-sm font-medium">
-          Kept — it&apos;s now part of your journal.
-        </p>
+        <p className="text-sm font-medium">{message}</p>
         {hint ? <p className="mt-1 text-sm text-success/90">{hint}</p> : null}
       </div>
       <button

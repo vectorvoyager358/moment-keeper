@@ -11,6 +11,8 @@ export type TimelineMoment = {
   mediaType: "photo" | "video" | "audio" | null;
   thumbnailPath: string | null;
   thumbnailUrl: string | null;
+  photoStoragePath: string | null;
+  photoUrl: string | null;
 };
 
 export type TimelineQueryRow = {
@@ -30,12 +32,14 @@ export type TimelineQueryRow = {
     | {
         id: string;
         media_type: "photo" | "video" | "audio";
+        storage_path?: string | null;
         thumbnail_path: string | null;
         display_order: number;
       }
     | {
         id: string;
         media_type: "photo" | "video" | "audio";
+        storage_path?: string | null;
         thumbnail_path: string | null;
         display_order: number;
       }[]
@@ -58,10 +62,14 @@ export function mapTimelineRow(
     (a, b) => a.display_order - b.display_order,
   );
   const attachment = attachments[0] ?? null;
+  const primaryPhoto =
+    attachments.find((item) => item.media_type === "photo") ?? null;
   const primaryVisual =
     attachments.find(
       (item) => item.media_type === "photo" && item.thumbnail_path,
-    ) ?? attachment;
+    ) ??
+    primaryPhoto ??
+    attachment;
 
   return {
     id: moment.id,
@@ -74,5 +82,7 @@ export function mapTimelineRow(
     mediaType: attachment?.media_type ?? null,
     thumbnailPath: primaryVisual?.thumbnail_path ?? null,
     thumbnailUrl,
+    photoStoragePath: primaryPhoto?.storage_path ?? null,
+    photoUrl: null,
   };
 }

@@ -2,6 +2,7 @@ import { Heart, ImageIcon, Mic, Video } from "lucide-react";
 import Link from "next/link";
 
 import { MomentDate } from "@/components/moments/MomentDate";
+import { TimelineMediaImage } from "@/components/timeline/TimelineMediaImage";
 import { buttonClassName } from "@/components/ui/Button";
 import { Tag } from "@/components/ui/Tag";
 import { truncateBody } from "@/lib/moments/dates";
@@ -85,6 +86,13 @@ export function MomentCard({
     truncateBody(moment.body),
     highlightQuery,
   );
+  const imageSrc = moment.thumbnailUrl ?? moment.photoUrl;
+  const imageFallbackSrc =
+    moment.thumbnailUrl &&
+    moment.photoUrl &&
+    moment.thumbnailUrl !== moment.photoUrl
+      ? moment.photoUrl
+      : null;
 
   return (
     <article className="group overflow-hidden rounded-[1.5rem] border border-border/80 bg-surface shadow-card transition duration-[var(--duration-normal)] hover:-translate-y-1 hover:border-border-strong hover:shadow-card-hover">
@@ -92,13 +100,11 @@ export function MomentCard({
         href={`/moments/${moment.id}`}
         className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40"
       >
-        {moment.thumbnailUrl ? (
+        {imageSrc ? (
           <div className="relative overflow-hidden bg-accent-subtle">
-            {/* eslint-disable-next-line @next/next/no-img-element -- signed Supabase URLs */}
-            <img
-              src={moment.thumbnailUrl}
-              alt=""
-              loading="lazy"
+            <TimelineMediaImage
+              src={imageSrc}
+              fallbackSrc={imageFallbackSrc}
               className="aspect-[4/3] w-full object-cover transition duration-500 group-hover:scale-[1.025] sm:aspect-[3/2]"
             />
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/20 to-transparent" />

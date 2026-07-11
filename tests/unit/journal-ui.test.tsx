@@ -21,6 +21,8 @@ describe("MomentCard", () => {
           mediaType: "video",
           thumbnailPath: null,
           thumbnailUrl: null,
+          photoStoragePath: null,
+          photoUrl: null,
         }}
       />,
     );
@@ -46,6 +48,8 @@ describe("MomentCard", () => {
           mediaType: null,
           thumbnailPath: null,
           thumbnailUrl: null,
+          photoStoragePath: null,
+          photoUrl: null,
         }}
       />,
     );

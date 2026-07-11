@@ -24,9 +24,14 @@ import {
 type EditMomentFormProps = {
   moment: MomentDetail;
   onCancel: () => void;
+  onSaved: () => void;
 };
 
-export function EditMomentForm({ moment, onCancel }: EditMomentFormProps) {
+export function EditMomentForm({
+  moment,
+  onCancel,
+  onSaved,
+}: EditMomentFormProps) {
   const router = useRouter();
   const [themes, setThemes] = useState<MemoryTheme[]>(moment.themes);
   const [isFavorite, setIsFavorite] = useState(moment.is_favorite);
@@ -36,6 +41,9 @@ export function EditMomentForm({ moment, onCancel }: EditMomentFormProps) {
   const [pending, setPending] = useState(false);
   const [percent, setPercent] = useState<number | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [timezoneOffset] = useState(() =>
+    String(new Date().getTimezoneOffset()),
+  );
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -69,7 +77,11 @@ export function EditMomentForm({ moment, onCancel }: EditMomentFormProps) {
         },
       );
 
-      router.push(result.redirectTo ?? `/moments/${moment.id}`);
+      setPending(false);
+      setProcessing(false);
+      setPercent(null);
+      onSaved();
+      router.push(result.redirectTo ?? `/moments/${moment.id}?updated=1`);
       router.refresh();
     } catch (submitError) {
       setPending(false);
@@ -85,6 +97,7 @@ export function EditMomentForm({ moment, onCancel }: EditMomentFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      <input type="hidden" name="occurred_at_offset" value={timezoneOffset} />
       <div className="space-y-2">
         <Label htmlFor="body">What happened?</Label>
         <Textarea

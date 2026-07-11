@@ -7,17 +7,24 @@ import { MomentDetailNav } from "@/components/moments/MomentDetailNav";
 import { MomentDetailPanel } from "@/components/moments/MomentDetailPanel";
 import { Card } from "@/components/ui/Card";
 import { PageShell } from "@/components/ui/PageShell";
+import { SavedToast } from "@/components/ui/SavedToast";
 import { toUserErrorMessage } from "@/lib/errors";
 import { getAdjacentMomentIds, getMomentById } from "@/lib/moments/queries";
 
 type MomentDetailPageProps = {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{
+    updated?: string | string[];
+  }>;
 };
 
 export default async function MomentDetailPage({
   params,
+  searchParams,
 }: MomentDetailPageProps) {
   const { id } = await params;
+  const rawParams = await searchParams;
+  const showUpdatedToast = rawParams.updated === "1";
 
   let moment;
 
@@ -45,6 +52,12 @@ export default async function MomentDetailPage({
             ← Back to your journal
           </Link>
         </p>
+
+        <SavedToast
+          initialVisible={showUpdatedToast}
+          queryParam="updated"
+          message="Saved — your changes are kept."
+        />
 
         <Card padding="lg" className="rounded-[1.5rem]">
           <MomentDetailPanel moment={moment} />

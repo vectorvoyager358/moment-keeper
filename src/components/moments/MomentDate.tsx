@@ -21,8 +21,8 @@ export function MomentDate({ iso, className }: MomentDateProps) {
   );
 
   return (
-    <time dateTime={iso} className={className}>
-      {formatMomentDate(iso, isClient ? undefined : "UTC")}
+    <time dateTime={iso} className={className} suppressHydrationWarning>
+      {isClient ? formatMomentDate(iso) : formatMomentDate(iso, "UTC")}
     </time>
   );
 }

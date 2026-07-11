@@ -80,6 +80,7 @@ const TIMELINE_SELECT = `
   media_attachments (
     id,
     media_type,
+    storage_path,
     thumbnail_path,
     display_order
   )
@@ -99,6 +100,7 @@ const MEDIA_GALLERY_SELECT = `
   media_attachments!inner (
     id,
     media_type,
+    storage_path,
     thumbnail_path,
     display_order
   )
@@ -113,6 +115,7 @@ export type MediaGalleryItem = {
   occurred_at: string;
   mediaType: MediaType;
   thumbnailUrl: string | null;
+  photoUrl: string | null;
 };
 
 async function withSignedThumbnails(
@@ -121,9 +124,12 @@ async function withSignedThumbnails(
   const supabase = await createClient();
   const paths = [
     ...new Set(
-      rows
-        .map((row) => mapTimelineRow(row).thumbnailPath)
-        .filter((path): path is string => Boolean(path)),
+      rows.flatMap((row) => {
+        const mapped = mapTimelineRow(row);
+        return [mapped.thumbnailPath, mapped.photoStoragePath].filter(
+          (path): path is string => Boolean(path),
+        );
+      }),
     ),
   ];
 
@@ -145,11 +151,17 @@ async function withSignedThumbnails(
 
   return rows.map((row) => {
     const mapped = mapTimelineRow(row);
+    const thumbnailUrl = mapped.thumbnailPath
+      ? (urlByPath.get(mapped.thumbnailPath) ?? null)
+      : null;
+    const photoUrl = mapped.photoStoragePath
+      ? (urlByPath.get(mapped.photoStoragePath) ?? null)
+      : null;
+
     return {
       ...mapped,
-      thumbnailUrl: mapped.thumbnailPath
-        ? (urlByPath.get(mapped.thumbnailPath) ?? null)
-        : null,
+      thumbnailUrl,
+      photoUrl,
     };
   });
 }
@@ -247,18 +259,28 @@ export async function getMediaGalleryMoments(
           occurred_at: moment.occurred_at,
           mediaType: attachment.media_type,
           thumbnailPath: attachment.thumbnail_path,
+          photoStoragePath:
+            attachment.media_type === "photo"
+              ? (attachment.storage_path ?? null)
+              : null,
         })),
     )
     .slice(0, MEDIA_GALLERY_LIMIT);
-  const thumbnailPaths = items
-    .map((item) => item.thumbnailPath)
-    .filter((path): path is string => Boolean(path));
+  const storagePaths = [
+    ...new Set(
+      items.flatMap((item) =>
+        [item.thumbnailPath, item.photoStoragePath].filter(
+          (path): path is string => Boolean(path),
+        ),
+      ),
+    ),
+  ];
   const signedUrlByPath = new Map<string, string>();
 
-  if (thumbnailPaths.length > 0) {
+  if (storagePaths.length > 0) {
     const { data: signedData, error: signedError } = await supabase.storage
       .from(MEDIA_BUCKET)
-      .createSignedUrls([...new Set(thumbnailPaths)], 60 * 60);
+      .createSignedUrls(storagePaths, 60 * 60);
 
     if (!signedError && signedData) {
       for (const item of signedData) {
@@ -269,12 +291,20 @@ export async function getMediaGalleryMoments(
     }
   }
 
-  return items.map(({ thumbnailPath, ...item }) => ({
-    ...item,
-    thumbnailUrl: thumbnailPath
+  return items.map(({ thumbnailPath, photoStoragePath, ...item }) => {
+    const thumbnailUrl = thumbnailPath
       ? (signedUrlByPath.get(thumbnailPath) ?? null)
-      : null,
-  }));
+      : null;
+    const photoUrl = photoStoragePath
+      ? (signedUrlByPath.get(photoStoragePath) ?? null)
+      : null;
+
+    return {
+      ...item,
+      thumbnailUrl,
+      photoUrl,
+    };
+  });
 }
 
 export async function getOnThisDayMoments(

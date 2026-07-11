@@ -61,6 +61,9 @@ export function CaptureForm({ userId }: CaptureFormProps) {
   const [pending, setPending] = useState(false);
   const [percent, setPercent] = useState<number | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [timezoneOffset] = useState(() =>
+    String(new Date().getTimezoneOffset()),
+  );
 
   useEffect(() => {
     const draft = readCaptureDraft(userId);
@@ -169,7 +172,8 @@ export function CaptureForm({ userId }: CaptureFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="space-y-2">
+      <input type="hidden" name="occurred_at_offset" value={timezoneOffset} />
+      <div className="mb-8 space-y-3">
         <Label htmlFor="body">What happened?</Label>
         <div className="rounded-2xl bg-accent-subtle/60 p-3.5">
           <p className="flex items-center gap-2 text-xs font-semibold tracking-wide text-accent uppercase">

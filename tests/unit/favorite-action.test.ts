@@ -29,6 +29,6 @@ describe("setMomentFavorite", () => {
     expect(eq).toHaveBeenCalledWith("id", "moment-1");
     expect(revalidatePath).toHaveBeenCalledWith("/timeline");
     expect(revalidatePath).toHaveBeenCalledWith("/browse");
-    expect(revalidatePath).toHaveBeenCalledWith("/moments/moment-1");
+    expect(revalidatePath).not.toHaveBeenCalledWith("/moments/moment-1");
   });
 });
