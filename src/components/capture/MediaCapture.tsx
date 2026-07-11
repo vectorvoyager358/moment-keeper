@@ -4,6 +4,7 @@ import { Camera, Square, SwitchCamera, Video, X, ZoomIn } from "lucide-react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 
+import { NativeMediaCapture } from "@/components/capture/NativeMediaCapture";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import {
@@ -20,6 +21,7 @@ import {
   isVideoCaptureSupported,
   MAX_CAMERA_VIDEO_MS,
   openCameraStream,
+  prefersNativeCamera,
   toggleFacingMode,
   type CameraFacingMode,
   type ZoomCapabilities,
@@ -45,7 +47,27 @@ function subscribeToCameraSupport() {
   return () => {};
 }
 
-export function MediaCapture({
+export function MediaCapture(props: MediaCaptureProps) {
+  const useNative = useSyncExternalStore(
+    subscribeToCameraSupport,
+    prefersNativeCamera,
+    () => false,
+  );
+
+  if (useNative) {
+    return (
+      <NativeMediaCapture
+        disabled={props.disabled}
+        onCaptured={props.onCaptured}
+        onError={props.onError}
+      />
+    );
+  }
+
+  return <BrowserMediaCapture {...props} />;
+}
+
+function BrowserMediaCapture({
   onCameraActiveChange,
   onCaptured,
   onError,

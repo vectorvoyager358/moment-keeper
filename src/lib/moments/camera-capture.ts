@@ -37,6 +37,22 @@ export function isCameraSupported(): boolean {
   );
 }
 
+/** Mobile browsers open the native camera app when file inputs use `capture`. */
+export function prefersNativeCamera(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return (
+    window.matchMedia("(pointer: coarse)").matches &&
+    window.matchMedia("(max-width: 768px)").matches
+  );
+}
+
+export const NATIVE_PHOTO_CAPTURE_ACCEPT = "image/*";
+export const NATIVE_VIDEO_CAPTURE_ACCEPT =
+  "video/mp4,video/quicktime,video/webm,video/*";
+
 export function isVideoCaptureSupported(): boolean {
   return (
     isCameraSupported() &&

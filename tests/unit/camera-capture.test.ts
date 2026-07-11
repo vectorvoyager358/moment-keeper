@@ -9,6 +9,7 @@ import {
   getZoomCapabilities,
   isCameraSupported,
   isVideoCaptureSupported,
+  prefersNativeCamera,
   toggleFacingMode,
 } from "@/lib/moments/camera-capture";
 
@@ -32,6 +33,18 @@ describe("buildCameraPhotoFileName", () => {
 describe("buildCameraVideoFileName", () => {
   it("creates a webm filename with a timestamp", () => {
     expect(buildCameraVideoFileName("video/webm")).toMatch(/^video-.*\.webm$/);
+  });
+});
+
+describe("prefersNativeCamera", () => {
+  it("returns false when matchMedia is unavailable", () => {
+    vi.stubGlobal("window", {
+      matchMedia: () => ({ matches: false }),
+    });
+
+    expect(prefersNativeCamera()).toBe(false);
+
+    vi.unstubAllGlobals();
   });
 });
 
