@@ -33,7 +33,7 @@ export default async function MomentDetailPage({
   return (
     <PageShell>
       <AppNav current="timeline" />
-      <main className="mx-auto max-w-2xl px-6 py-10">
+      <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
         <p className="mb-6 text-sm">
           <Link
             href="/timeline"
@@ -43,7 +43,7 @@ export default async function MomentDetailPage({
           </Link>
         </p>
 
-        <Card padding="lg">
+        <Card padding="lg" className="rounded-[1.5rem]">
           <MomentDetailPanel moment={moment} />
         </Card>
 

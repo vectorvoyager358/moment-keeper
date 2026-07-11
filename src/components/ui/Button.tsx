@@ -21,8 +21,8 @@ const variantClasses: Record<ButtonVariant, string> = {
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: "rounded-lg px-3 py-1.5 text-sm",
-  md: "rounded-lg px-4 py-2 text-sm",
+  sm: "rounded-xl px-3.5 py-2 text-sm",
+  md: "rounded-xl px-4 py-2.5 text-sm",
 };
 
 export function buttonClassName({
@@ -35,7 +35,7 @@ export function buttonClassName({
   className?: string;
 } = {}) {
   return cn(
-    "inline-flex items-center justify-center font-medium transition disabled:cursor-not-allowed disabled:opacity-60",
+    "inline-flex items-center justify-center gap-2 font-medium transition duration-[var(--duration-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100",
     variantClasses[variant],
     sizeClasses[size],
     className,

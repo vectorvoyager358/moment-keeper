@@ -1,4 +1,12 @@
 export type MediaType = "photo" | "video" | "audio";
+export type MemoryTheme =
+  | "joy"
+  | "achievement"
+  | "growth"
+  | "gratitude"
+  | "connection"
+  | "adventure"
+  | "calm";
 
 export interface Profile {
   id: string;
@@ -12,6 +20,7 @@ export interface Moment {
   id: string;
   user_id: string;
   body: string;
+  themes: MemoryTheme[];
   occurred_at: string;
   created_at: string;
   updated_at: string;
@@ -68,12 +77,14 @@ export type Database = {
           id?: string;
           user_id: string;
           body: string;
+          themes?: MemoryTheme[];
           occurred_at?: string;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           body?: string;
+          themes?: MemoryTheme[];
           occurred_at?: string;
           updated_at?: string;
         };
@@ -157,9 +168,22 @@ export type Database = {
           occurred_at: string;
         }[];
       };
+      resurface_moment_ids: {
+        Args: {
+          p_themes: MemoryTheme[];
+          p_media_type?: MediaType | null;
+          p_limit?: number;
+        };
+        Returns: {
+          id: string;
+          match_source: "theme" | "content";
+          rank: number;
+        }[];
+      };
     };
     Enums: {
       media_type: MediaType;
+      memory_theme: MemoryTheme;
     };
     CompositeTypes: {
       [_ in never]: never;

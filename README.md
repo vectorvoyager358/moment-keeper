@@ -86,6 +86,8 @@ If it persists: `rm -rf node_modules .next && npm install`
 3. Run later migrations in order, including:
    - [`supabase/migrations/20260708200000_search_moment_ids.sql`](supabase/migrations/20260708200000_search_moment_ids.sql) for full-text search
    - [`supabase/migrations/20260708210000_media_thumbnail_path.sql`](supabase/migrations/20260708210000_media_thumbnail_path.sql) for photo thumbnails
+   - [`supabase/migrations/20260708220000_on_this_day_moment_ids.sql`](supabase/migrations/20260708220000_on_this_day_moment_ids.sql) for on-this-day memories
+   - [`supabase/migrations/20260710043000_memory_themes.sql`](supabase/migrations/20260710043000_memory_themes.sql) for theme and content resurfacing
 
 See [`supabase/README.md`](supabase/README.md) for verification steps.
 

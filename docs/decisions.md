@@ -31,6 +31,10 @@ Significant technical decisions. Add a row when a choice is made — don't relit
 | 2026-07-08 | **On this day resurfacing on timeline**             | `on_this_day_moment_ids` RPC matches UTC month/day on `occurred_at`, excludes current year. Horizontal scroll section on timeline with years-ago labels.                                                    |
 | 2026-07-09 | **In-browser voice memo on capture/edit**           | MediaRecorder API records audio in the browser (free, no API). Attaches as `audio/webm` / `audio/mp4` to the existing media upload; 10-minute cap; works on capture and edit forms.                         |
 | 2026-07-09 | **In-browser camera photo on capture/edit**         | `getUserMedia` video preview + canvas JPEG capture; prefers rear camera on mobile; runs through existing photo compression before upload. Free — no third-party API.                                        |
+| 2026-07-09 | **Per-user local capture drafts**                   | Text, date, and tags auto-save to user-scoped `localStorage` and clear after a successful save. Media is excluded because browser file handles cannot be restored safely.                                   |
+| 2026-07-09 | **Journal-first UI patterns**                       | Mobile bottom navigation, editorial timeline cards, compact search, and optional reflection prompts borrow proven patterns from Day One and Apple Journal without adding streak pressure.                   |
+| 2026-07-09 | **Media-first journal presentation**                | Local attachment previews prevent wrong uploads; visual timeline tiles represent audio/video; photo/video lead detail pages; tags link directly to timeline filters.                                        |
+| 2026-07-09 | **Structured themes before semantic AI**            | Moments accept up to three fixed themes. Resurfacing ranks those first and uses curated full-text terms as a private fallback; future embeddings can extend the same query and UI as an explicit opt-in.    |
 
 ---
 

@@ -9,6 +9,7 @@ describe("mapMomentDetailRow", () => {
         id: "moment-1",
         body: "A proud moment.",
         occurred_at: "2026-07-07T12:00:00.000Z",
+        themes: ["achievement"],
         moment_tags: [{ tags: { id: "tag-1", name: "work" } }],
         media_attachments: null,
       },
@@ -16,6 +17,7 @@ describe("mapMomentDetailRow", () => {
     );
 
     expect(result.media).toBeNull();
+    expect(result.themes).toEqual(["achievement"]);
     expect(result.tags).toEqual([{ id: "tag-1", name: "work" }]);
   });
 
@@ -25,6 +27,7 @@ describe("mapMomentDetailRow", () => {
         id: "moment-2",
         body: "Photo moment.",
         occurred_at: "2026-07-07T12:00:00.000Z",
+        themes: [],
         moment_tags: null,
         media_attachments: [
           {
@@ -54,6 +57,7 @@ describe("mapMomentDetailRow", () => {
         id: "moment-3",
         body: "Video moment.",
         occurred_at: "2026-07-07T12:00:00.000Z",
+        themes: [],
         moment_tags: null,
         media_attachments: {
           id: "media-2",

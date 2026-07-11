@@ -18,6 +18,7 @@ import {
   replaceMomentTags,
 } from "@/lib/moments/repository";
 import { parseTagInput } from "@/lib/moments/tags";
+import { parseMemoryThemeFormData } from "@/lib/moments/themes";
 import { validateMomentBody } from "@/lib/moments/validation";
 import { createClient } from "@/lib/supabase/server";
 
@@ -31,7 +32,12 @@ export async function saveNewMoment(
   const body = String(formData.get("body") ?? "");
   const occurredAtRaw = String(formData.get("occurred_at") ?? "");
   const tagsRaw = String(formData.get("tags") ?? "");
+  const themeInput = parseMemoryThemeFormData(formData);
   const mediaFile = getMediaFileFromFormData(formData);
+
+  if (themeInput.error) {
+    return { ok: false, error: themeInput.error, status: 400 };
+  }
 
   const bodyError = validateMomentBody(body);
   if (bodyError) {
@@ -70,6 +76,7 @@ export async function saveNewMoment(
     .insert({
       user_id: user.id,
       body: body.trim(),
+      themes: themeInput.themes,
       occurred_at: occurredAt,
     })
     .select("id")
@@ -112,7 +119,12 @@ export async function saveUpdatedMoment(
   const body = String(formData.get("body") ?? "");
   const occurredAtRaw = String(formData.get("occurred_at") ?? "");
   const tagsRaw = String(formData.get("tags") ?? "");
+  const themeInput = parseMemoryThemeFormData(formData);
   const mediaFile = getMediaFileFromFormData(formData);
+  if (themeInput.error) {
+    return { ok: false, error: themeInput.error, status: 400 };
+  }
+
   const removeMedia = shouldRemoveMedia(formData);
 
   const bodyError = validateMomentBody(body);
@@ -151,6 +163,7 @@ export async function saveUpdatedMoment(
     .from("moments")
     .update({
       body: body.trim(),
+      themes: themeInput.themes,
       occurred_at: occurredAt,
     })
     .eq("id", momentId);

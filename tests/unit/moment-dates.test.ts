@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { truncateBody, validateOccurredAt } from "@/lib/moments/dates";
+import {
+  formatMomentDate,
+  truncateBody,
+  validateOccurredAt,
+} from "@/lib/moments/dates";
 
 describe("validateOccurredAt", () => {
   it("rejects invalid dates", () => {
@@ -28,5 +32,15 @@ describe("truncateBody", () => {
 
   it("leaves short text unchanged", () => {
     expect(truncateBody("Short moment.")).toBe("Short moment.");
+  });
+});
+
+describe("formatMomentDate", () => {
+  it("formats an instant in the requested timezone", () => {
+    const iso = "2026-07-09T12:00:00.000Z";
+
+    expect(formatMomentDate(iso, "America/Chicago")).not.toBe(
+      formatMomentDate(iso, "UTC"),
+    );
   });
 });

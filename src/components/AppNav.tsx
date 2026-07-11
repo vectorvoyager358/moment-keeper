@@ -25,8 +25,8 @@ const navItems = [
 
 export function AppNav({ current }: AppNavProps) {
   return (
-    <header className="sticky top-0 z-10 border-b border-border bg-paper/90 backdrop-blur-md">
-      <div className="mx-auto flex max-w-3xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-4">
+    <header className="sticky top-0 z-20 border-b border-border/80 bg-paper/85 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
         <Link
           href="/timeline"
           className="group inline-flex items-center gap-2.5 text-ink transition hover:text-accent"
@@ -40,7 +40,7 @@ export function AppNav({ current }: AppNavProps) {
         </Link>
 
         <nav
-          className="flex items-center gap-1 rounded-xl border border-border bg-surface p-1 sm:gap-1.5"
+          className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-3 border-t border-border/80 bg-surface/95 px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(42,33,24,0.08)] backdrop-blur-xl sm:static sm:flex sm:items-center sm:gap-1.5 sm:rounded-xl sm:border sm:bg-surface sm:p-1 sm:shadow-none"
           aria-label="Main"
         >
           {navItems.map(({ id, href, label, icon: Icon }) => {
@@ -51,9 +51,9 @@ export function AppNav({ current }: AppNavProps) {
                 key={id}
                 href={href}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition",
+                  "inline-flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-xl px-3 py-1.5 text-xs font-medium transition sm:min-h-0 sm:flex-row sm:gap-1.5 sm:rounded-lg sm:py-2 sm:text-sm",
                   active
-                    ? "bg-accent text-white shadow-sm"
+                    ? "bg-accent-subtle text-accent sm:bg-accent sm:text-white sm:shadow-sm"
                     : "text-muted hover:bg-accent-subtle hover:text-ink",
                   id === "capture" &&
                     !active &&

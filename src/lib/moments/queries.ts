@@ -3,6 +3,7 @@ import {
   type MomentDetail,
   type MomentDetailQueryRow,
 } from "@/lib/moments/detail";
+import type { MediaType, MemoryTheme } from "@/lib/database.types";
 import {
   paginateItems,
   TIMELINE_PAGE_SIZE,
@@ -25,6 +26,7 @@ import {
   type TimelineQueryRow,
 } from "@/lib/moments/timeline";
 import { MEDIA_BUCKET } from "@/lib/moments/media";
+import { RESURFACED_MOMENT_LIMIT } from "@/lib/moments/themes";
 import { createClient } from "@/lib/supabase/server";
 
 export type {
@@ -44,6 +46,7 @@ const MOMENT_SELECT = `
   id,
   body,
   occurred_at,
+  themes,
   moment_tags (
     tags (
       id,
@@ -161,6 +164,51 @@ export async function getOnThisDayMoments(
   }
 
   const orderedIds = ordered.map((row) => row.id);
+
+  const { data, error } = await supabase
+    .from("moments")
+    .select(TIMELINE_SELECT)
+    .in("id", orderedIds);
+
+  if (error) {
+    throw error;
+  }
+
+  return orderByIds(
+    await withSignedThumbnails((data ?? []) as TimelineQueryRow[]),
+    orderedIds,
+  );
+}
+
+export async function getResurfacedMoments(
+  themes: MemoryTheme[],
+  mediaType: MediaType | null = null,
+): Promise<TimelineMoment[]> {
+  if (themes.length === 0) {
+    return [];
+  }
+
+  const supabase = await createClient();
+  const { data: ranked, error: rpcError } = await supabase.rpc(
+    "resurface_moment_ids",
+    {
+      p_themes: themes,
+      p_media_type: mediaType,
+      p_limit: RESURFACED_MOMENT_LIMIT,
+    },
+  );
+
+  if (rpcError) {
+    throw rpcError;
+  }
+
+  const orderedIds = (ranked ?? []).map(
+    (row: { id: string; match_source: string; rank: number }) => row.id,
+  );
+
+  if (orderedIds.length === 0) {
+    return [];
+  }
 
   const { data, error } = await supabase
     .from("moments")

@@ -12,14 +12,18 @@ export function MomentMediaDisplay({ media }: MomentMediaDisplayProps) {
       <img
         src={media.signedUrl}
         alt={media.original_filename ?? "Moment attachment"}
-        className="max-h-96 w-full rounded-xl object-contain"
+        className="max-h-[34rem] w-full rounded-2xl bg-accent-subtle object-contain"
       />
     );
   }
 
   if (media.media_type === "video") {
     return (
-      <video controls src={media.signedUrl} className="w-full rounded-xl">
+      <video
+        controls
+        src={media.signedUrl}
+        className="max-h-[34rem] w-full rounded-2xl bg-black"
+      >
         Your browser does not support video playback.
       </video>
     );

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Search } from "lucide-react";
 
 import { Button, buttonClassName } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -17,16 +18,28 @@ export function TimelineSearchForm({ filters, tags }: TimelineSearchFormProps) {
 
   return (
     <form action="/timeline" method="get" className="space-y-4">
-      <Card padding="sm" className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="q">Search</Label>
-          <Input
-            id="q"
-            name="q"
-            type="search"
-            defaultValue={filters.keyword}
-            placeholder="Search your moments..."
-          />
+      <Card padding="sm" className="space-y-3 rounded-[1.25rem]">
+        <div className="flex items-center gap-2">
+          <Label htmlFor="q" className="sr-only">
+            Search
+          </Label>
+          <div className="relative min-w-0 flex-1">
+            <Search
+              className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted"
+              aria-hidden
+            />
+            <Input
+              id="q"
+              name="q"
+              type="search"
+              defaultValue={filters.keyword}
+              placeholder="Search your moments..."
+              className="border-transparent bg-accent-subtle/55 pl-9 focus:border-accent"
+            />
+          </div>
+          <Button type="submit" size="sm">
+            Search
+          </Button>
         </div>
 
         {tags.length > 0 ? (
@@ -59,19 +72,16 @@ export function TimelineSearchForm({ filters, tags }: TimelineSearchFormProps) {
           </fieldset>
         ) : null}
 
-        <div className="flex flex-wrap gap-3">
-          <Button type="submit" size="sm">
-            Apply
-          </Button>
-          {filters.keyword || filters.tagIds.length > 0 ? (
+        {filters.keyword || filters.tagIds.length > 0 ? (
+          <div>
             <Link
               href="/timeline"
-              className={buttonClassName({ variant: "secondary", size: "sm" })}
+              className={buttonClassName({ variant: "ghost", size: "sm" })}
             >
-              Clear
+              Clear search and filters
             </Link>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
       </Card>
     </form>
   );
