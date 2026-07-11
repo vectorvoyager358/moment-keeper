@@ -10,10 +10,19 @@ describe("journal-focused navigation copy", () => {
   it("uses warm, consistent labels in the main navigation", () => {
     render(<AppNav current="timeline" />);
 
-    expect(screen.getByRole("link", { name: "Journal" })).toBeVisible();
-    expect(screen.getByRole("link", { name: "Keep" })).toBeVisible();
-    expect(screen.getByRole("link", { name: "Look back" })).toBeVisible();
-    expect(screen.getByRole("link", { name: "Account" })).toBeVisible();
+    expect(screen.getAllByRole("link", { name: "Journal" })[0]).toBeVisible();
+    expect(screen.getAllByRole("link", { name: "Keep" })[0]).toBeVisible();
+    expect(screen.getAllByRole("link", { name: "Look back" })[0]).toBeVisible();
+    expect(screen.getAllByRole("link", { name: "Account" })[0]).toBeVisible();
+  });
+
+  it("renders a dedicated mobile bottom navigation bar", () => {
+    render(<AppNav current="capture" />);
+
+    const mobileNavs = screen.getAllByRole("navigation", { name: "Main" });
+    expect(mobileNavs).toHaveLength(2);
+    expect(mobileNavs[1]).toHaveClass("md:hidden");
+    expect(mobileNavs[1]).toHaveClass("bottom-0");
   });
 
   it("describes browse views by user intent", () => {

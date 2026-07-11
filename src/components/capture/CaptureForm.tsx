@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Sparkles, Heart } from "lucide-react";
+import { ChevronDown, Sparkles, Heart } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 
 import { MediaFileInput } from "@/components/capture/MediaFileInput";
@@ -34,6 +34,16 @@ const CAPTURE_PROMPTS = [
   "Who made this moment meaningful?",
 ] as const;
 
+function draftUsesAddMore(draft: {
+  tags: string;
+  themes: MemoryTheme[];
+  isFavorite: boolean;
+}): boolean {
+  return (
+    draft.tags.trim().length > 0 || draft.themes.length > 0 || draft.isFavorite
+  );
+}
+
 export function CaptureForm({ userId }: CaptureFormProps) {
   const router = useRouter();
   const [body, setBody] = useState("");
@@ -44,12 +54,16 @@ export function CaptureForm({ userId }: CaptureFormProps) {
   const [themes, setThemes] = useState<MemoryTheme[]>([]);
   const [isFavorite, setIsFavorite] = useState(false);
   const [preparedMediaFiles, setPreparedMediaFiles] = useState<File[]>([]);
+  const [addMoreOpen, setAddMoreOpen] = useState(false);
   const [draftLoaded, setDraftLoaded] = useState(false);
   const [mediaValid, setMediaValid] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [percent, setPercent] = useState<number | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [timezoneOffset] = useState(() =>
+    String(new Date().getTimezoneOffset()),
+  );
 
   useEffect(() => {
     const draft = readCaptureDraft(userId);
@@ -66,6 +80,9 @@ export function CaptureForm({ userId }: CaptureFormProps) {
         setTags(draft.tags);
         setThemes(draft.themes);
         setIsFavorite(draft.isFavorite);
+        if (draftUsesAddMore(draft)) {
+          setAddMoreOpen(true);
+        }
       }
 
       setDraftLoaded(true);
@@ -102,6 +119,13 @@ export function CaptureForm({ userId }: CaptureFormProps) {
     themes,
     userId,
   ]);
+
+  function handlePreparedFilesChange(files: File[]) {
+    setPreparedMediaFiles(files);
+    if (files.length > 0) {
+      setAddMoreOpen(true);
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -148,7 +172,8 @@ export function CaptureForm({ userId }: CaptureFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="space-y-2">
+      <input type="hidden" name="occurred_at_offset" value={timezoneOffset} />
+      <div className="mb-8 space-y-3">
         <Label htmlFor="body">What happened?</Label>
         <div className="rounded-2xl bg-accent-subtle/60 p-3.5">
           <p className="flex items-center gap-2 text-xs font-semibold tracking-wide text-accent uppercase">
@@ -187,78 +212,6 @@ export function CaptureForm({ userId }: CaptureFormProps) {
         />
       </div>
 
-      <MemoryThemePicker
-        selected={themes}
-        disabled={pending}
-        onChange={(nextThemes) => {
-          setThemes(nextThemes);
-        }}
-      />
-
-      <div className="space-y-2">
-        <Label htmlFor="occurred_at">When did it happen?</Label>
-        <Input
-          id="occurred_at"
-          name="occurred_at"
-          type="datetime-local"
-          required
-          value={occurredAt}
-          onChange={(event) => {
-            setOccurredAt(event.target.value);
-          }}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="tags">
-          Tags <span className="font-normal text-muted">(optional)</span>
-        </Label>
-        <Input
-          id="tags"
-          name="tags"
-          type="text"
-          placeholder="work, proud moment"
-          value={tags}
-          onChange={(event) => {
-            setTags(event.target.value);
-          }}
-        />
-        <FieldHint>Separate tags with commas.</FieldHint>
-      </div>
-
-      <label
-        className={cn(
-          "inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition",
-          isFavorite
-            ? "border-accent bg-accent text-white"
-            : "border-border-strong bg-surface text-muted hover:border-accent/50 hover:text-accent",
-          pending && "pointer-events-none opacity-60",
-        )}
-      >
-        <input
-          type="checkbox"
-          name="favorite"
-          value="1"
-          checked={isFavorite}
-          disabled={pending}
-          aria-label="Keep close"
-          onChange={(event) => {
-            setIsFavorite(event.target.checked);
-          }}
-          className="sr-only"
-        />
-        <Heart
-          className={cn("h-3.5 w-3.5", isFavorite && "fill-current")}
-          aria-hidden
-        />
-        {isFavorite ? null : <span aria-hidden="true">Keep close</span>}
-      </label>
-
-      <MediaFileInput
-        onValidityChange={setMediaValid}
-        onPreparedFilesChange={setPreparedMediaFiles}
-      />
-
       {error ? <Alert variant="error">{error}</Alert> : null}
 
       <SaveProgress
@@ -279,6 +232,99 @@ export function CaptureForm({ userId }: CaptureFormProps) {
       >
         {pending ? "Keeping…" : "Keep this moment"}
       </Button>
+
+      <div className="space-y-4">
+        <button
+          type="button"
+          aria-expanded={addMoreOpen}
+          disabled={pending}
+          onClick={() => setAddMoreOpen((open) => !open)}
+          className="flex w-full items-center justify-between rounded-2xl border border-border-strong bg-surface px-4 py-3 text-left text-sm font-medium text-ink transition hover:border-accent/50 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:opacity-60"
+        >
+          <span>Add more</span>
+          <ChevronDown
+            className={cn(
+              "h-4 w-4 text-muted transition",
+              addMoreOpen && "rotate-180",
+            )}
+            aria-hidden
+          />
+        </button>
+
+        <div hidden={!addMoreOpen} className="space-y-5">
+          <MemoryThemePicker
+            selected={themes}
+            disabled={pending}
+            onChange={(nextThemes) => {
+              setThemes(nextThemes);
+            }}
+          />
+
+          <div className="space-y-2">
+            <Label htmlFor="occurred_at">When did it happen?</Label>
+            <Input
+              id="occurred_at"
+              name="occurred_at"
+              type="datetime-local"
+              required
+              value={occurredAt}
+              onChange={(event) => {
+                setOccurredAt(event.target.value);
+              }}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="tags">
+              Tags <span className="font-normal text-muted">(optional)</span>
+            </Label>
+            <Input
+              id="tags"
+              name="tags"
+              type="text"
+              placeholder="work, proud moment"
+              value={tags}
+              onChange={(event) => {
+                setTags(event.target.value);
+              }}
+            />
+            <FieldHint>Separate tags with commas.</FieldHint>
+          </div>
+
+          <label
+            className={cn(
+              "inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition",
+              isFavorite
+                ? "border-accent bg-accent text-white"
+                : "border-border-strong bg-surface text-muted hover:border-accent/50 hover:text-accent",
+              pending && "pointer-events-none opacity-60",
+            )}
+          >
+            <input
+              type="checkbox"
+              name="favorite"
+              value="1"
+              checked={isFavorite}
+              disabled={pending}
+              aria-label="Keep close"
+              onChange={(event) => {
+                setIsFavorite(event.target.checked);
+              }}
+              className="sr-only"
+            />
+            <Heart
+              className={cn("h-3.5 w-3.5", isFavorite && "fill-current")}
+              aria-hidden
+            />
+            {isFavorite ? null : <span aria-hidden="true">Keep close</span>}
+          </label>
+
+          <MediaFileInput
+            onValidityChange={setMediaValid}
+            onPreparedFilesChange={handlePreparedFilesChange}
+          />
+        </div>
+      </div>
     </form>
   );
 }

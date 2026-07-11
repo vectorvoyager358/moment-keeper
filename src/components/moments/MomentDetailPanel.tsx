@@ -16,7 +16,11 @@ export function MomentDetailPanel({ moment }: MomentDetailPanelProps) {
 
   if (isEditing) {
     return (
-      <EditMomentForm moment={moment} onCancel={() => setIsEditing(false)} />
+      <EditMomentForm
+        moment={moment}
+        onCancel={() => setIsEditing(false)}
+        onSaved={() => setIsEditing(false)}
+      />
     );
   }
 

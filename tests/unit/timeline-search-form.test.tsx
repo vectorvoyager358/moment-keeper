@@ -30,7 +30,7 @@ describe("TimelineSearchForm active filters", () => {
       screen.getByRole("link", { name: "Remove tag filter work" }),
     ).toHaveAttribute("href", "/timeline?q=presentation&tag=tag-2&favorite=1");
     expect(
-      screen.getByRole("link", { name: "Remove favorites filter" }),
+      screen.getByRole("link", { name: "Remove keep close filter" }),
     ).toHaveAttribute("href", "/timeline?q=presentation&tag=tag-1&tag=tag-2");
   });
 });

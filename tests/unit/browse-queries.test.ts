@@ -93,6 +93,7 @@ describe("browse queries", () => {
             {
               id: "media-1",
               media_type: "photo",
+              storage_path: "user/photo.jpg",
               thumbnail_path: "user/photo.thumb.jpg",
               display_order: 0,
             },
@@ -107,6 +108,10 @@ describe("browse queries", () => {
         data: [
           {
             path: "user/photo.thumb.jpg",
+            signedUrl: "https://example.com/photo-thumb.jpg",
+          },
+          {
+            path: "user/photo.jpg",
             signedUrl: "https://example.com/photo.jpg",
           },
         ],
@@ -121,7 +126,8 @@ describe("browse queries", () => {
     expect(result[0]).toEqual(
       expect.objectContaining({
         momentId: "moment-1",
-        thumbnailUrl: "https://example.com/photo.jpg",
+        thumbnailUrl: "https://example.com/photo-thumb.jpg",
+        photoUrl: "https://example.com/photo.jpg",
       }),
     );
   });

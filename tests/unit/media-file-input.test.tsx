@@ -9,8 +9,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { MediaFileInput } from "@/components/capture/MediaFileInput";
 
-vi.mock("@/components/capture/PhotoCapture", () => ({
-  PhotoCapture: () => null,
+vi.mock("@/components/capture/MediaCapture", () => ({
+  MediaCapture: () => null,
 }));
 
 vi.mock("@/components/capture/VoiceMemoRecorder", () => ({
@@ -32,7 +32,7 @@ describe("MediaFileInput", () => {
     const { container } = render(
       <MediaFileInput onPreparedFilesChange={onPreparedFilesChange} />,
     );
-    const input = screen.getByLabelText(/Add photos, videos, or voice memos/);
+    const input = screen.getByLabelText(/Add from your device/);
     const file = new File(["voice"], "memory.webm", { type: "audio/webm" });
 
     fireEvent.change(input, { target: { files: [file] } });
@@ -61,10 +61,9 @@ describe("MediaFileInput", () => {
       new File(["two"], "two.webm", { type: "audio/webm" }),
     ];
 
-    fireEvent.change(
-      screen.getByLabelText(/Add photos, videos, or voice memos/),
-      { target: { files } },
-    );
+    fireEvent.change(screen.getByLabelText(/Add from your device/), {
+      target: { files },
+    });
 
     await waitFor(() => {
       expect(onPreparedFilesChange).toHaveBeenCalledWith(files);

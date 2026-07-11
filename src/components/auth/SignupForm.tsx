@@ -15,10 +15,10 @@ export function SignupForm() {
 
   return (
     <AuthCard
-      title="Create your account"
-      description="Start saving moments that matter."
+      title="Start your private journal"
+      description="A quiet place for the moments you want to keep."
       alternateHref="/login"
-      alternateLabel="Already have an account? Log in"
+      alternateLabel="Already have a journal? Log in"
     >
       <form action={formAction} className="space-y-4">
         <div className="space-y-2">
@@ -50,7 +50,7 @@ export function SignupForm() {
         ) : null}
 
         <Button type="submit" disabled={pending} className="w-full">
-          {pending ? "Creating account..." : "Sign up"}
+          {pending ? "Creating your journal..." : "Create journal"}
         </Button>
       </form>
     </AuthCard>

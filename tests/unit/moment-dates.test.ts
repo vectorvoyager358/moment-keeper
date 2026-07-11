@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   formatMomentDate,
+  parseOccurredAtFormValue,
   truncateBody,
   validateOccurredAt,
 } from "@/lib/moments/dates";
@@ -41,6 +42,20 @@ describe("formatMomentDate", () => {
 
     expect(formatMomentDate(iso, "America/Chicago")).not.toBe(
       formatMomentDate(iso, "UTC"),
+    );
+  });
+});
+
+describe("parseOccurredAtFormValue", () => {
+  it("converts datetime-local values using the browser timezone offset", () => {
+    expect(parseOccurredAtFormValue("2026-07-11T12:54", 300)).toBe(
+      "2026-07-11T17:54:00.000Z",
+    );
+  });
+
+  it("keeps full ISO values intact", () => {
+    expect(parseOccurredAtFormValue("2026-07-11T17:54:00.000Z")).toBe(
+      "2026-07-11T17:54:00.000Z",
     );
   });
 });

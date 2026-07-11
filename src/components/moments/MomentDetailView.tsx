@@ -24,21 +24,22 @@ export function MomentDetailView({ moment, onEdit }: MomentDetailViewProps) {
 
   return (
     <article className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
+      <header className="space-y-3 border-b border-border/70 pb-4">
         <MomentDate
           iso={moment.occurred_at}
-          className="font-display text-sm font-medium text-muted"
+          className="block font-display text-sm font-medium text-muted"
         />
-        <div className="flex items-start gap-2">
+        <div className="flex items-center justify-end gap-2">
           <FavoriteMomentButton
             momentId={moment.id}
             initialFavorite={moment.is_favorite}
+            showLabel
           />
           <Button type="button" variant="secondary" size="sm" onClick={onEdit}>
             Edit
           </Button>
         </div>
-      </div>
+      </header>
 
       {visualMedia.length > 0 ? (
         <div

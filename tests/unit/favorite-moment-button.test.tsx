@@ -27,10 +27,12 @@ describe("FavoriteMomentButton", () => {
       <FavoriteMomentButton momentId="moment-1" initialFavorite={false} />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Save to favorites" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Keep this moment close" }),
+    );
 
     expect(
-      screen.getByRole("button", { name: "Remove from favorites" }),
+      screen.getByRole("button", { name: "Remove from keep close" }),
     ).toHaveAttribute("aria-pressed", "true");
     await waitFor(() => {
       expect(setMomentFavorite).toHaveBeenCalledWith("moment-1", true);

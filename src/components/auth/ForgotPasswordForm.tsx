@@ -25,9 +25,9 @@ export function ForgotPasswordForm({ initialError }: ForgotPasswordFormProps) {
   return (
     <AuthCard
       title="Reset your password"
-      description="Enter your email and we'll send a reset link if an account exists."
+      description="Enter your email and we'll send a reset link if a journal exists for it."
       alternateHref="/login"
-      alternateLabel="Back to log in"
+      alternateLabel="Back to your journal"
     >
       <form action={formAction} className="space-y-4">
         <div className="space-y-2">

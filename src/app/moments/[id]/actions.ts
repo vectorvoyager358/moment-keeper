@@ -41,7 +41,6 @@ export async function setMomentFavorite(
 
   revalidatePath("/timeline");
   revalidatePath("/browse");
-  revalidatePath(`/moments/${momentId}`);
   return { error: null };
 }
 

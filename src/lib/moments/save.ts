@@ -1,7 +1,11 @@
 import { revalidatePath } from "next/cache";
 
 import { toUserErrorMessage } from "@/lib/errors";
-import { validateOccurredAt } from "@/lib/moments/dates";
+import {
+  parseOccurredAtFormValue,
+  parseTimezoneOffsetFromFormData,
+  validateOccurredAt,
+} from "@/lib/moments/dates";
 import {
   getMediaFilesFromFormData,
   getRemovedMediaIds,
@@ -48,7 +52,8 @@ export async function saveNewMoment(
     return { ok: false, error: bodyError, status: 400 };
   }
 
-  const occurredAtError = validateOccurredAt(occurredAtRaw);
+  const timezoneOffset = parseTimezoneOffsetFromFormData(formData);
+  const occurredAtError = validateOccurredAt(occurredAtRaw, timezoneOffset);
   if (occurredAtError) {
     return { ok: false, error: occurredAtError, status: 400 };
   }
@@ -71,7 +76,7 @@ export async function saveNewMoment(
     };
   }
 
-  const occurredAt = new Date(occurredAtRaw).toISOString();
+  const occurredAt = parseOccurredAtFormValue(occurredAtRaw, timezoneOffset);
 
   const { data: moment, error: momentError } = await supabase
     .from("moments")
@@ -134,7 +139,8 @@ export async function saveUpdatedMoment(
     return { ok: false, error: bodyError, status: 400 };
   }
 
-  const occurredAtError = validateOccurredAt(occurredAtRaw);
+  const timezoneOffset = parseTimezoneOffsetFromFormData(formData);
+  const occurredAtError = validateOccurredAt(occurredAtRaw, timezoneOffset);
   if (occurredAtError) {
     return { ok: false, error: occurredAtError, status: 400 };
   }
@@ -182,7 +188,7 @@ export async function saveUpdatedMoment(
     return { ok: false, error: mediaError, status: 400 };
   }
 
-  const occurredAt = new Date(occurredAtRaw).toISOString();
+  const occurredAt = parseOccurredAtFormValue(occurredAtRaw, timezoneOffset);
 
   const { error: updateError } = await supabase
     .from("moments")
@@ -242,5 +248,5 @@ export async function saveUpdatedMoment(
 
   revalidatePath("/timeline");
   revalidatePath(`/moments/${momentId}`);
-  return { ok: true, redirectTo: `/moments/${momentId}` };
+  return { ok: true, redirectTo: `/moments/${momentId}?updated=1` };
 }

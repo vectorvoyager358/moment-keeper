@@ -9,7 +9,14 @@ type PageShellProps = {
 
 export function PageShell({ children, className }: PageShellProps) {
   return (
-    <div className={cn("min-h-full pb-24 sm:pb-0", className)}>{children}</div>
+    <div
+      className={cn(
+        "min-h-full pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0",
+        className,
+      )}
+    >
+      {children}
+    </div>
   );
 }
 
@@ -27,18 +34,18 @@ export function PageHeader({
   className,
 }: PageHeaderProps) {
   return (
-    <div
-      className={cn("mb-8 flex items-start justify-between gap-4", className)}
-    >
-      <div>
-        <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">
+    <div className={cn("mb-10", className)}>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="font-display text-[1.625rem] font-semibold leading-none tracking-tight text-ink sm:text-3xl">
           {title}
         </h1>
-        {description ? (
-          <p className="mt-1 text-sm text-muted">{description}</p>
-        ) : null}
+        {action ? <div className="shrink-0">{action}</div> : null}
       </div>
-      {action}
+      {description ? (
+        <p className="mt-2.5 max-w-prose text-sm leading-relaxed text-muted">
+          {description}
+        </p>
+      ) : null}
     </div>
   );
 }

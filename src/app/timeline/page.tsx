@@ -1,24 +1,29 @@
-import Link from "next/link";
-import { PenLine, Shuffle } from "lucide-react";
 import { Suspense } from "react";
 
 import { AppNav } from "@/components/AppNav";
+import { KeepMomentLink } from "@/components/KeepMomentLink";
+import { OnThisDaySection } from "@/components/timeline/OnThisDaySection";
+import { ResurfacingSection } from "@/components/timeline/ResurfacingSection";
+import { TimelineCollapsiblePanel } from "@/components/timeline/TimelineCollapsiblePanel";
 import {
   TimelineResults,
   TimelineSearchSection,
 } from "@/components/timeline/TimelinePageSections";
-import { OnThisDaySection } from "@/components/timeline/OnThisDaySection";
-import { ResurfacingSection } from "@/components/timeline/ResurfacingSection";
+import { TimelineSurpriseLink } from "@/components/timeline/TimelineSurpriseLink";
 import { Alert } from "@/components/ui/Alert";
-import { buttonClassName } from "@/components/ui/Button";
 import {
   TimelineFeedSkeleton,
   TimelineSearchSkeleton,
 } from "@/components/ui/LoadingSkeleton";
 import { PageHeader, PageShell } from "@/components/ui/PageShell";
 import { SavedToast } from "@/components/ui/SavedToast";
-import { parseSearchParams } from "@/lib/moments/search";
+import { ScrollToTopButton } from "@/components/ui/ScrollToTopButton";
+import {
+  hasActiveSearchFilters,
+  parseSearchParams,
+} from "@/lib/moments/search";
 import { parseResurfacingParams } from "@/lib/moments/themes";
+import { getUserMomentCount } from "@/lib/moments/queries";
 
 type TimelinePageProps = {
   searchParams: Promise<{
@@ -39,6 +44,9 @@ export default async function TimelinePage({
   const filters = parseSearchParams(rawParams);
   const resurfacingFilters = parseResurfacingParams(rawParams);
   const showSavedToast = rawParams.saved === "1";
+  const momentCount = await getUserMomentCount();
+  const hasMoments = momentCount > 0;
+  const hasSearchFilters = hasActiveSearchFilters(filters);
 
   return (
     <PageShell>
@@ -47,65 +55,73 @@ export default async function TimelinePage({
         <PageHeader
           title="Your journal"
           description="A quiet place for the moments you want to keep."
-          action={
-            <div className="flex flex-wrap justify-end gap-2">
-              <Link
-                href="/timeline/surprise"
-                className={buttonClassName({
-                  variant: "secondary",
-                  size: "sm",
-                })}
-              >
-                <Shuffle className="h-4 w-4" aria-hidden />
-                Surprise me
-              </Link>
-              <Link href="/capture" className={buttonClassName({ size: "sm" })}>
-                <PenLine className="h-4 w-4" aria-hidden />
-                Keep a moment
-              </Link>
-            </div>
+          action={<KeepMomentLink />}
+        />
+
+        <SavedToast
+          initialVisible={showSavedToast}
+          hint={
+            showSavedToast && momentCount === 1
+              ? "Next time, open Add more on Keep to attach a photo or voice memo."
+              : null
           }
         />
 
-        <SavedToast initialVisible={showSavedToast} />
-
-        {rawParams.surprise === "empty" ? (
+        {hasMoments && rawParams.surprise === "empty" ? (
           <Alert className="mb-8">
             Keep your first moment, then “Surprise me” can bring one back.
           </Alert>
         ) : null}
 
-        <Suspense
-          key={`${resurfacingFilters.themes.join(",")}:${resurfacingFilters.mediaType ?? "all"}`}
-          fallback={
-            <div
-              className="mb-8 h-44 animate-pulse rounded-2xl border border-border bg-surface"
-              aria-hidden="true"
-            />
-          }
-        >
-          <ResurfacingSection
-            searchFilters={filters}
-            resurfacingFilters={resurfacingFilters}
-          />
-        </Suspense>
+        {hasMoments ? (
+          <TimelineCollapsiblePanel
+            panelId="find"
+            title="Find"
+            description="Search your journal by words, tags, or keep-close moments."
+            initialOpen={hasSearchFilters}
+            className="mt-6"
+          >
+            <Suspense fallback={<TimelineSearchSkeleton />}>
+              <TimelineSearchSection filters={filters} />
+            </Suspense>
+          </TimelineCollapsiblePanel>
+        ) : null}
 
-        <Suspense
-          fallback={
-            <div
-              className="mb-8 h-36 animate-pulse rounded-2xl border border-border bg-surface"
-              aria-hidden="true"
-            />
-          }
-        >
-          <OnThisDaySection filters={filters} />
-        </Suspense>
+        {hasMoments ? (
+          <TimelineCollapsiblePanel
+            panelId="revisit"
+            title="Revisit"
+            description="On this day, themes, and a surprise draw from your journal."
+          >
+            <Suspense
+              fallback={
+                <div
+                  className="h-36 animate-pulse rounded-2xl border border-border bg-surface"
+                  aria-hidden="true"
+                />
+              }
+            >
+              <OnThisDaySection filters={filters} />
+            </Suspense>
 
-        <div className="mb-8">
-          <Suspense fallback={<TimelineSearchSkeleton />}>
-            <TimelineSearchSection filters={filters} />
-          </Suspense>
-        </div>
+            <Suspense
+              key={`${resurfacingFilters.themes.join(",")}:${resurfacingFilters.mediaType ?? "all"}`}
+              fallback={
+                <div
+                  className="h-44 animate-pulse rounded-2xl border border-border bg-surface"
+                  aria-hidden="true"
+                />
+              }
+            >
+              <ResurfacingSection
+                searchFilters={filters}
+                resurfacingFilters={resurfacingFilters}
+              />
+            </Suspense>
+
+            <TimelineSurpriseLink />
+          </TimelineCollapsiblePanel>
+        ) : null}
 
         <Suspense
           key={`${filters.keyword}:${filters.tagIds.join(",")}:${filters.favoriteOnly}`}
@@ -119,6 +135,7 @@ export default async function TimelinePage({
           <TimelineResults filters={filters} />
         </Suspense>
       </main>
+      <ScrollToTopButton />
     </PageShell>
   );
 }
