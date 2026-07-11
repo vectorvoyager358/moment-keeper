@@ -60,7 +60,8 @@ const MOMENT_SELECT = `
     mime_type,
     original_filename,
     storage_path,
-    thumbnail_path
+    thumbnail_path,
+    display_order
   )
 `;
 
@@ -77,7 +78,8 @@ const TIMELINE_SELECT = `
   media_attachments (
     id,
     media_type,
-    thumbnail_path
+    thumbnail_path,
+    display_order
   )
 `;
 
@@ -94,11 +96,21 @@ const MEDIA_GALLERY_SELECT = `
   media_attachments!inner (
     id,
     media_type,
-    thumbnail_path
+    thumbnail_path,
+    display_order
   )
 `;
 
 export const MEDIA_GALLERY_LIMIT = 60;
+
+export type MediaGalleryItem = {
+  id: string;
+  momentId: string;
+  body: string;
+  occurred_at: string;
+  mediaType: MediaType;
+  thumbnailUrl: string | null;
+};
 
 async function withSignedThumbnails(
   rows: TimelineQueryRow[],
@@ -205,7 +217,7 @@ export async function getCalendarMoments(
 
 export async function getMediaGalleryMoments(
   mediaType: MediaType | null = null,
-): Promise<TimelineMoment[]> {
+): Promise<MediaGalleryItem[]> {
   const supabase = await createClient();
   let query = supabase.from("moments").select(MEDIA_GALLERY_SELECT);
 
@@ -221,7 +233,45 @@ export async function getMediaGalleryMoments(
     throw error;
   }
 
-  return withSignedThumbnails((data ?? []) as TimelineQueryRow[]);
+  const items = ((data ?? []) as TimelineQueryRow[])
+    .flatMap((moment) =>
+      normalizeRelationItems(moment.media_attachments)
+        .sort((a, b) => a.display_order - b.display_order)
+        .map((attachment) => ({
+          id: attachment.id,
+          momentId: moment.id,
+          body: moment.body,
+          occurred_at: moment.occurred_at,
+          mediaType: attachment.media_type,
+          thumbnailPath: attachment.thumbnail_path,
+        })),
+    )
+    .slice(0, MEDIA_GALLERY_LIMIT);
+  const thumbnailPaths = items
+    .map((item) => item.thumbnailPath)
+    .filter((path): path is string => Boolean(path));
+  const signedUrlByPath = new Map<string, string>();
+
+  if (thumbnailPaths.length > 0) {
+    const { data: signedData, error: signedError } = await supabase.storage
+      .from(MEDIA_BUCKET)
+      .createSignedUrls([...new Set(thumbnailPaths)], 60 * 60);
+
+    if (!signedError && signedData) {
+      for (const item of signedData) {
+        if (item.path && item.signedUrl) {
+          signedUrlByPath.set(item.path, item.signedUrl);
+        }
+      }
+    }
+  }
+
+  return items.map(({ thumbnailPath, ...item }) => ({
+    ...item,
+    thumbnailUrl: thumbnailPath
+      ? (signedUrlByPath.get(thumbnailPath) ?? null)
+      : null,
+  }));
 }
 
 export async function getOnThisDayMoments(
@@ -455,20 +505,27 @@ export async function getMomentById(id: string): Promise<MomentDetail | null> {
   }
 
   const row = data as MomentDetailQueryRow;
-  const attachment = normalizeRelationItems(row.media_attachments)[0] ?? null;
-  let signedUrl: string | null = null;
+  const attachments = normalizeRelationItems(row.media_attachments);
+  const signedUrlByPath = new Map<string, string>();
 
-  if (attachment) {
+  if (attachments.length > 0) {
     const { data: signedData, error: signedError } = await supabase.storage
       .from("moment-media")
-      .createSignedUrl(attachment.storage_path, 60 * 60);
+      .createSignedUrls(
+        attachments.map((attachment) => attachment.storage_path),
+        60 * 60,
+      );
 
     if (signedError) {
       throw signedError;
     }
 
-    signedUrl = signedData.signedUrl;
+    for (const item of signedData) {
+      if (item.path && item.signedUrl) {
+        signedUrlByPath.set(item.path, item.signedUrl);
+      }
+    }
   }
 
-  return mapMomentDetailRow(row, signedUrl);
+  return mapMomentDetailRow(row, signedUrlByPath);
 }

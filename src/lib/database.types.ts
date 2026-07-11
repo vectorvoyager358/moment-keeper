@@ -44,6 +44,7 @@ export interface MediaAttachment {
   moment_id: string;
   user_id: string;
   media_type: MediaType;
+  display_order: number;
   storage_path: string;
   thumbnail_path: string | null;
   mime_type: string;
@@ -122,6 +123,7 @@ export type Database = {
           moment_id: string;
           user_id: string;
           media_type: MediaType;
+          display_order?: number;
           storage_path: string;
           thumbnail_path?: string | null;
           mime_type: string;
@@ -131,6 +133,7 @@ export type Database = {
         };
         Update: {
           media_type?: MediaType;
+          display_order?: number;
           storage_path?: string;
           thumbnail_path?: string | null;
           mime_type?: string;

@@ -15,12 +15,20 @@ type MomentCardProps = {
   highlightQuery?: string;
 };
 
-function MediaBadge({ mediaType }: { mediaType: TimelineMoment["mediaType"] }) {
+function MediaBadge({
+  mediaType,
+  attachmentCount,
+}: {
+  mediaType: TimelineMoment["mediaType"];
+  attachmentCount: number;
+}) {
+  const extra = attachmentCount > 1 ? ` +${attachmentCount - 1}` : "";
+
   if (mediaType === "photo") {
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-accent-subtle px-2 py-0.5 text-xs font-medium text-accent">
         <ImageIcon className="h-3 w-3" aria-hidden />
-        Photo
+        Photo{extra}
       </span>
     );
   }
@@ -29,7 +37,7 @@ function MediaBadge({ mediaType }: { mediaType: TimelineMoment["mediaType"] }) {
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-accent-subtle px-2 py-0.5 text-xs font-medium text-accent">
         <Video className="h-3 w-3" aria-hidden />
-        Video
+        Video{extra}
       </span>
     );
   }
@@ -38,7 +46,7 @@ function MediaBadge({ mediaType }: { mediaType: TimelineMoment["mediaType"] }) {
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-accent-subtle px-2 py-0.5 text-xs font-medium text-accent">
         <Mic className="h-3 w-3" aria-hidden />
-        Voice
+        Voice{extra}
       </span>
     );
   }
@@ -111,7 +119,10 @@ export function MomentCard({
               className="text-xs font-semibold tracking-[0.12em] text-muted uppercase"
             />
             {moment.hasMedia ? (
-              <MediaBadge mediaType={moment.mediaType} />
+              <MediaBadge
+                mediaType={moment.mediaType}
+                attachmentCount={moment.attachmentCount}
+              />
             ) : null}
           </div>
 

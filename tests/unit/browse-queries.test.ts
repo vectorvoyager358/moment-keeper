@@ -72,4 +72,57 @@ describe("browse queries", () => {
     });
     expect(builder.limit).toHaveBeenCalledWith(MEDIA_GALLERY_LIMIT);
   });
+
+  it("returns one gallery item per attachment", async () => {
+    const builder: Record<string, ReturnType<typeof vi.fn>> = {};
+    builder.order = vi.fn(() => builder);
+    builder.limit = vi.fn().mockResolvedValue({
+      data: [
+        {
+          id: "moment-1",
+          body: "A day away",
+          occurred_at: "2026-07-10T12:00:00.000Z",
+          moment_tags: [],
+          media_attachments: [
+            {
+              id: "media-2",
+              media_type: "audio",
+              thumbnail_path: null,
+              display_order: 1,
+            },
+            {
+              id: "media-1",
+              media_type: "photo",
+              thumbnail_path: "user/photo.thumb.jpg",
+              display_order: 0,
+            },
+          ],
+        },
+      ],
+      error: null,
+    });
+    const client = createClientWithBuilder(builder);
+    client.storage.from = vi.fn(() => ({
+      createSignedUrls: vi.fn().mockResolvedValue({
+        data: [
+          {
+            path: "user/photo.thumb.jpg",
+            signedUrl: "https://example.com/photo.jpg",
+          },
+        ],
+        error: null,
+      }),
+    }));
+    createClientMock.mockResolvedValue(client);
+
+    const result = await getMediaGalleryMoments();
+
+    expect(result.map((item) => item.id)).toEqual(["media-1", "media-2"]);
+    expect(result[0]).toEqual(
+      expect.objectContaining({
+        momentId: "moment-1",
+        thumbnailUrl: "https://example.com/photo.jpg",
+      }),
+    );
+  });
 });

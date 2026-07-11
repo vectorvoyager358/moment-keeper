@@ -27,7 +27,7 @@ type EditMomentFormProps = {
 export function EditMomentForm({ moment, onCancel }: EditMomentFormProps) {
   const router = useRouter();
   const [themes, setThemes] = useState<MemoryTheme[]>(moment.themes);
-  const [preparedMediaFile, setPreparedMediaFile] = useState<File | null>(null);
+  const [preparedMediaFiles, setPreparedMediaFiles] = useState<File[]>([]);
   const [mediaValid, setMediaValid] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -44,9 +44,8 @@ export function EditMomentForm({ moment, onCancel }: EditMomentFormProps) {
     const form = event.currentTarget;
     const formData = new FormData(form);
 
-    if (preparedMediaFile) {
-      formData.set("media", preparedMediaFile);
-    }
+    formData.delete("media");
+    preparedMediaFiles.forEach((file) => formData.append("media", file));
 
     setError(null);
     setPending(true);
@@ -126,10 +125,9 @@ export function EditMomentForm({ moment, onCancel }: EditMomentFormProps) {
       </div>
 
       <MediaFileInput
-        currentFilename={moment.media?.original_filename}
-        showRemove={Boolean(moment.media)}
+        existingMedia={moment.media}
         onValidityChange={setMediaValid}
-        onPreparedFileChange={setPreparedMediaFile}
+        onPreparedFilesChange={setPreparedMediaFiles}
       />
 
       {error ? <Alert variant="error">{error}</Alert> : null}

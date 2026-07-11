@@ -16,6 +16,7 @@ describe("MomentCard", () => {
           occurred_at: "2026-07-09T12:00:00.000Z",
           tags: [{ id: "tag-1", name: "travel" }],
           hasMedia: true,
+          attachmentCount: 1,
           mediaType: "video",
           thumbnailPath: null,
           thumbnailUrl: null,
@@ -39,6 +40,7 @@ describe("MomentCard", () => {
           occurred_at: "2026-07-09T12:00:00.000Z",
           tags: [],
           hasMedia: false,
+          attachmentCount: 0,
           mediaType: null,
           thumbnailPath: null,
           thumbnailUrl: null,
@@ -60,13 +62,16 @@ describe("MomentDetailView", () => {
           occurred_at: "2026-07-09T12:00:00.000Z",
           themes: ["joy"],
           tags: [{ id: "tag-1", name: "family" }],
-          media: {
-            id: "media-1",
-            media_type: "photo",
-            mime_type: "image/jpeg",
-            original_filename: "memory.jpg",
-            signedUrl: "https://example.com/memory.jpg",
-          },
+          media: [
+            {
+              id: "media-1",
+              media_type: "photo",
+              mime_type: "image/jpeg",
+              original_filename: "memory.jpg",
+              signedUrl: "https://example.com/memory.jpg",
+              display_order: 0,
+            },
+          ],
         }}
         onEdit={vi.fn()}
       />,

@@ -96,28 +96,30 @@ Join table linking moments to tags (many-to-many).
 
 ## MediaAttachment
 
-Optional single photo, video, or audio file per moment (MVP: max one attachment).
+Up to five ordered photo, video, or audio files per moment.
 
-| Field               | Type      | Notes                                                  |
-| ------------------- | --------- | ------------------------------------------------------ |
-| `id`                | UUID      | Primary key                                            |
-| `moment_id`         | UUID      | FK → Moment; UNIQUE (one attachment per moment in MVP) |
-| `user_id`           | UUID      | FK → User; denormalized for storage path scoping       |
-| `media_type`        | enum      | `photo` \| `video` \| `audio`                          |
-| `storage_path`      | string    | Path/key in object storage (not a public URL)          |
-| `thumbnail_path`    | string    | Optional JPEG thumbnail path for timeline previews     |
-| `mime_type`         | string    | e.g. `image/jpeg`, `video/mp4`, `audio/mpeg`           |
-| `file_size_bytes`   | integer   | For display / upload limits                            |
-| `original_filename` | string    | Optional; for download display                         |
-| `created_at`        | timestamp |                                                        |
+| Field               | Type      | Notes                                              |
+| ------------------- | --------- | -------------------------------------------------- |
+| `id`                | UUID      | Primary key                                        |
+| `moment_id`         | UUID      | FK → Moment                                        |
+| `user_id`           | UUID      | FK → User; denormalized for storage path scoping   |
+| `media_type`        | enum      | `photo` \| `video` \| `audio`                      |
+| `display_order`     | smallint  | Stable order from `0` to `4`                       |
+| `storage_path`      | string    | Path/key in object storage (not a public URL)      |
+| `thumbnail_path`    | string    | Optional JPEG thumbnail path for timeline previews |
+| `mime_type`         | string    | e.g. `image/jpeg`, `video/mp4`, `audio/mpeg`       |
+| `file_size_bytes`   | integer   | For display / upload limits                        |
+| `original_filename` | string    | Optional; for download display                     |
+| `created_at`        | timestamp |                                                    |
 
 **MVP upload limits (suggested):**
 
+- Combined upload: 50 MB across up to five attachments
 - Photo: 10 MB
 - Video: 50 MB
 - Audio: 25 MB
 
-**Client prep (capture / edit):** JPEG/PNG/WebP photos ≥ ~300 KB are downscaled (max edge 1920px) and re-encoded as JPEG before upload. GIFs, video, and audio are left unchanged.
+**Client prep (capture / edit):** JPEG/PNG/WebP photos ≥ ~300 KB are downscaled (max edge 1920px) and re-encoded as JPEG before upload. GIFs, video, and audio are left unchanged. Existing attachments can be removed individually while new files are appended.
 
 **Storage layout (suggested):** `{user_id}/{moment_id}/{attachment_id}.{ext}`  
 **Thumbnails (photos):** `{user_id}/{moment_id}/{attachment_id}.thumb.jpg` generated with `sharp` on upload (max edge 480px). Video/audio have no thumbnail yet.

@@ -35,7 +35,7 @@ export async function MediaGallery({ mediaType }: MediaGalleryProps) {
     <div>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted">
-          {moments.length} {moments.length === 1 ? "memory" : "memories"}
+          {moments.length} {moments.length === 1 ? "attachment" : "attachments"}
         </p>
         <div
           className="flex flex-wrap gap-1 rounded-xl border border-border bg-surface p-1"
@@ -85,7 +85,7 @@ export async function MediaGallery({ mediaType }: MediaGalleryProps) {
             return (
               <li key={moment.id}>
                 <Link
-                  href={`/moments/${moment.id}`}
+                  href={`/moments/${moment.momentId}`}
                   className="group relative flex aspect-square overflow-hidden rounded-2xl border border-border bg-accent-subtle shadow-card transition hover:-translate-y-0.5 hover:border-border-strong hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 >
                   {moment.thumbnailUrl ? (
