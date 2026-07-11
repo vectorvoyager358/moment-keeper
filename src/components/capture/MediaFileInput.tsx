@@ -207,13 +207,13 @@ export function MediaFileInput({
     <div className="space-y-4">
       <div className="space-y-2">
         <label htmlFor={inputId} className="text-sm font-medium text-ink">
-          Photo, video, or audio{" "}
+          Add a photo, video, or voice memo{" "}
           <span className="font-normal text-muted">(optional)</span>
         </label>
 
         {currentFilename ? (
           <p className="text-sm text-muted">
-            Current file:{" "}
+            Already attached:{" "}
             <span className="font-medium text-ink">{currentFilename}</span>
           </p>
         ) : null}
@@ -230,7 +230,7 @@ export function MediaFileInput({
         />
 
         <p className="text-xs text-muted">
-          Max 10 MB photos, 50 MB video, 25 MB audio. Large photos are
+          Max 10 MB photos, 50 MB video, 25 MB voice memos. Large photos are
           compressed before upload.
         </p>
       </div>
@@ -261,14 +261,14 @@ export function MediaFileInput({
             <div className="h-full w-1/2 animate-pulse rounded-full bg-accent" />
           </div>
           <p className="text-sm text-muted">
-            Preparing {prepareState.fileName}…
+            Getting {prepareState.fileName} ready…
           </p>
         </div>
       ) : null}
 
       {prepareState.status === "ready" && prepareState.compressed ? (
         <p className="text-sm text-muted">
-          Compressed {prepareState.fileName}:{" "}
+          {prepareState.fileName} was sized down for a quicker save:{" "}
           {formatFileSize(prepareState.originalBytes)} →{" "}
           {formatFileSize(prepareState.finalBytes)}
         </p>
@@ -276,7 +276,7 @@ export function MediaFileInput({
 
       {prepareState.status === "ready" && !prepareState.compressed ? (
         <p className="text-sm text-muted">
-          Ready: {prepareState.fileName} (
+          {prepareState.fileName} is ready to keep (
           {formatFileSize(prepareState.finalBytes)})
           {prepareState.source === "voice"
             ? " · voice memo"
@@ -341,7 +341,7 @@ export function MediaFileInput({
             name="remove_media"
             className="rounded border-border-strong accent-accent"
           />
-          Remove current attachment
+          Remove what&apos;s attached
         </label>
       ) : null}
     </div>

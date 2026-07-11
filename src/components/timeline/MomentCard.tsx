@@ -38,7 +38,7 @@ function MediaBadge({ mediaType }: { mediaType: TimelineMoment["mediaType"] }) {
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-accent-subtle px-2 py-0.5 text-xs font-medium text-accent">
         <Mic className="h-3 w-3" aria-hidden />
-        Audio
+        Voice
       </span>
     );
   }
@@ -51,10 +51,10 @@ function MediaTile({ mediaType }: { mediaType: TimelineMoment["mediaType"] }) {
     mediaType === "video" ? Video : mediaType === "audio" ? Mic : ImageIcon;
   const label =
     mediaType === "video"
-      ? "Video moment"
+      ? "A video"
       : mediaType === "audio"
-        ? "Voice moment"
-        : "Photo moment";
+        ? "A voice memo"
+        : "A photo";
 
   return (
     <div className="flex aspect-[3/1] items-center justify-center bg-gradient-to-br from-accent-subtle to-tag sm:aspect-[4/1]">
@@ -138,7 +138,7 @@ export function MomentCard({
             <li key={tag.id}>
               <Link
                 href={`/timeline?tag=${encodeURIComponent(tag.id)}`}
-                aria-label={`Filter timeline by ${tag.name}`}
+                aria-label={`See moments tagged ${tag.name}`}
                 className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 <Tag className="hover:bg-accent-subtle hover:text-accent">
@@ -169,10 +169,10 @@ export function TimelineEmptyState({ className }: TimelineEmptyStateProps) {
         Your journal is waiting
       </h2>
       <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted">
-        Save your first meaningful moment — a few words is enough to start.
+        A few honest words are enough to begin.
       </p>
       <Link href="/capture" className={buttonClassName({ className: "mt-6" })}>
-        Capture a moment
+        Keep your first moment
       </Link>
     </div>
   );

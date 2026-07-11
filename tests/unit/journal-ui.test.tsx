@@ -23,9 +23,9 @@ describe("MomentCard", () => {
       />,
     );
 
-    expect(screen.getByText("Video moment")).toBeVisible();
+    expect(screen.getByText("A video")).toBeVisible();
     expect(
-      screen.getByRole("link", { name: "Filter timeline by travel" }),
+      screen.getByRole("link", { name: "See moments tagged travel" }),
     ).toHaveAttribute("href", "/timeline?tag=tag-1");
   });
 
@@ -79,7 +79,7 @@ describe("MomentDetailView", () => {
       image.compareDocumentPosition(body) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(
-      screen.getByRole("link", { name: "Filter timeline by family" }),
+      screen.getByRole("link", { name: "See moments tagged family" }),
     ).toHaveAttribute("href", "/timeline?tag=tag-1");
     expect(screen.getByRole("link", { name: "Joy" })).toHaveAttribute(
       "href",

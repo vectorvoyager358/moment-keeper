@@ -46,7 +46,7 @@ export default async function CapturePage({ searchParams }: CapturePageProps) {
             href="/timeline"
             className="underline-offset-4 transition hover:text-accent hover:underline"
           >
-            Back to timeline
+            Back to your journal
           </Link>
         </p>
       </main>

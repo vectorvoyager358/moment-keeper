@@ -21,11 +21,16 @@ export default async function SettingsPage() {
     <PageShell>
       <AppNav current="settings" />
       <main className="mx-auto max-w-3xl px-6 py-10">
-        <PageHeader title="Settings" />
+        <PageHeader
+          title="Your account"
+          description="Sign-in details for your private journal."
+        />
 
         <Card padding="lg" className="space-y-4">
           <div>
-            <p className="text-sm font-medium text-muted">Signed in as</p>
+            <p className="text-sm font-medium text-muted">
+              You&apos;re signed in as
+            </p>
             <p className="mt-1 text-ink">{user?.email}</p>
           </div>
 
@@ -40,7 +45,7 @@ export default async function SettingsPage() {
           <CardHeader>
             <CardTitle>Change password</CardTitle>
             <CardDescription>
-              Update the password you use to sign in.
+              Choose a new password for signing in.
             </CardDescription>
           </CardHeader>
 

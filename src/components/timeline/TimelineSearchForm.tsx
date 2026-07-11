@@ -25,7 +25,7 @@ export function TimelineSearchForm({ filters, tags }: TimelineSearchFormProps) {
       <Card padding="sm" className="space-y-3 rounded-[1.25rem]">
         <div className="flex items-center gap-2">
           <Label htmlFor="q" className="sr-only">
-            Search
+            Find a moment
           </Label>
           <div className="relative min-w-0 flex-1">
             <Search
@@ -37,20 +37,18 @@ export function TimelineSearchForm({ filters, tags }: TimelineSearchFormProps) {
               name="q"
               type="search"
               defaultValue={filters.keyword}
-              placeholder="Search your moments..."
+              placeholder="Find a moment…"
               className="border-transparent bg-accent-subtle/55 pl-9 focus:border-accent"
             />
           </div>
           <Button type="submit" size="sm">
-            Search
+            Find
           </Button>
         </div>
 
         {tags.length > 0 ? (
           <fieldset className="space-y-2">
-            <legend className="text-sm font-medium text-ink">
-              Filter by tag
-            </legend>
+            <legend className="text-sm font-medium text-ink">Tags</legend>
             <div className="flex flex-wrap gap-2">
               {tags.map((tag) => (
                 <label
@@ -79,7 +77,7 @@ export function TimelineSearchForm({ filters, tags }: TimelineSearchFormProps) {
         {filters.keyword || selectedTags.length > 0 ? (
           <div className="border-t border-border pt-3">
             <p className="mb-2 text-xs font-semibold tracking-wide text-muted uppercase">
-              Active filters
+              Looking for
             </p>
             <div className="flex flex-wrap items-center gap-2">
               {filters.keyword ? (
@@ -117,7 +115,7 @@ export function TimelineSearchForm({ filters, tags }: TimelineSearchFormProps) {
                   className: "ml-auto",
                 })}
               >
-                Clear all
+                Start over
               </Link>
             </div>
           </div>
@@ -142,10 +140,10 @@ export function TimelineSearchEmptyState({
       )}
     >
       <h2 className="font-display text-xl font-semibold text-ink">
-        No matching moments
+        Nothing turned up
       </h2>
       <p className="mx-auto mt-2 max-w-sm text-sm text-muted">
-        Try a different keyword or remove a tag filter.
+        Try another word, or loosen a tag.
       </p>
       <Link
         href="/timeline"
@@ -154,7 +152,7 @@ export function TimelineSearchEmptyState({
           className: "mt-6",
         })}
       >
-        Clear search
+        See everything again
       </Link>
     </div>
   );

@@ -76,6 +76,7 @@ If it persists: `rm -rf node_modules .next && npm install`
 | `/api/moments/[id]` | Authenticated (update moment; XHR upload progress) |
 | `/timeline`         | Authenticated (search + list)                      |
 | `/capture`          | Authenticated                                      |
+| `/browse`           | Authenticated (calendar + media gallery)           |
 | `/moments/[id]`     | Authenticated (view / edit / delete)               |
 | `/settings`         | Authenticated (account + change password)          |
 

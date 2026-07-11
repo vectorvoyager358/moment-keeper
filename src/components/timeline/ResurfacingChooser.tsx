@@ -47,8 +47,8 @@ export function ResurfacingChooser() {
               What would you like to revisit?
             </h2>
             <p className="mt-1 text-sm text-muted">
-              Choose up to {MAX_MEMORY_THEMES}. We&apos;ll look at both themes
-              and the words in your memories.
+              Pick up to {MAX_MEMORY_THEMES} — we&apos;ll find moments that fit,
+              including ones you didn&apos;t tag.
             </p>
           </div>
         </div>
@@ -86,7 +86,7 @@ export function ResurfacingChooser() {
 
         <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <label className="text-sm font-medium text-ink">
-            Media
+            Include
             <select
               value={mediaType}
               onChange={(event) =>
@@ -94,15 +94,15 @@ export function ResurfacingChooser() {
               }
               className="mt-1 block rounded-xl border border-border-strong bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
             >
-              <option value="all">All moments</option>
+              <option value="all">Anything</option>
               <option value="photo">Photos</option>
               <option value="video">Videos</option>
-              <option value="audio">Voice and audio</option>
+              <option value="audio">Voice memos</option>
             </select>
           </label>
 
           <Button type="submit" disabled={themes.length === 0}>
-            Show me memories
+            Bring them back
           </Button>
         </div>
       </form>

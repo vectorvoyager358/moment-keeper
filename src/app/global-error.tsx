@@ -42,7 +42,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
                 href="/timeline"
                 className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-900 transition hover:bg-red-100 dark:border-red-800 dark:text-red-100 dark:hover:bg-red-900"
               >
-                Back to timeline
+                Back to your journal
               </Link>
             </div>
           </div>

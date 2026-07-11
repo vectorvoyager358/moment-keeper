@@ -6,21 +6,21 @@ import { buttonClassName } from "@/components/ui/Button";
 const highlights = [
   {
     icon: Camera,
-    title: "Capture in seconds",
+    title: "Keep it in seconds",
     description:
-      "A few words, a photo, or a voice note — save what mattered without a daily journaling ritual.",
+      "A few words, a photo, or a voice note — keep what mattered without a daily journaling ritual.",
   },
   {
     icon: Sparkles,
     title: "Revisit what lasts",
     description:
-      "Browse your timeline or see memories resurface on the same date in past years.",
+      "Look back through your journal or rediscover this date in years past.",
   },
   {
     icon: Lock,
     title: "Private by default",
     description:
-      "Your moments stay yours. Sign in to access your personal archive.",
+      "Your moments stay yours. Sign in to open your private journal.",
   },
 ];
 

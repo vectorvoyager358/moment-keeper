@@ -139,17 +139,15 @@ export function EditMomentForm({ moment, onCancel }: EditMomentFormProps) {
         percent={percent}
         processing={processing}
         label={
-          processing ? "Upload complete — saving on server…" : "Uploading…"
+          processing
+            ? "Almost there — keeping your changes…"
+            : "Sending your changes…"
         }
       />
 
       <div className="flex gap-3">
         <Button type="submit" disabled={!mediaValid || pending}>
-          {pending
-            ? processing
-              ? "Saving..."
-              : "Uploading..."
-            : "Save changes"}
+          {pending ? "Keeping…" : "Keep changes"}
         </Button>
         <Button
           type="button"

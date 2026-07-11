@@ -39,7 +39,7 @@ export default async function MomentDetailPage({
             href="/timeline"
             className="text-muted underline-offset-4 transition hover:text-accent hover:underline"
           >
-            ← Back to timeline
+            ← Back to your journal
           </Link>
         </p>
 

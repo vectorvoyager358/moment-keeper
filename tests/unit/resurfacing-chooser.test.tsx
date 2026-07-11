@@ -20,10 +20,10 @@ describe("ResurfacingChooser", () => {
     render(<ResurfacingChooser />);
 
     fireEvent.click(screen.getByRole("button", { name: "Joy" }));
-    fireEvent.change(screen.getByLabelText("Media"), {
+    fireEvent.change(screen.getByLabelText("Include"), {
       target: { value: "video" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Show me memories" }));
+    fireEvent.click(screen.getByRole("button", { name: "Bring them back" }));
 
     expect(push).toHaveBeenCalledWith("/timeline?theme=joy&media=video");
   });
@@ -32,7 +32,7 @@ describe("ResurfacingChooser", () => {
     render(<ResurfacingChooser />);
 
     expect(
-      screen.getByRole("button", { name: "Show me memories" }),
+      screen.getByRole("button", { name: "Bring them back" }),
     ).toBeDisabled();
   });
 });

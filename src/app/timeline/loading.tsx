@@ -1,5 +1,5 @@
 import { PageLoading } from "@/components/ui/LoadingSkeleton";
 
 export default function TimelineLoading() {
-  return <PageLoading label="Loading timeline" />;
+  return <PageLoading label="Gathering your journal" />;
 }
