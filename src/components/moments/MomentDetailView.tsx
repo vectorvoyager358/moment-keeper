@@ -4,6 +4,7 @@ import type { MomentDetail } from "@/lib/moments/queries";
 import { memoryThemeLabel } from "@/lib/moments/themes";
 
 import { MomentDate } from "@/components/moments/MomentDate";
+import { FavoriteMomentButton } from "@/components/moments/FavoriteMomentButton";
 import { MomentMediaDisplay } from "@/components/moments/MomentMediaDisplay";
 import { Button } from "@/components/ui/Button";
 import { Tag } from "@/components/ui/Tag";
@@ -28,9 +29,15 @@ export function MomentDetailView({ moment, onEdit }: MomentDetailViewProps) {
           iso={moment.occurred_at}
           className="font-display text-sm font-medium text-muted"
         />
-        <Button type="button" variant="secondary" size="sm" onClick={onEdit}>
-          Edit
-        </Button>
+        <div className="flex items-start gap-2">
+          <FavoriteMomentButton
+            momentId={moment.id}
+            initialFavorite={moment.is_favorite}
+          />
+          <Button type="button" variant="secondary" size="sm" onClick={onEdit}>
+            Edit
+          </Button>
+        </div>
       </div>
 
       {visualMedia.length > 0 ? (

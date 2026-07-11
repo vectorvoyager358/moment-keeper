@@ -14,6 +14,7 @@ export type MomentDetail = {
   id: string;
   body: string;
   occurred_at: string;
+  is_favorite: boolean;
   themes: MemoryTheme[];
   tags: { id: string; name: string }[];
   media: MomentMedia[];
@@ -23,6 +24,7 @@ type MomentDetailQueryRow = {
   id: string;
   body: string;
   occurred_at: string;
+  is_favorite: boolean;
   themes: MemoryTheme[];
   moment_tags:
     | {
@@ -76,6 +78,7 @@ export function mapMomentDetailRow(
     id: moment.id,
     body: moment.body,
     occurred_at: moment.occurred_at,
+    is_favorite: moment.is_favorite,
     themes: moment.themes ?? [],
     tags: extractTags(moment.moment_tags),
     media: attachments.flatMap((attachment) => {

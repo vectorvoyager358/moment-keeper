@@ -132,9 +132,7 @@ export function PhotoCapture({
   return (
     <div className="rounded-xl border border-border bg-accent-subtle/30 p-4">
       <p className="text-sm font-medium text-ink">Or take a photo</p>
-      <p className="mt-1 text-xs text-muted">
-        Snap one right here — no other app needed.
-      </p>
+      <p className="mt-1 text-xs text-muted">Snap one right here.</p>
 
       {!isPreview ? (
         <div className="mt-4">

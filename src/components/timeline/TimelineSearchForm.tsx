@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search, X } from "lucide-react";
+import { Heart, Search, X } from "lucide-react";
 
 import { Button, buttonClassName } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -74,7 +74,32 @@ export function TimelineSearchForm({ filters, tags }: TimelineSearchFormProps) {
           </fieldset>
         ) : null}
 
-        {filters.keyword || selectedTags.length > 0 ? (
+        <label
+          className={cn(
+            "inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition",
+            filters.favoriteOnly
+              ? "border-accent bg-accent text-white"
+              : "border-border-strong bg-surface text-muted hover:border-accent/50 hover:text-accent",
+          )}
+        >
+          <input
+            type="checkbox"
+            name="favorite"
+            value="1"
+            defaultChecked={filters.favoriteOnly}
+            className="sr-only"
+          />
+          <Heart
+            className={cn(
+              "h-3.5 w-3.5",
+              filters.favoriteOnly && "fill-current",
+            )}
+            aria-hidden
+          />
+          Favorites
+        </label>
+
+        {filters.keyword || selectedTags.length > 0 || filters.favoriteOnly ? (
           <div className="border-t border-border pt-3">
             <p className="mb-2 text-xs font-semibold tracking-wide text-muted uppercase">
               Looking for
@@ -85,6 +110,7 @@ export function TimelineSearchForm({ filters, tags }: TimelineSearchFormProps) {
                   href={buildTimelineSearchUrl({
                     keyword: "",
                     tagIds: filters.tagIds,
+                    favoriteOnly: filters.favoriteOnly,
                   })}
                   className="inline-flex items-center gap-1 rounded-full bg-accent-subtle px-3 py-1 text-xs font-medium text-accent transition hover:bg-accent/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                   aria-label={`Remove keyword filter ${filters.keyword}`}
@@ -99,6 +125,7 @@ export function TimelineSearchForm({ filters, tags }: TimelineSearchFormProps) {
                   href={buildTimelineSearchUrl({
                     keyword: filters.keyword,
                     tagIds: filters.tagIds.filter((tagId) => tagId !== tag.id),
+                    favoriteOnly: filters.favoriteOnly,
                   })}
                   className="inline-flex items-center gap-1 rounded-full bg-tag px-3 py-1 text-xs font-medium text-tag-text transition hover:bg-accent-subtle hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                   aria-label={`Remove tag filter ${tag.name}`}
@@ -107,6 +134,20 @@ export function TimelineSearchForm({ filters, tags }: TimelineSearchFormProps) {
                   <X className="h-3 w-3" aria-hidden />
                 </Link>
               ))}
+              {filters.favoriteOnly ? (
+                <Link
+                  href={buildTimelineSearchUrl({
+                    keyword: filters.keyword,
+                    tagIds: filters.tagIds,
+                    favoriteOnly: false,
+                  })}
+                  className="inline-flex items-center gap-1 rounded-full bg-accent-subtle px-3 py-1 text-xs font-medium text-accent transition hover:bg-accent/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  aria-label="Remove favorites filter"
+                >
+                  Favorites
+                  <X className="h-3 w-3" aria-hidden />
+                </Link>
+              ) : null}
               <Link
                 href="/timeline"
                 className={buttonClassName({

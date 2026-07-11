@@ -1,6 +1,7 @@
 export type TimelineSearchFilters = {
   keyword: string;
   tagIds: string[];
+  favoriteOnly: boolean;
 };
 
 export type HighlightSegment = {
@@ -11,6 +12,7 @@ export type HighlightSegment = {
 export function parseSearchParams(params: {
   q?: string | string[];
   tag?: string | string[];
+  favorite?: string | string[];
 }): TimelineSearchFilters {
   const keyword = typeof params.q === "string" ? params.q.trim() : "";
   const tagParam = params.tag;
@@ -23,13 +25,18 @@ export function parseSearchParams(params: {
   return {
     keyword,
     tagIds: [...new Set(tagIds.filter(Boolean))],
+    favoriteOnly: params.favorite === "1",
   };
 }
 
 export function hasActiveSearchFilters(
   filters: TimelineSearchFilters,
 ): boolean {
-  return filters.keyword.length > 0 || filters.tagIds.length > 0;
+  return (
+    filters.keyword.length > 0 ||
+    filters.tagIds.length > 0 ||
+    filters.favoriteOnly
+  );
 }
 
 export function buildTimelineSearchUrl(filters: TimelineSearchFilters): string {
@@ -40,6 +47,9 @@ export function buildTimelineSearchUrl(filters: TimelineSearchFilters): string {
   }
 
   filters.tagIds.forEach((tagId) => params.append("tag", tagId));
+  if (filters.favoriteOnly) {
+    params.set("favorite", "1");
+  }
   const query = params.toString();
   return query ? `/timeline?${query}` : "/timeline";
 }

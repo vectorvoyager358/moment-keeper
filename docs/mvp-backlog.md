@@ -21,6 +21,7 @@ User stories and implementation tickets for Phase 1. Organized by screen/area.
 - As a user, I want to see all my moments in reverse-chronological order, so that I can browse my recent and past memories easily.
 - As a user, I want each timeline entry to show a preview of the text, date, tags, and media indicator, so that I can scan quickly.
 - As a user, I want to tap a moment to open its detail view, so that I can read or edit the full entry.
+- As a user, I want to favorite meaningful moments and filter my journal to them, so that I can return to them quickly.
 
 ### Search
 
@@ -72,6 +73,7 @@ User stories and implementation tickets for Phase 1. Organized by screen/area.
 | TL-02 | Timeline data fetch | Paginated or infinite-scroll query           | Performs well with 100+ moments; only fetches current user's data        |
 | TL-03 | Empty state         | Friendly message when no moments exist       | CTA to capture first moment                                              |
 | TL-04 | Navigate to detail  | Tap/click row opens moment detail            | Correct moment loaded by id                                              |
+| TL-05 | Favorite moments    | Toggle a favorite marker and filter timeline | Favorite works with keyword and tag filters; cards show favorite state   |
 
 ### Moment Detail
 

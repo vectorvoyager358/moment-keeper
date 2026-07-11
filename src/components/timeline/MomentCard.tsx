@@ -1,4 +1,4 @@
-import { ImageIcon, Mic, Video } from "lucide-react";
+import { Heart, ImageIcon, Mic, Video } from "lucide-react";
 import Link from "next/link";
 
 import { MomentDate } from "@/components/moments/MomentDate";
@@ -118,12 +118,23 @@ export function MomentCard({
               iso={moment.occurred_at}
               className="text-xs font-semibold tracking-[0.12em] text-muted uppercase"
             />
-            {moment.hasMedia ? (
-              <MediaBadge
-                mediaType={moment.mediaType}
-                attachmentCount={moment.attachmentCount}
-              />
-            ) : null}
+            <span className="flex items-center gap-2">
+              {moment.isFavorite ? (
+                <span
+                  className="inline-flex items-center gap-1 text-xs font-medium text-accent"
+                  title="Saved to favorites"
+                >
+                  <Heart className="h-3.5 w-3.5 fill-current" aria-hidden />
+                  <span className="sr-only">Saved to favorites</span>
+                </span>
+              ) : null}
+              {moment.hasMedia ? (
+                <MediaBadge
+                  mediaType={moment.mediaType}
+                  attachmentCount={moment.attachmentCount}
+                />
+              ) : null}
+            </span>
           </div>
 
           <p className="mt-3 whitespace-pre-wrap font-display text-[1.05rem] leading-7 text-ink">

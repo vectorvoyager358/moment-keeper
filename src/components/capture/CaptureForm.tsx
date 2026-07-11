@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Heart } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 
 import { MediaFileInput } from "@/components/capture/MediaFileInput";
@@ -18,6 +18,7 @@ import {
   writeCaptureDraft,
 } from "@/lib/moments/capture-draft";
 import { toDatetimeLocalValue } from "@/lib/moments/dates";
+import { cn } from "@/lib/cn";
 import {
   postFormDataWithProgress,
   UploadRequestError,
@@ -41,9 +42,9 @@ export function CaptureForm({ userId }: CaptureFormProps) {
   );
   const [tags, setTags] = useState("");
   const [themes, setThemes] = useState<MemoryTheme[]>([]);
+  const [isFavorite, setIsFavorite] = useState(false);
   const [preparedMediaFiles, setPreparedMediaFiles] = useState<File[]>([]);
   const [draftLoaded, setDraftLoaded] = useState(false);
-  const [draftSaved, setDraftSaved] = useState(false);
   const [mediaValid, setMediaValid] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -64,7 +65,7 @@ export function CaptureForm({ userId }: CaptureFormProps) {
         setOccurredAt(draft.occurredAt);
         setTags(draft.tags);
         setThemes(draft.themes);
-        setDraftSaved(true);
+        setIsFavorite(draft.isFavorite);
       }
 
       setDraftLoaded(true);
@@ -81,13 +82,26 @@ export function CaptureForm({ userId }: CaptureFormProps) {
     }
 
     const timeout = window.setTimeout(() => {
-      setDraftSaved(
-        writeCaptureDraft(userId, { body, occurredAt, tags, themes }),
-      );
+      writeCaptureDraft(userId, {
+        body,
+        occurredAt,
+        tags,
+        themes,
+        isFavorite,
+      });
     }, 500);
 
     return () => window.clearTimeout(timeout);
-  }, [body, draftLoaded, occurredAt, pending, tags, themes, userId]);
+  }, [
+    body,
+    draftLoaded,
+    isFavorite,
+    occurredAt,
+    pending,
+    tags,
+    themes,
+    userId,
+  ]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -153,7 +167,6 @@ export function CaptureForm({ userId }: CaptureFormProps) {
                       ? `${current.trimEnd()}\n\n${prompt}\n\n`
                       : `${prompt}\n\n`,
                   );
-                  setDraftSaved(false);
                 }}
               >
                 {prompt}
@@ -170,7 +183,6 @@ export function CaptureForm({ userId }: CaptureFormProps) {
           value={body}
           onChange={(event) => {
             setBody(event.target.value);
-            setDraftSaved(false);
           }}
         />
       </div>
@@ -180,7 +192,6 @@ export function CaptureForm({ userId }: CaptureFormProps) {
         disabled={pending}
         onChange={(nextThemes) => {
           setThemes(nextThemes);
-          setDraftSaved(false);
         }}
       />
 
@@ -194,7 +205,6 @@ export function CaptureForm({ userId }: CaptureFormProps) {
           value={occurredAt}
           onChange={(event) => {
             setOccurredAt(event.target.value);
-            setDraftSaved(false);
           }}
         />
       </div>
@@ -211,18 +221,38 @@ export function CaptureForm({ userId }: CaptureFormProps) {
           value={tags}
           onChange={(event) => {
             setTags(event.target.value);
-            setDraftSaved(false);
           }}
         />
         <FieldHint>Separate tags with commas.</FieldHint>
       </div>
 
-      {draftSaved ? (
-        <p className="text-xs text-muted" role="status">
-          Saved on this device for now — photos and voice memos aren&apos;t
-          included.
-        </p>
-      ) : null}
+      <label
+        className={cn(
+          "inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition",
+          isFavorite
+            ? "border-accent bg-accent text-white"
+            : "border-border-strong bg-surface text-muted hover:border-accent/50 hover:text-accent",
+          pending && "pointer-events-none opacity-60",
+        )}
+      >
+        <input
+          type="checkbox"
+          name="favorite"
+          value="1"
+          checked={isFavorite}
+          disabled={pending}
+          aria-label="Keep close"
+          onChange={(event) => {
+            setIsFavorite(event.target.checked);
+          }}
+          className="sr-only"
+        />
+        <Heart
+          className={cn("h-3.5 w-3.5", isFavorite && "fill-current")}
+          aria-hidden
+        />
+        {isFavorite ? null : <span aria-hidden="true">Keep close</span>}
+      </label>
 
       <MediaFileInput
         onValidityChange={setMediaValid}

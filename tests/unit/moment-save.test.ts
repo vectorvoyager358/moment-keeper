@@ -68,7 +68,37 @@ describe("moment theme saving", () => {
 
     expect(result.ok).toBe(true);
     expect(insert).toHaveBeenCalledWith(
-      expect.objectContaining({ themes: ["joy", "connection"] }),
+      expect.objectContaining({
+        themes: ["joy", "connection"],
+        is_favorite: false,
+      }),
+    );
+  });
+
+  it("stores the favorite flag on a new moment", async () => {
+    const insert = vi.fn(() => ({
+      select: () => ({
+        single: vi.fn().mockResolvedValue({
+          data: { id: "moment-1" },
+          error: null,
+        }),
+      }),
+    }));
+    createClientMock.mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: "u1" } } }),
+      },
+      from: vi.fn(() => ({ insert })),
+    });
+    const formData = validFormData();
+    formData.set("favorite", "1");
+
+    expect(await saveNewMoment(formData)).toEqual({
+      ok: true,
+      redirectTo: "/timeline?saved=1",
+    });
+    expect(insert).toHaveBeenCalledWith(
+      expect.objectContaining({ is_favorite: true }),
     );
   });
 
@@ -131,7 +161,38 @@ describe("moment theme saving", () => {
 
     expect(result.ok).toBe(true);
     expect(update).toHaveBeenCalledWith(
-      expect.objectContaining({ themes: [] }),
+      expect.objectContaining({ themes: [], is_favorite: false }),
+    );
+  });
+
+  it("updates the favorite flag when editing a moment", async () => {
+    const eq = vi.fn().mockResolvedValue({ error: null });
+    const update = vi.fn(() => ({ eq }));
+    createClientMock.mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: "u1" } } }),
+      },
+      from: vi.fn((table: string) =>
+        table === "media_attachments"
+          ? {
+              select: vi.fn(() => ({
+                eq: vi.fn(() => ({
+                  order: vi.fn().mockResolvedValue({ data: [], error: null }),
+                })),
+              })),
+            }
+          : { update },
+      ),
+    });
+    const formData = validFormData();
+    formData.set("favorite", "1");
+
+    expect(await saveUpdatedMoment("moment-1", formData)).toEqual({
+      ok: true,
+      redirectTo: "/moments/moment-1",
+    });
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({ is_favorite: true }),
     );
   });
 

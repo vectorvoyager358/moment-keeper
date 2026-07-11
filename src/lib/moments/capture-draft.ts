@@ -6,6 +6,7 @@ export type CaptureDraft = {
   occurredAt: string;
   tags: string;
   themes: MemoryTheme[];
+  isFavorite: boolean;
 };
 
 const CAPTURE_DRAFT_PREFIX = "moment-keeper:capture-draft:";
@@ -49,11 +50,17 @@ export function readCaptureDraft(userId: string): CaptureDraft | null {
           ].slice(0, MAX_MEMORY_THEMES)
         : [];
 
+    const isFavorite =
+      "isFavorite" in draft && typeof draft.isFavorite === "boolean"
+        ? draft.isFavorite
+        : false;
+
     return {
       body: draft.body,
       occurredAt: draft.occurredAt,
       tags: draft.tags,
       themes,
+      isFavorite,
     };
   } catch {
     return null;
@@ -64,7 +71,12 @@ export function writeCaptureDraft(
   userId: string,
   draft: CaptureDraft,
 ): boolean {
-  if (!draft.body.trim() && !draft.tags.trim() && draft.themes.length === 0) {
+  if (
+    !draft.body.trim() &&
+    !draft.tags.trim() &&
+    draft.themes.length === 0 &&
+    !draft.isFavorite
+  ) {
     clearCaptureDraft(userId);
     return false;
   }

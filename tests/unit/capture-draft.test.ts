@@ -12,6 +12,7 @@ const draft: CaptureDraft = {
   occurredAt: "2026-07-09T14:30",
   tags: "personal",
   themes: ["joy", "connection"],
+  isFavorite: false,
 };
 
 describe("capture drafts", () => {
@@ -35,6 +36,7 @@ describe("capture drafts", () => {
         occurredAt: draft.occurredAt,
         tags: "",
         themes: [],
+        isFavorite: false,
       }),
     ).toBe(false);
     expect(readCaptureDraft("user-1")).toBeNull();

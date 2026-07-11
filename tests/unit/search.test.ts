@@ -18,6 +18,7 @@ describe("parseSearchParams", () => {
     ).toEqual({
       keyword: "presentation",
       tagIds: ["tag-1", "tag-2"],
+      favoriteOnly: false,
     });
   });
 
@@ -25,6 +26,15 @@ describe("parseSearchParams", () => {
     expect(parseSearchParams({ tag: ["tag-1", "tag-1"] })).toEqual({
       keyword: "",
       tagIds: ["tag-1"],
+      favoriteOnly: false,
+    });
+  });
+
+  it("parses the favorites-only filter", () => {
+    expect(parseSearchParams({ favorite: "1" })).toEqual({
+      keyword: "",
+      tagIds: [],
+      favoriteOnly: true,
     });
   });
 });
@@ -35,8 +45,9 @@ describe("buildTimelineSearchUrl", () => {
       buildTimelineSearchUrl({
         keyword: "family trip",
         tagIds: ["tag-1", "tag-2"],
+        favoriteOnly: true,
       }),
-    ).toBe("/timeline?q=family+trip&tag=tag-1&tag=tag-2");
+    ).toBe("/timeline?q=family+trip&tag=tag-1&tag=tag-2&favorite=1");
   });
 });
 
@@ -59,11 +70,34 @@ describe("getHighlightedSegments", () => {
 
 describe("hasActiveSearchFilters", () => {
   it("returns true when keyword or tags are present", () => {
-    expect(hasActiveSearchFilters({ keyword: "work", tagIds: [] })).toBe(true);
-    expect(hasActiveSearchFilters({ keyword: "", tagIds: ["tag-1"] })).toBe(
-      true,
-    );
-    expect(hasActiveSearchFilters({ keyword: "", tagIds: [] })).toBe(false);
+    expect(
+      hasActiveSearchFilters({
+        keyword: "work",
+        tagIds: [],
+        favoriteOnly: false,
+      }),
+    ).toBe(true);
+    expect(
+      hasActiveSearchFilters({
+        keyword: "",
+        tagIds: ["tag-1"],
+        favoriteOnly: false,
+      }),
+    ).toBe(true);
+    expect(
+      hasActiveSearchFilters({
+        keyword: "",
+        tagIds: [],
+        favoriteOnly: true,
+      }),
+    ).toBe(true);
+    expect(
+      hasActiveSearchFilters({
+        keyword: "",
+        tagIds: [],
+        favoriteOnly: false,
+      }),
+    ).toBe(false);
   });
 });
 
