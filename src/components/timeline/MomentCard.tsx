@@ -101,11 +101,11 @@ export function MomentCard({
         className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40"
       >
         {imageSrc ? (
-          <div className="relative overflow-hidden bg-accent-subtle">
+          <div className="relative aspect-[4/3] overflow-hidden bg-accent-subtle sm:aspect-[3/2]">
             <TimelineMediaImage
               src={imageSrc}
               fallbackSrc={imageFallbackSrc}
-              className="aspect-[4/3] w-full object-cover transition duration-500 group-hover:scale-[1.025] sm:aspect-[3/2]"
+              className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.025]"
             />
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/20 to-transparent" />
           </div>

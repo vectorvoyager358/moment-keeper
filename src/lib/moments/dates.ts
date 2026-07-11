@@ -83,6 +83,19 @@ export function formatMomentDate(iso: string, timeZone?: string): string {
   }).format(new Date(iso));
 }
 
+export function formatMomentDateCompact(
+  iso: string,
+  timeZone?: string,
+): string {
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone,
+  }).format(new Date(iso));
+}
+
 export function truncateBody(body: string, maxLength = 160): string {
   if (body.length <= maxLength) {
     return body;

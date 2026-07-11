@@ -9,7 +9,7 @@ import type {
 import { cn } from "@/lib/cn";
 
 export const fieldClassName =
-  "w-full rounded-xl border border-border-strong bg-surface-elevated px-3.5 py-2.5 text-sm text-ink outline-none transition placeholder:text-muted/70 focus:border-accent focus:ring-2 focus:ring-accent/20";
+  "w-full rounded-xl border border-border-strong bg-surface-elevated px-3.5 py-2.5 text-base text-ink outline-none transition placeholder:text-muted/70 focus:border-accent focus:ring-2 focus:ring-accent/20 sm:text-sm";
 
 type LabelProps = LabelHTMLAttributes<HTMLLabelElement>;
 

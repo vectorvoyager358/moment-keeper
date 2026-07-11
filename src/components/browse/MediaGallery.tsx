@@ -112,17 +112,18 @@ export async function MediaGallery({ mediaType }: MediaGalleryProps) {
                   )}
 
                   <span className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/5 to-transparent" />
-                  <span className="relative z-10 mt-auto w-full min-w-0 overflow-hidden p-3 text-white sm:p-4">
-                    <span className="mb-1 flex items-center gap-1.5 text-[0.65rem] font-semibold tracking-wide uppercase opacity-85 sm:text-xs">
+                  <span className="relative z-10 mt-auto w-full min-w-0 p-3 text-white sm:p-4">
+                    <p className="flex min-h-4 items-center gap-1.5 text-[0.65rem] font-semibold tracking-wide uppercase opacity-85 sm:text-xs">
                       <Icon className="h-3 w-3 shrink-0" aria-hidden />
-                      <span className="truncate">{mediaLabel}</span>
-                    </span>
-                    <span className="line-clamp-2 block overflow-hidden font-display text-sm leading-snug break-words sm:text-base">
-                      {truncateBody(moment.body, 70)}
-                    </span>
+                      <span className="min-w-0 truncate">{mediaLabel}</span>
+                    </p>
+                    <p className="mt-1 min-h-5 truncate font-display text-sm sm:text-base">
+                      {truncateBody(moment.body, 48)}
+                    </p>
                     <MomentDate
                       iso={moment.occurred_at}
-                      className="mt-1.5 block text-[0.65rem] opacity-75 sm:text-xs"
+                      compact
+                      className="mt-1 block min-h-4 truncate text-[0.65rem] opacity-75 sm:text-xs"
                     />
                   </span>
                 </Link>
