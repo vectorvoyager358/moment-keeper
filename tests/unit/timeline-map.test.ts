@@ -8,6 +8,7 @@ describe("mapTimelineRow", () => {
       id: "moment-1",
       body: "A proud moment.",
       occurred_at: "2026-07-07T12:00:00.000Z",
+      location: null,
       is_favorite: false,
       moment_tags: null,
       media_attachments: null,
@@ -17,6 +18,7 @@ describe("mapTimelineRow", () => {
       id: "moment-1",
       body: "A proud moment.",
       occurred_at: "2026-07-07T12:00:00.000Z",
+      location: null,
       isFavorite: false,
       tags: [],
       hasMedia: false,
@@ -34,6 +36,7 @@ describe("mapTimelineRow", () => {
       id: "moment-2",
       body: "Tagged moment.",
       occurred_at: "2026-07-07T13:00:00.000Z",
+      location: "Austin, TX",
       is_favorite: true,
       moment_tags: [{ tags: { id: "tag-1", name: "work" } }],
       media_attachments: [
@@ -47,6 +50,7 @@ describe("mapTimelineRow", () => {
     });
 
     expect(result.tags).toEqual([{ id: "tag-1", name: "work" }]);
+    expect(result.location).toBe("Austin, TX");
     expect(result.hasMedia).toBe(true);
     expect(result.isFavorite).toBe(true);
     expect(result.attachmentCount).toBe(1);
@@ -60,6 +64,7 @@ describe("mapTimelineRow", () => {
         id: "moment-3",
         body: "Media moment.",
         occurred_at: "2026-07-07T14:00:00.000Z",
+        location: null,
         is_favorite: false,
         moment_tags: null,
         media_attachments: {
@@ -82,6 +87,7 @@ describe("mapTimelineRow", () => {
       id: "moment-4",
       body: "Mixed media.",
       occurred_at: "2026-07-07T15:00:00.000Z",
+      location: null,
       is_favorite: false,
       moment_tags: [],
       media_attachments: [
@@ -110,6 +116,7 @@ describe("mapTimelineRow", () => {
       id: "moment-5",
       body: "Phone photo.",
       occurred_at: "2026-07-07T16:00:00.000Z",
+      location: null,
       is_favorite: false,
       moment_tags: [],
       media_attachments: [

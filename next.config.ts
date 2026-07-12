@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { withSerwist } from "@serwist/turbopack";
 import { withSentryConfig } from "@sentry/nextjs";
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
@@ -21,7 +22,7 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSentryConfig(nextConfig, {
+export default withSentryConfig(withSerwist(nextConfig), {
   // Optional: set these + SENTRY_AUTH_TOKEN in CI to upload source maps.
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,

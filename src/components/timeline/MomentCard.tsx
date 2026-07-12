@@ -2,6 +2,7 @@ import { Heart, ImageIcon, Mic, Video } from "lucide-react";
 import Link from "next/link";
 
 import { MomentDate } from "@/components/moments/MomentDate";
+import { MomentLocation } from "@/components/moments/MomentLocation";
 import { TimelineMediaImage } from "@/components/timeline/TimelineMediaImage";
 import { buttonClassName } from "@/components/ui/Button";
 import { Tag } from "@/components/ui/Tag";
@@ -173,10 +174,10 @@ export function MomentCard({
               {moment.isFavorite ? (
                 <span
                   className="inline-flex items-center gap-1 text-xs font-medium text-accent"
-                  title="Kept close"
+                  title="Favorite"
                 >
                   <Heart className="h-3.5 w-3.5 fill-current" aria-hidden />
-                  <span className="sr-only">Kept close</span>
+                  <span className="sr-only">Favorite</span>
                 </span>
               ) : null}
               {moment.hasMedia ? (
@@ -187,6 +188,13 @@ export function MomentCard({
               ) : null}
             </span>
           </div>
+          {moment.location ? (
+            <MomentLocation
+              location={moment.location}
+              compact
+              className="mt-1"
+            />
+          ) : null}
 
           <p className="mt-3 min-w-0 truncate font-display text-[1.05rem] leading-7 text-ink">
             {bodySegments.map((segment, index) =>
@@ -245,7 +253,7 @@ export function TimelineEmptyState({ className }: TimelineEmptyStateProps) {
         A few honest words are enough to begin.
       </p>
       <Link href="/capture" className={buttonClassName({ className: "mt-6" })}>
-        Keep your first moment
+        Capture your first moment
       </Link>
     </div>
   );

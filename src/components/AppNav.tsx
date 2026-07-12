@@ -14,7 +14,7 @@ const navItems = [
     label: "Journal",
     icon: LayoutList,
   },
-  { id: "capture" as const, href: "/capture", label: "Keep", icon: Camera },
+  { id: "capture" as const, href: "/capture", label: "Capture", icon: Camera },
   { id: "browse" as const, href: "/browse", label: "Look back", icon: Images },
   {
     id: "settings" as const,

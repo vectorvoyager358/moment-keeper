@@ -18,15 +18,17 @@ import {
   type TimelineSearchFilters,
 } from "@/lib/moments/search";
 import {
-  getUtcCalendarParts,
+  getLocalCalendarParts,
   ON_THIS_DAY_LIMIT,
 } from "@/lib/moments/on-this-day";
+import { getRequestTimeZone } from "@/lib/timezone.server";
 import {
   mapTimelineRow,
   type TimelineMoment,
   type TimelineQueryRow,
 } from "@/lib/moments/timeline";
 import { MEDIA_BUCKET } from "@/lib/moments/media";
+import { compareTagsForPicker } from "@/lib/moments/tag-filter";
 import { RESURFACED_MOMENT_LIMIT } from "@/lib/moments/themes";
 import { createClient } from "@/lib/supabase/server";
 
@@ -41,12 +43,14 @@ export { TIMELINE_PAGE_SIZE };
 export type UserTag = {
   id: string;
   name: string;
+  momentCount: number;
 };
 
 const MOMENT_SELECT = `
   id,
   body,
   occurred_at,
+  location,
   is_favorite,
   themes,
   moment_tags (
@@ -70,6 +74,7 @@ const TIMELINE_SELECT = `
   id,
   body,
   occurred_at,
+  location,
   is_favorite,
   moment_tags (
     tags (
@@ -90,6 +95,7 @@ const MEDIA_GALLERY_SELECT = `
   id,
   body,
   occurred_at,
+  location,
   is_favorite,
   moment_tags (
     tags (
@@ -113,6 +119,7 @@ export type MediaGalleryItem = {
   momentId: string;
   body: string;
   occurred_at: string;
+  location: string | null;
   mediaType: MediaType;
   thumbnailUrl: string | null;
   photoUrl: string | null;
@@ -169,16 +176,26 @@ async function withSignedThumbnails(
 export async function getUserTags(): Promise<UserTag[]> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("tags")
-    .select("id, name")
-    .order("name", { ascending: true });
+  const { data, error } = await supabase.from("tags").select(`
+      id,
+      name,
+      moment_tags (count)
+    `);
 
   if (error) {
     throw error;
   }
 
-  return data ?? [];
+  return (data ?? [])
+    .map((tag) => ({
+      id: tag.id,
+      name: tag.name,
+      momentCount:
+        Array.isArray(tag.moment_tags) && tag.moment_tags[0]?.count
+          ? tag.moment_tags[0].count
+          : 0,
+    }))
+    .sort(compareTagsForPicker);
 }
 
 export async function getRandomMomentId(): Promise<string | null> {
@@ -257,6 +274,7 @@ export async function getMediaGalleryMoments(
           momentId: moment.id,
           body: moment.body,
           occurred_at: moment.occurred_at,
+          location: moment.location,
           mediaType: attachment.media_type,
           thumbnailPath: attachment.thumbnail_path,
           photoStoragePath:
@@ -309,9 +327,14 @@ export async function getMediaGalleryMoments(
 
 export async function getOnThisDayMoments(
   referenceDate: Date = new Date(),
+  timeZone?: string,
 ): Promise<TimelineMoment[]> {
   const supabase = await createClient();
-  const { month, day, year } = getUtcCalendarParts(referenceDate);
+  const resolvedTimeZone = timeZone ?? (await getRequestTimeZone());
+  const { month, day, year } = getLocalCalendarParts(
+    referenceDate,
+    resolvedTimeZone,
+  );
 
   const { data: ranked, error: rpcError } = await supabase.rpc(
     "on_this_day_moment_ids",
@@ -320,6 +343,7 @@ export async function getOnThisDayMoments(
       p_day: day,
       p_year: year,
       p_limit: ON_THIS_DAY_LIMIT,
+      p_timezone: resolvedTimeZone,
     },
   );
 
@@ -446,85 +470,42 @@ async function searchTimelineMoments(
   const supabase = await createClient();
   const fetchSize = limit + 1;
 
-  if (filters.keyword) {
-    const { data: ranked, error: searchError } = await supabase.rpc(
-      "search_moment_ids",
-      {
-        p_query: filters.keyword,
-        p_tag_ids: filters.tagIds.length > 0 ? filters.tagIds : null,
-        p_limit: fetchSize,
-        p_offset: offset,
-        p_favorite_only: filters.favoriteOnly,
-      },
-    );
+  const { data: ranked, error: searchError } = await supabase.rpc(
+    "search_moment_ids",
+    {
+      p_query: filters.keyword,
+      p_tag_ids: filters.tagIds.length > 0 ? filters.tagIds : null,
+      p_limit: fetchSize,
+      p_offset: offset,
+      p_favorite_only: filters.favoriteOnly,
+    },
+  );
 
-    if (searchError) {
-      throw searchError;
-    }
-
-    const orderedIds = (ranked ?? []).map(
-      (row: { id: string; rank: number }) => row.id,
-    );
-
-    if (orderedIds.length === 0) {
-      return { items: [], hasMore: false };
-    }
-
-    const { data, error } = await supabase
-      .from("moments")
-      .select(TIMELINE_SELECT)
-      .in("id", orderedIds);
-
-    if (error) {
-      throw error;
-    }
-
-    const rows = orderByIds(
-      await withSignedThumbnails((data ?? []) as TimelineQueryRow[]),
-      orderedIds,
-    );
-
-    return paginateItems(rows, limit);
+  if (searchError) {
+    throw searchError;
   }
 
-  let momentIds: string[] | null = null;
+  const orderedIds = (ranked ?? []).map(
+    (row: { id: string; rank: number }) => row.id,
+  );
 
-  if (filters.tagIds.length > 0) {
-    const { data: links, error: tagError } = await supabase
-      .from("moment_tags")
-      .select("moment_id")
-      .in("tag_id", filters.tagIds);
-
-    if (tagError) {
-      throw tagError;
-    }
-
-    momentIds = [...new Set((links ?? []).map((link) => link.moment_id))];
-
-    if (momentIds.length === 0) {
-      return { items: [], hasMore: false };
-    }
+  if (orderedIds.length === 0) {
+    return { items: [], hasMore: false };
   }
 
-  let query = supabase.from("moments").select(TIMELINE_SELECT);
-
-  if (momentIds) {
-    query = query.in("id", momentIds);
-  }
-
-  if (filters.favoriteOnly) {
-    query = query.eq("is_favorite", true);
-  }
-
-  const { data, error } = await query
-    .order("occurred_at", { ascending: false })
-    .range(offset, offset + fetchSize - 1);
+  const { data, error } = await supabase
+    .from("moments")
+    .select(TIMELINE_SELECT)
+    .in("id", orderedIds);
 
   if (error) {
     throw error;
   }
 
-  const rows = await withSignedThumbnails((data ?? []) as TimelineQueryRow[]);
+  const rows = orderByIds(
+    await withSignedThumbnails((data ?? []) as TimelineQueryRow[]),
+    orderedIds,
+  );
 
   return paginateItems(rows, limit);
 }

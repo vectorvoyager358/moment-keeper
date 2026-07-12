@@ -64,6 +64,7 @@ describe("getOnThisDayMoments", () => {
 
     const result = await getOnThisDayMoments(
       new Date("2026-07-08T12:00:00.000Z"),
+      "UTC",
     );
 
     expect(rpc).toHaveBeenCalledWith("on_this_day_moment_ids", {
@@ -71,6 +72,7 @@ describe("getOnThisDayMoments", () => {
       p_day: 8,
       p_year: 2026,
       p_limit: 12,
+      p_timezone: "UTC",
     });
     expect(result.map((moment) => moment.id)).toEqual(["moment-2", "moment-1"]);
   });

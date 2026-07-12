@@ -33,7 +33,7 @@ export default async function CapturePage({ searchParams }: CapturePageProps) {
         <WelcomeBanner initialVisible={showWelcomeBanner} />
 
         <PageHeader
-          title="Keep this moment"
+          title="Capture a moment"
           description="No pressure to write perfectly. A few honest words are enough."
         />
 

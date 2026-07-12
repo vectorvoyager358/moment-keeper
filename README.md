@@ -91,20 +91,42 @@ If it persists: `rm -rf node_modules .next && npm install`
    - [`supabase/migrations/20260710043000_memory_themes.sql`](supabase/migrations/20260710043000_memory_themes.sql) for theme and content resurfacing
    - [`supabase/migrations/20260711100000_multiple_media_attachments.sql`](supabase/migrations/20260711100000_multiple_media_attachments.sql) for up to five ordered attachments per moment
    - [`supabase/migrations/20260711103000_favorite_moments.sql`](supabase/migrations/20260711103000_favorite_moments.sql) for favorite moments and favorite-aware search
+   - [`supabase/migrations/20260711194500_on_this_day_timezone.sql`](supabase/migrations/20260711194500_on_this_day_timezone.sql) for timezone-aware on-this-day resurfacing
+   - [`supabase/migrations/20260711200000_moment_location.sql`](supabase/migrations/20260711200000_moment_location.sql) for optional moment location and search
+   - [`supabase/migrations/20260711213000_improve_search_query.sql`](supabase/migrations/20260711213000_improve_search_query.sql) for improved Find search ranking and parsing
 
 See [`supabase/README.md`](supabase/README.md) for verification steps.
 
 ## Scripts
 
-| Command                | Description                  |
-| ---------------------- | ---------------------------- |
-| `npm run dev`          | Start local dev server       |
-| `npm run build`        | Production build             |
-| `npm run start`        | Run production build locally |
-| `npm run lint`         | ESLint                       |
-| `npm run format`       | Prettier write               |
-| `npm run format:check` | Prettier check               |
-| `npm run test`         | Run unit tests (Vitest)      |
+| Command                  | Description                                       |
+| ------------------------ | ------------------------------------------------- |
+| `npm run dev`            | Start local dev server                            |
+| `npm run build`          | Production build                                  |
+| `npm run start`          | Run production build locally                      |
+| `npm run lint`           | ESLint                                            |
+| `npm run format`         | Prettier write                                    |
+| `npm run format:check`   | Prettier check                                    |
+| `npm run test`           | Run unit tests (Vitest)                           |
+| `npm run icons:generate` | Regenerate PWA icons from `public/icons/icon.svg` |
+
+## Install as an app (PWA)
+
+Moment Keeper is a Progressive Web App. On **production** (HTTPS), you can install it from the browser:
+
+- **iPhone / iPad (Safari):** Share → **Add to Home Screen**
+- **Android (Chrome):** Menu → **Install app** or **Add to Home screen**
+- **Desktop (Chrome / Edge):** Install icon in the address bar
+
+The app opens in standalone mode with your journal theme color. Static assets are cached for faster loads; when you are offline, a fallback page explains that a connection is needed to sync entries.
+
+Regenerate the Apple touch icon (180×180) after replacing `public/icons/icon-512.png`:
+
+```bash
+sips -z 180 180 public/icons/icon-512.png --out public/icons/apple-touch-icon.png
+```
+
+Legacy SVG-based generation is still available via `npm run icons:generate` if needed.
 
 ## CI
 

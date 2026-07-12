@@ -76,7 +76,9 @@ describe("CaptureForm drafts", () => {
     expect(screen.getByDisplayValue("2026-07-08T09:15")).toBeVisible();
     expect(screen.getByDisplayValue("family")).toBeVisible();
     expect(screen.getByRole("checkbox", { name: "Joy" })).toBeChecked();
-    expect(screen.getByRole("checkbox", { name: "Keep close" })).toBeChecked();
+    expect(
+      screen.getByRole("checkbox", { name: "Remove from favorites" }),
+    ).toBeChecked();
   });
 
   it("adds an optional reflection prompt to the entry", () => {
@@ -106,7 +108,9 @@ describe("CaptureForm drafts", () => {
       { timeout: 1_000 },
     );
 
-    fireEvent.submit(screen.getByRole("button", { name: "Keep this moment" }));
+    fireEvent.submit(
+      screen.getByRole("button", { name: "Capture this moment" }),
+    );
 
     await waitFor(() => {
       expect(push).toHaveBeenCalledWith("/timeline");
@@ -125,7 +129,9 @@ describe("CaptureForm drafts", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Attach generated photo" }),
     );
-    fireEvent.submit(screen.getByRole("button", { name: "Keep this moment" }));
+    fireEvent.submit(
+      screen.getByRole("button", { name: "Capture this moment" }),
+    );
 
     await waitFor(() => {
       expect(postFormDataWithProgress).toHaveBeenCalled();
@@ -144,8 +150,10 @@ describe("CaptureForm drafts", () => {
       target: { value: "A special memory" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Add more" }));
-    fireEvent.click(screen.getByRole("checkbox", { name: "Keep close" }));
-    fireEvent.submit(screen.getByRole("button", { name: "Keep this moment" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Add to favorites" }));
+    fireEvent.submit(
+      screen.getByRole("button", { name: "Capture this moment" }),
+    );
 
     await waitFor(() => {
       expect(postFormDataWithProgress).toHaveBeenCalled();
@@ -158,7 +166,7 @@ describe("CaptureForm drafts", () => {
     render(<CaptureForm userId="user-1" />);
 
     expect(
-      screen.getByRole("button", { name: "Keep this moment" }),
+      screen.getByRole("button", { name: "Capture this moment" }),
     ).toBeVisible();
     expect(screen.getByRole("button", { name: "Add more" })).toHaveAttribute(
       "aria-expanded",

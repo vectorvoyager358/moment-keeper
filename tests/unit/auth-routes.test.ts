@@ -2,10 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import {
   getAuthRedirect,
+  getProfileNameRedirect,
   getSafeAuthCallbackRedirect,
   isAuthCallbackRoute,
+  isProfileSetupExemptRoute,
   isPublicApiRoute,
   isPublicRoute,
+  isPwaSupportRoute,
 } from "@/lib/auth/routes";
 
 describe("isPublicRoute", () => {
@@ -55,6 +58,15 @@ describe("getSafeAuthCallbackRedirect", () => {
   });
 });
 
+describe("isPwaSupportRoute", () => {
+  it("recognizes service worker, manifest, and offline fallback routes", () => {
+    expect(isPwaSupportRoute("/serwist/sw.js")).toBe(true);
+    expect(isPwaSupportRoute("/manifest.webmanifest")).toBe(true);
+    expect(isPwaSupportRoute("/~offline")).toBe(true);
+    expect(isPwaSupportRoute("/timeline")).toBe(false);
+  });
+});
+
 describe("getAuthRedirect", () => {
   it("redirects unauthenticated users to login", () => {
     expect(getAuthRedirect("/timeline", false)).toBe("/login");
@@ -74,6 +86,13 @@ describe("getAuthRedirect", () => {
     expect(getAuthRedirect("/api/health", false)).toBeNull();
   });
 
+  it("does not redirect PWA support routes", () => {
+    expect(getAuthRedirect("/serwist/sw.js", false)).toBeNull();
+    expect(getAuthRedirect("/manifest.webmanifest", true)).toBeNull();
+    expect(getAuthRedirect("/~offline", false)).toBeNull();
+    expect(getAuthRedirect("/~offline", true)).toBeNull();
+  });
+
   it("allows authenticated users on reset-password", () => {
     expect(getAuthRedirect("/reset-password", true)).toBeNull();
   });
@@ -86,5 +105,26 @@ describe("getAuthRedirect", () => {
     expect(getAuthRedirect("/timeline", true)).toBeNull();
     expect(getAuthRedirect("/login", false)).toBeNull();
     expect(getAuthRedirect("/forgot-password", false)).toBeNull();
+  });
+});
+
+describe("isProfileSetupExemptRoute", () => {
+  it("allows settings and reset-password during profile setup", () => {
+    expect(isProfileSetupExemptRoute("/settings")).toBe(true);
+    expect(isProfileSetupExemptRoute("/reset-password")).toBe(true);
+    expect(isProfileSetupExemptRoute("/timeline")).toBe(false);
+  });
+});
+
+describe("getProfileNameRedirect", () => {
+  it("sends users without a name to settings", () => {
+    expect(getProfileNameRedirect("/timeline", false)).toBe(
+      "/settings?setup=1",
+    );
+  });
+
+  it("does not redirect when a name exists or route is exempt", () => {
+    expect(getProfileNameRedirect("/timeline", true)).toBeNull();
+    expect(getProfileNameRedirect("/settings", false)).toBeNull();
   });
 });

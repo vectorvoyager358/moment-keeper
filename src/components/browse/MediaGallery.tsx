@@ -120,6 +120,11 @@ export async function MediaGallery({ mediaType }: MediaGalleryProps) {
                     <p className="mt-1 min-h-5 truncate font-display text-sm sm:text-base">
                       {truncateBody(moment.body, 48)}
                     </p>
+                    {moment.location ? (
+                      <p className="mt-1 min-h-4 truncate text-[0.65rem] opacity-85 sm:text-xs">
+                        {moment.location}
+                      </p>
+                    ) : null}
                     <MomentDate
                       iso={moment.occurred_at}
                       compact
@@ -146,7 +151,7 @@ export async function MediaGallery({ mediaType }: MediaGalleryProps) {
             href="/capture"
             className="mt-5 inline-flex text-sm font-medium text-accent hover:underline"
           >
-            Keep a moment with media
+            Capture a moment with media
           </Link>
         </Card>
       )}

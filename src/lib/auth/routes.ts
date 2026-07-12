@@ -5,6 +5,15 @@ export const PUBLIC_ROUTES = [
   "/forgot-password",
 ] as const;
 
+/** Service worker and manifest must bypass auth redirects. */
+export function isPwaSupportRoute(pathname: string): boolean {
+  return (
+    pathname.startsWith("/serwist/") ||
+    pathname === "/manifest.webmanifest" ||
+    pathname === "/~offline"
+  );
+}
+
 /** PKCE callback must run without auth redirects interfering. */
 export function isAuthCallbackRoute(pathname: string): boolean {
   return (
@@ -23,6 +32,27 @@ export function isPublicRoute(pathname: string): boolean {
   );
 }
 
+/** Settings (and password reset) stay reachable while profile name is missing. */
+export function isProfileSetupExemptRoute(pathname: string): boolean {
+  return (
+    pathname === "/settings" ||
+    pathname.startsWith("/settings/") ||
+    pathname === "/reset-password" ||
+    pathname.startsWith("/reset-password/")
+  );
+}
+
+export function getProfileNameRedirect(
+  pathname: string,
+  hasDisplayName: boolean,
+): string | null {
+  if (hasDisplayName || isProfileSetupExemptRoute(pathname)) {
+    return null;
+  }
+
+  return "/settings?setup=1";
+}
+
 /**
  * Only allow known in-app destinations after exchanging an auth code.
  * Prevents open redirects via a crafted `next` query param.
@@ -39,7 +69,11 @@ export function getAuthRedirect(
   pathname: string,
   isAuthenticated: boolean,
 ): string | null {
-  if (isAuthCallbackRoute(pathname) || isPublicApiRoute(pathname)) {
+  if (
+    isAuthCallbackRoute(pathname) ||
+    isPublicApiRoute(pathname) ||
+    isPwaSupportRoute(pathname)
+  ) {
     return null;
   }
 

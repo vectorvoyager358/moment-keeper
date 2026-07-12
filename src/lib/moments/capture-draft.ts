@@ -5,6 +5,7 @@ export type CaptureDraft = {
   body: string;
   occurredAt: string;
   tags: string;
+  location: string;
   themes: MemoryTheme[];
   isFavorite: boolean;
 };
@@ -38,6 +39,11 @@ export function readCaptureDraft(userId: string): CaptureDraft | null {
       return null;
     }
 
+    const location =
+      "location" in draft && typeof draft.location === "string"
+        ? draft.location
+        : "";
+
     const themes =
       "themes" in draft && Array.isArray(draft.themes)
         ? [
@@ -59,6 +65,7 @@ export function readCaptureDraft(userId: string): CaptureDraft | null {
       body: draft.body,
       occurredAt: draft.occurredAt,
       tags: draft.tags,
+      location,
       themes,
       isFavorite,
     };
@@ -74,6 +81,7 @@ export function writeCaptureDraft(
   if (
     !draft.body.trim() &&
     !draft.tags.trim() &&
+    !draft.location.trim() &&
     draft.themes.length === 0 &&
     !draft.isFavorite
   ) {

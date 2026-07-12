@@ -14,7 +14,8 @@ export function parseSearchParams(params: {
   tag?: string | string[];
   favorite?: string | string[];
 }): TimelineSearchFilters {
-  const keyword = typeof params.q === "string" ? params.q.trim() : "";
+  const keyword =
+    typeof params.q === "string" ? normalizeSearchKeyword(params.q) : "";
   const tagParam = params.tag;
   const tagIds = Array.isArray(tagParam)
     ? tagParam
@@ -54,19 +55,45 @@ export function buildTimelineSearchUrl(filters: TimelineSearchFilters): string {
   return query ? `/timeline?${query}` : "/timeline";
 }
 
+/** Collapse whitespace before sending keywords to full-text search. */
+export function normalizeSearchKeyword(raw: string): string {
+  return raw.trim().replace(/\s+/g, " ");
+}
+
+function extractHighlightTerms(query: string): string[] {
+  const terms: string[] = [];
+  const normalized = normalizeSearchKeyword(query);
+
+  if (!normalized) {
+    return terms;
+  }
+
+  const phrasePattern = /"([^"]+)"/g;
+  let match: RegExpExecArray | null = phrasePattern.exec(normalized);
+
+  while (match !== null) {
+    terms.push(match[1]);
+    match = phrasePattern.exec(normalized);
+  }
+
+  const withoutPhrases = normalized.replace(/"([^"]+)"/g, " ");
+  for (const word of withoutPhrases.split(/\s+/)) {
+    if (word && !/^or$/i.test(word)) {
+      terms.push(word);
+    }
+  }
+
+  return [...new Set(terms)];
+}
+
 export function getHighlightedSegments(
   text: string,
   query: string,
 ): HighlightSegment[] {
-  const terms = [
-    ...new Set(
-      query
-        .trim()
-        .split(/\s+/)
-        .map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-        .filter(Boolean),
-    ),
-  ].sort((a, b) => b.length - a.length);
+  const terms = extractHighlightTerms(query)
+    .map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length);
 
   if (terms.length === 0) {
     return [{ text, highlighted: false }];

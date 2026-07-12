@@ -140,31 +140,48 @@ export function EditMomentForm({
         <FieldHint>Separate tags with commas.</FieldHint>
       </div>
 
-      <label
-        className={cn(
-          "inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition",
-          isFavorite
-            ? "border-accent bg-accent text-white"
-            : "border-border-strong bg-surface text-muted hover:border-accent/50 hover:text-accent",
-          pending && "pointer-events-none opacity-60",
-        )}
-      >
-        <input
-          type="checkbox"
-          name="favorite"
-          value="1"
-          checked={isFavorite}
-          disabled={pending}
-          aria-label="Keep close"
-          onChange={(event) => setIsFavorite(event.target.checked)}
-          className="sr-only"
+      <div className="space-y-2">
+        <Label htmlFor="location">
+          Location <span className="font-normal text-muted">(optional)</span>
+        </Label>
+        <Input
+          id="location"
+          name="location"
+          type="text"
+          defaultValue={moment.location ?? ""}
+          placeholder="Central Park, Mom's kitchen"
         />
-        <Heart
-          className={cn("h-3.5 w-3.5", isFavorite && "fill-current")}
-          aria-hidden
-        />
-        {isFavorite ? null : <span aria-hidden="true">Keep close</span>}
-      </label>
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-ink">Favorites</p>
+        <label
+          className={cn(
+            "inline-flex cursor-pointer items-center rounded-full border p-2 transition",
+            isFavorite
+              ? "border-accent bg-accent text-white"
+              : "border-border-strong bg-surface text-muted hover:border-accent/50 hover:text-accent",
+            pending && "pointer-events-none opacity-60",
+          )}
+        >
+          <input
+            type="checkbox"
+            name="favorite"
+            value="1"
+            checked={isFavorite}
+            disabled={pending}
+            aria-label={
+              isFavorite ? "Remove from favorites" : "Add to favorites"
+            }
+            onChange={(event) => setIsFavorite(event.target.checked)}
+            className="sr-only"
+          />
+          <Heart
+            className={cn("h-4 w-4", isFavorite && "fill-current")}
+            aria-hidden
+          />
+        </label>
+      </div>
 
       <MediaFileInput
         existingMedia={moment.media}
@@ -187,7 +204,7 @@ export function EditMomentForm({
 
       <div className="flex gap-3">
         <Button type="submit" disabled={!mediaValid || pending}>
-          {pending ? "Keeping…" : "Keep changes"}
+          {pending ? "Saving…" : "Save changes"}
         </Button>
         <Button
           type="button"

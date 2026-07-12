@@ -20,6 +20,7 @@ export interface Moment {
   id: string;
   user_id: string;
   body: string;
+  location: string | null;
   themes: MemoryTheme[];
   is_favorite: boolean;
   occurred_at: string;
@@ -79,6 +80,7 @@ export type Database = {
           id?: string;
           user_id: string;
           body: string;
+          location?: string | null;
           themes?: MemoryTheme[];
           is_favorite?: boolean;
           occurred_at?: string;
@@ -87,6 +89,7 @@ export type Database = {
         };
         Update: {
           body?: string;
+          location?: string | null;
           themes?: MemoryTheme[];
           is_favorite?: boolean;
           occurred_at?: string;
@@ -169,6 +172,7 @@ export type Database = {
           p_day: number;
           p_year: number;
           p_limit?: number;
+          p_timezone?: string;
         };
         Returns: {
           id: string;
