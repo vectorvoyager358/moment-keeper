@@ -2,6 +2,7 @@ import { Suspense } from "react";
 
 import { AppNav } from "@/components/AppNav";
 import { KeepMomentLink } from "@/components/KeepMomentLink";
+import { JournalGreeting } from "@/components/timeline/JournalGreeting";
 import { OnThisDaySection } from "@/components/timeline/OnThisDaySection";
 import { ResurfacingSection } from "@/components/timeline/ResurfacingSection";
 import { TimelineCollapsiblePanel } from "@/components/timeline/TimelineCollapsiblePanel";
@@ -24,6 +25,8 @@ import {
 } from "@/lib/moments/search";
 import { parseResurfacingParams } from "@/lib/moments/themes";
 import { getUserMomentCount } from "@/lib/moments/queries";
+import { getUserProfile } from "@/lib/profile/queries";
+import { formatProfileNameForDisplay } from "@/lib/profile/validation";
 
 type TimelinePageProps = {
   searchParams: Promise<{
@@ -45,6 +48,7 @@ export default async function TimelinePage({
   const resurfacingFilters = parseResurfacingParams(rawParams);
   const showSavedToast = rawParams.saved === "1";
   const momentCount = await getUserMomentCount();
+  const profile = await getUserProfile();
   const hasMoments = momentCount > 0;
   const hasSearchFilters = hasActiveSearchFilters(filters);
 
@@ -52,6 +56,12 @@ export default async function TimelinePage({
     <PageShell>
       <AppNav current="timeline" />
       <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
+        {profile?.hasDisplayName ? (
+          <JournalGreeting
+            name={formatProfileNameForDisplay(profile.displayName)}
+          />
+        ) : null}
+
         <PageHeader
           title="Your journal"
           description="A quiet place for the moments you want to keep."

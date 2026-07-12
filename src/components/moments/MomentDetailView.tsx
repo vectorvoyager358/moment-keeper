@@ -5,6 +5,7 @@ import { memoryThemeLabel } from "@/lib/moments/themes";
 
 import { MomentDate } from "@/components/moments/MomentDate";
 import { FavoriteMomentButton } from "@/components/moments/FavoriteMomentButton";
+import { MomentLocation } from "@/components/moments/MomentLocation";
 import { MomentMediaDisplay } from "@/components/moments/MomentMediaDisplay";
 import { Button } from "@/components/ui/Button";
 import { Tag } from "@/components/ui/Tag";
@@ -29,6 +30,7 @@ export function MomentDetailView({ moment, onEdit }: MomentDetailViewProps) {
           iso={moment.occurred_at}
           className="block font-display text-sm font-medium text-muted"
         />
+        {moment.location ? <MomentLocation location={moment.location} /> : null}
         <div className="flex items-center justify-end gap-2">
           <FavoriteMomentButton
             momentId={moment.id}

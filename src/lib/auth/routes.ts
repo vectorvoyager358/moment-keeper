@@ -32,6 +32,27 @@ export function isPublicRoute(pathname: string): boolean {
   );
 }
 
+/** Settings (and password reset) stay reachable while profile name is missing. */
+export function isProfileSetupExemptRoute(pathname: string): boolean {
+  return (
+    pathname === "/settings" ||
+    pathname.startsWith("/settings/") ||
+    pathname === "/reset-password" ||
+    pathname.startsWith("/reset-password/")
+  );
+}
+
+export function getProfileNameRedirect(
+  pathname: string,
+  hasDisplayName: boolean,
+): string | null {
+  if (hasDisplayName || isProfileSetupExemptRoute(pathname)) {
+    return null;
+  }
+
+  return "/settings?setup=1";
+}
+
 /**
  * Only allow known in-app destinations after exchanging an auth code.
  * Prevents open redirects via a crafted `next` query param.

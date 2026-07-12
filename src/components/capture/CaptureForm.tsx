@@ -36,11 +36,15 @@ const CAPTURE_PROMPTS = [
 
 function draftUsesAddMore(draft: {
   tags: string;
+  location: string;
   themes: MemoryTheme[];
   isFavorite: boolean;
 }): boolean {
   return (
-    draft.tags.trim().length > 0 || draft.themes.length > 0 || draft.isFavorite
+    draft.tags.trim().length > 0 ||
+    draft.location.trim().length > 0 ||
+    draft.themes.length > 0 ||
+    draft.isFavorite
   );
 }
 
@@ -51,6 +55,7 @@ export function CaptureForm({ userId }: CaptureFormProps) {
     toDatetimeLocalValue(new Date()),
   );
   const [tags, setTags] = useState("");
+  const [location, setLocation] = useState("");
   const [themes, setThemes] = useState<MemoryTheme[]>([]);
   const [isFavorite, setIsFavorite] = useState(false);
   const [preparedMediaFiles, setPreparedMediaFiles] = useState<File[]>([]);
@@ -78,6 +83,7 @@ export function CaptureForm({ userId }: CaptureFormProps) {
         setBody(draft.body);
         setOccurredAt(draft.occurredAt);
         setTags(draft.tags);
+        setLocation(draft.location ?? "");
         setThemes(draft.themes);
         setIsFavorite(draft.isFavorite);
         if (draftUsesAddMore(draft)) {
@@ -103,6 +109,7 @@ export function CaptureForm({ userId }: CaptureFormProps) {
         body,
         occurredAt,
         tags,
+        location,
         themes,
         isFavorite,
       });
@@ -113,6 +120,7 @@ export function CaptureForm({ userId }: CaptureFormProps) {
     body,
     draftLoaded,
     isFavorite,
+    location,
     occurredAt,
     pending,
     tags,
@@ -289,6 +297,23 @@ export function CaptureForm({ userId }: CaptureFormProps) {
               }}
             />
             <FieldHint>Separate tags with commas.</FieldHint>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="location">
+              Location{" "}
+              <span className="font-normal text-muted">(optional)</span>
+            </Label>
+            <Input
+              id="location"
+              name="location"
+              type="text"
+              placeholder="Central Park, Mom's kitchen"
+              value={location}
+              onChange={(event) => {
+                setLocation(event.target.value);
+              }}
+            />
           </div>
 
           <div className="space-y-2">

@@ -141,6 +141,19 @@ export function EditMomentForm({
       </div>
 
       <div className="space-y-2">
+        <Label htmlFor="location">
+          Location <span className="font-normal text-muted">(optional)</span>
+        </Label>
+        <Input
+          id="location"
+          name="location"
+          type="text"
+          defaultValue={moment.location ?? ""}
+          placeholder="Central Park, Mom's kitchen"
+        />
+      </div>
+
+      <div className="space-y-2">
         <p className="text-sm font-medium text-ink">Favorites</p>
         <label
           className={cn(

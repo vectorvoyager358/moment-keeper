@@ -101,6 +101,31 @@ describe("moment theme saving", () => {
     );
   });
 
+  it("stores an optional location on a new moment", async () => {
+    const insert = vi.fn(() => ({
+      select: () => ({
+        single: vi.fn().mockResolvedValue({
+          data: { id: "moment-1" },
+          error: null,
+        }),
+      }),
+    }));
+    createClientMock.mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: "u1" } } }),
+      },
+      from: vi.fn(() => ({ insert })),
+    });
+    const formData = validFormData();
+    formData.set("location", " Central Park ");
+
+    await saveNewMoment(formData);
+
+    expect(insert).toHaveBeenCalledWith(
+      expect.objectContaining({ location: "Central Park" }),
+    );
+  });
+
   it("stores the favorite flag on a new moment", async () => {
     const insert = vi.fn(() => ({
       select: () => ({

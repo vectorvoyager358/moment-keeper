@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import {
   getAuthRedirect,
+  getProfileNameRedirect,
   getSafeAuthCallbackRedirect,
   isAuthCallbackRoute,
+  isProfileSetupExemptRoute,
   isPublicApiRoute,
   isPublicRoute,
   isPwaSupportRoute,
@@ -103,5 +105,26 @@ describe("getAuthRedirect", () => {
     expect(getAuthRedirect("/timeline", true)).toBeNull();
     expect(getAuthRedirect("/login", false)).toBeNull();
     expect(getAuthRedirect("/forgot-password", false)).toBeNull();
+  });
+});
+
+describe("isProfileSetupExemptRoute", () => {
+  it("allows settings and reset-password during profile setup", () => {
+    expect(isProfileSetupExemptRoute("/settings")).toBe(true);
+    expect(isProfileSetupExemptRoute("/reset-password")).toBe(true);
+    expect(isProfileSetupExemptRoute("/timeline")).toBe(false);
+  });
+});
+
+describe("getProfileNameRedirect", () => {
+  it("sends users without a name to settings", () => {
+    expect(getProfileNameRedirect("/timeline", false)).toBe(
+      "/settings?setup=1",
+    );
+  });
+
+  it("does not redirect when a name exists or route is exempt", () => {
+    expect(getProfileNameRedirect("/timeline", true)).toBeNull();
+    expect(getProfileNameRedirect("/settings", false)).toBeNull();
   });
 });

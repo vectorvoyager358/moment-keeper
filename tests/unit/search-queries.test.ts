@@ -109,6 +109,58 @@ describe("getTimelineMoments keyword search", () => {
     });
     expect(result).toEqual({ items: [], hasMore: false });
   });
+
+  it("uses the search RPC for tag-only filters", async () => {
+    const rpc = vi.fn().mockResolvedValue({
+      data: [{ id: "moment-3", rank: 0 }],
+      error: null,
+    });
+    const inFilter = vi.fn().mockResolvedValue({
+      data: [
+        {
+          id: "moment-3",
+          body: "Tagged only",
+          occurred_at: "2026-07-03T12:00:00.000Z",
+          location: null,
+          is_favorite: false,
+          moment_tags: [],
+          media_attachments: [],
+        },
+      ],
+      error: null,
+    });
+
+    createClientMock.mockResolvedValue({
+      rpc,
+      from: vi.fn(() => ({
+        select: () => ({
+          in: inFilter,
+        }),
+      })),
+      storage: {
+        from: () => ({
+          createSignedUrls: vi
+            .fn()
+            .mockResolvedValue({ data: [], error: null }),
+        }),
+      },
+    });
+
+    const result = await getTimelineMoments({
+      keyword: "",
+      tagIds: ["tag-1"],
+      favoriteOnly: false,
+    });
+
+    expect(rpc).toHaveBeenCalledWith("search_moment_ids", {
+      p_query: "",
+      p_tag_ids: ["tag-1"],
+      p_limit: 21,
+      p_offset: 0,
+      p_favorite_only: false,
+    });
+    expect(result.items.map((item) => item.id)).toEqual(["moment-3"]);
+  });
 });
 
 describe("getUserMomentCount", () => {

@@ -48,8 +48,13 @@ export function Textarea({ className, ...props }: TextareaProps) {
 type FieldHintProps = {
   children: ReactNode;
   className?: string;
+  id?: string;
 };
 
-export function FieldHint({ children, className }: FieldHintProps) {
-  return <p className={cn("text-xs text-muted", className)}>{children}</p>;
+export function FieldHint({ children, className, id }: FieldHintProps) {
+  return (
+    <p id={id} className={cn("text-xs text-muted", className)}>
+      {children}
+    </p>
+  );
 }

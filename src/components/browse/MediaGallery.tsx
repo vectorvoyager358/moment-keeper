@@ -120,6 +120,11 @@ export async function MediaGallery({ mediaType }: MediaGalleryProps) {
                     <p className="mt-1 min-h-5 truncate font-display text-sm sm:text-base">
                       {truncateBody(moment.body, 48)}
                     </p>
+                    {moment.location ? (
+                      <p className="mt-1 min-h-4 truncate text-[0.65rem] opacity-85 sm:text-xs">
+                        {moment.location}
+                      </p>
+                    ) : null}
                     <MomentDate
                       iso={moment.occurred_at}
                       compact

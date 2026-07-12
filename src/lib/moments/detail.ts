@@ -14,6 +14,7 @@ export type MomentDetail = {
   id: string;
   body: string;
   occurred_at: string;
+  location: string | null;
   is_favorite: boolean;
   themes: MemoryTheme[];
   tags: { id: string; name: string }[];
@@ -24,6 +25,7 @@ type MomentDetailQueryRow = {
   id: string;
   body: string;
   occurred_at: string;
+  location: string | null;
   is_favorite: boolean;
   themes: MemoryTheme[];
   moment_tags:
@@ -78,6 +80,7 @@ export function mapMomentDetailRow(
     id: moment.id,
     body: moment.body,
     occurred_at: moment.occurred_at,
+    location: moment.location,
     is_favorite: moment.is_favorite,
     themes: moment.themes ?? [],
     tags: extractTags(moment.moment_tags),

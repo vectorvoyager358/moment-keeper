@@ -23,6 +23,10 @@ import {
 } from "@/lib/moments/repository";
 import { parseTagInput } from "@/lib/moments/tags";
 import { parseMemoryThemeFormData } from "@/lib/moments/themes";
+import {
+  parseLocationFormData,
+  validateMomentLocation,
+} from "@/lib/moments/location";
 import { validateMomentBody } from "@/lib/moments/validation";
 import { createClient } from "@/lib/supabase/server";
 
@@ -63,6 +67,12 @@ export async function saveNewMoment(
     return { ok: false, error: mediaError, status: 400 };
   }
 
+  const location = parseLocationFormData(formData);
+  const locationError = validateMomentLocation(location);
+  if (locationError) {
+    return { ok: false, error: locationError, status: 400 };
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -86,6 +96,7 @@ export async function saveNewMoment(
       themes: themeInput.themes,
       occurred_at: occurredAt,
       is_favorite: parseFavoriteFormData(formData),
+      location,
     })
     .select("id")
     .single();
@@ -188,6 +199,12 @@ export async function saveUpdatedMoment(
     return { ok: false, error: mediaError, status: 400 };
   }
 
+  const location = parseLocationFormData(formData);
+  const locationError = validateMomentLocation(location);
+  if (locationError) {
+    return { ok: false, error: locationError, status: 400 };
+  }
+
   const occurredAt = parseOccurredAtFormValue(occurredAtRaw, timezoneOffset);
 
   const { error: updateError } = await supabase
@@ -197,6 +214,7 @@ export async function saveUpdatedMoment(
       themes: themeInput.themes,
       occurred_at: occurredAt,
       is_favorite: parseFavoriteFormData(formData),
+      location,
     })
     .eq("id", momentId);
 

@@ -11,6 +11,7 @@ const draft: CaptureDraft = {
   body: "A good day",
   occurredAt: "2026-07-09T14:30",
   tags: "personal",
+  location: "Back porch",
   themes: ["joy", "connection"],
   isFavorite: false,
 };
@@ -35,6 +36,7 @@ describe("capture drafts", () => {
         body: " ",
         occurredAt: draft.occurredAt,
         tags: "",
+        location: "",
         themes: [],
         isFavorite: false,
       }),

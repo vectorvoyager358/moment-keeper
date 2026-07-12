@@ -6,6 +6,7 @@ import {
   validateEmail,
   validateNewPassword,
   validatePassword,
+  validateSignupFields,
 } from "@/lib/auth/validation";
 
 describe("validateEmail", () => {
@@ -45,6 +46,20 @@ describe("validateAuthFields", () => {
 
   it("accepts valid credentials", () => {
     expect(validateAuthFields("user@example.com", "password123")).toBeNull();
+  });
+});
+
+describe("validateSignupFields", () => {
+  it("requires a display name", () => {
+    expect(validateSignupFields("   ", "user@example.com", "password123")).toBe(
+      "Enter a name.",
+    );
+  });
+
+  it("accepts valid signup details", () => {
+    expect(
+      validateSignupFields("Alex", "user@example.com", "password123"),
+    ).toBeNull();
   });
 });
 

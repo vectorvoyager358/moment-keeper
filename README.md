@@ -91,6 +91,9 @@ If it persists: `rm -rf node_modules .next && npm install`
    - [`supabase/migrations/20260710043000_memory_themes.sql`](supabase/migrations/20260710043000_memory_themes.sql) for theme and content resurfacing
    - [`supabase/migrations/20260711100000_multiple_media_attachments.sql`](supabase/migrations/20260711100000_multiple_media_attachments.sql) for up to five ordered attachments per moment
    - [`supabase/migrations/20260711103000_favorite_moments.sql`](supabase/migrations/20260711103000_favorite_moments.sql) for favorite moments and favorite-aware search
+   - [`supabase/migrations/20260711194500_on_this_day_timezone.sql`](supabase/migrations/20260711194500_on_this_day_timezone.sql) for timezone-aware on-this-day resurfacing
+   - [`supabase/migrations/20260711200000_moment_location.sql`](supabase/migrations/20260711200000_moment_location.sql) for optional moment location and search
+   - [`supabase/migrations/20260711213000_improve_search_query.sql`](supabase/migrations/20260711213000_improve_search_query.sql) for improved Find search ranking and parsing
 
 See [`supabase/README.md`](supabase/README.md) for verification steps.
 

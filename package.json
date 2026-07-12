@@ -20,12 +20,13 @@
     "@sentry/nextjs": "^10.64.0",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.110.1",
-    "@swc/helpers": "^0.5.15",
+    "@swc/helpers": "^0.5.23",
     "@vercel/analytics": "^2.0.1",
     "lucide-react": "^1.23.0",
     "next": "16.2.10",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "server-only": "^0.0.1",
     "sharp": "^0.35.3"
   },
   "devDependencies": {

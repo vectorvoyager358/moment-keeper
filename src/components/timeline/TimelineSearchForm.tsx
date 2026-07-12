@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { Heart, Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { TagFilterField } from "@/components/timeline/TagFilterField";
 import { buttonClassName } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input, Label } from "@/components/ui/Input";
 import { cn } from "@/lib/cn";
 import {
   buildTimelineSearchUrl,
+  normalizeSearchKeyword,
   type TimelineSearchFilters,
 } from "@/lib/moments/search";
 import type { UserTag } from "@/lib/moments/queries";
@@ -43,7 +45,7 @@ function TimelineSearchFormFields({ filters, tags }: TimelineSearchFormProps) {
   const selectedTags = tags.filter((tag) => selectedTagIds.has(tag.id));
 
   useEffect(() => {
-    const trimmed = keyword.trim();
+    const trimmed = normalizeSearchKeyword(keyword);
 
     if (trimmed === filters.keyword) {
       return;
@@ -106,38 +108,16 @@ function TimelineSearchFormFields({ filters, tags }: TimelineSearchFormProps) {
             type="search"
             value={keyword}
             onChange={(event) => setKeyword(event.target.value)}
-            placeholder="Find a moment…"
+            placeholder='Try a word, place, or "exact phrase"'
             className="border-transparent bg-accent-subtle/55 pl-9 focus:border-accent"
           />
         </div>
 
-        {tags.length > 0 ? (
-          <fieldset className="space-y-2">
-            <legend className="text-sm font-medium text-ink">Tags</legend>
-            <div className="flex flex-wrap gap-2">
-              {tags.map((tag) => {
-                const selected = selectedTagIds.has(tag.id);
-
-                return (
-                  <button
-                    key={tag.id}
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={() => toggleTag(tag.id)}
-                    className={cn(
-                      "rounded-full border px-3 py-1 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40",
-                      selected
-                        ? "border-accent bg-accent text-white"
-                        : "border-border-strong bg-tag text-tag-text hover:border-accent/50",
-                    )}
-                  >
-                    {tag.name}
-                  </button>
-                );
-              })}
-            </div>
-          </fieldset>
-        ) : null}
+        <TagFilterField
+          tags={tags}
+          selectedTagIds={filters.tagIds}
+          onToggleTag={toggleTag}
+        />
 
         <button
           type="button"
@@ -244,7 +224,8 @@ export function TimelineSearchEmptyState({
         Nothing turned up
       </h2>
       <p className="mx-auto mt-2 max-w-sm text-sm text-muted">
-        Try another word, or loosen a tag.
+        Try another word or place, use fewer tags, or search with an exact
+        phrase in quotes.
       </p>
       <Link
         href="/timeline"

@@ -6,6 +6,7 @@ import { buttonClassName } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input, Label, Select } from "@/components/ui/Input";
 import { cn } from "@/lib/cn";
+import { localDateKey } from "@/lib/timezone";
 import { toUserErrorMessage } from "@/lib/errors";
 import {
   buildCalendarDays,
@@ -79,7 +80,7 @@ export async function CalendarView({
   const selectedMoments = selectedDay
     ? (momentsByDay.get(selectedDay) ?? [])
     : [];
-  const todayKey = new Date().toISOString().slice(0, 10);
+  const todayKey = localDateKey();
 
   return (
     <div className="space-y-8">

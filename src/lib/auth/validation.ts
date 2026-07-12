@@ -1,3 +1,5 @@
+import { validateProfileName } from "@/lib/profile/validation";
+
 export type AuthFormState = {
   error?: string;
   message?: string;
@@ -26,6 +28,17 @@ export function validateAuthFields(
   password: FormDataEntryValue | null,
 ): string | null {
   return validateEmail(email) ?? validatePassword(password);
+}
+
+export function validateSignupFields(
+  displayName: FormDataEntryValue | null,
+  email: FormDataEntryValue | null,
+  password: FormDataEntryValue | null,
+): string | null {
+  return (
+    validateProfileName(String(displayName ?? "")) ??
+    validateAuthFields(email, password)
+  );
 }
 
 export function validateNewPassword(

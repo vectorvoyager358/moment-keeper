@@ -6,7 +6,8 @@ import { signup } from "@/app/auth/actions";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
-import { Input, Label } from "@/components/ui/Input";
+import { FieldHint, Input, Label } from "@/components/ui/Input";
+import { MAX_PROFILE_NAME_LENGTH } from "@/lib/profile/validation";
 
 const initialState = { error: undefined, message: undefined };
 
@@ -21,6 +22,22 @@ export function SignupForm() {
       alternateLabel="Already have a journal? Log in"
     >
       <form action={formAction} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="displayName">Your name</Label>
+          <Input
+            id="displayName"
+            name="displayName"
+            type="text"
+            autoComplete="name"
+            required
+            maxLength={MAX_PROFILE_NAME_LENGTH}
+            placeholder="What should we call you?"
+          />
+          <FieldHint>
+            Required. Up to {MAX_PROFILE_NAME_LENGTH} characters.
+          </FieldHint>
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <Input

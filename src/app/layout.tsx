@@ -3,6 +3,7 @@ import { Lora, Source_Sans_3 } from "next/font/google";
 
 import { AnalyticsProvider } from "@/components/AnalyticsProvider";
 import { AppSerwistProvider } from "@/components/pwa/AppSerwistProvider";
+import { TimezoneSync } from "@/components/TimezoneSync";
 
 import "./globals.css";
 
@@ -95,6 +96,7 @@ export default function RootLayout({
         <AppSerwistProvider swUrl="/serwist/sw.js">
           {children}
         </AppSerwistProvider>
+        <TimezoneSync />
         <AnalyticsProvider />
       </body>
     </html>

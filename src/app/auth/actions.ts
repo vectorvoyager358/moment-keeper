@@ -10,8 +10,11 @@ import {
   validateChangePassword,
   validateEmail,
   validateNewPassword,
+  validateSignupFields,
 } from "@/lib/auth/validation";
 import { toUserErrorMessage } from "@/lib/errors";
+import { saveProfileDisplayName } from "@/lib/profile/save";
+import { normalizeProfileName } from "@/lib/profile/validation";
 import { createClient } from "@/lib/supabase/server";
 
 export async function login(
@@ -47,7 +50,9 @@ export async function signup(
   _prevState: AuthFormState,
   formData: FormData,
 ): Promise<AuthFormState> {
-  const validationError = validateAuthFields(
+  const rawName = String(formData.get("displayName") ?? "");
+  const validationError = validateSignupFields(
+    rawName,
     formData.get("email"),
     formData.get("password"),
   );
@@ -56,16 +61,43 @@ export async function signup(
     return { error: validationError };
   }
 
+  const displayName = normalizeProfileName(rawName);
+  const email = String(formData.get("email")).trim();
+  const password = String(formData.get("password"));
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
-    email: String(formData.get("email")).trim(),
-    password: String(formData.get("password")),
+    email,
+    password,
+    options: {
+      data: {
+        display_name: displayName,
+      },
+    },
   });
 
   if (error) {
     return {
       error: toUserErrorMessage(error, "Could not create your account."),
     };
+  }
+
+  if (data.user && data.session) {
+    const { error: profileError } = await saveProfileDisplayName(
+      supabase,
+      data.user.id,
+      data.user.email ?? email,
+      displayName,
+    );
+
+    if (profileError) {
+      return {
+        error: toUserErrorMessage(
+          profileError,
+          "Could not save your profile name.",
+        ),
+      };
+    }
   }
 
   if (data.session) {

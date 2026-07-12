@@ -38,8 +38,8 @@ describe("TimelineSearchForm active filters", () => {
           favoriteOnly: true,
         }}
         tags={[
-          { id: "tag-1", name: "work" },
-          { id: "tag-2", name: "proud" },
+          { id: "tag-1", name: "work", momentCount: 2 },
+          { id: "tag-2", name: "proud", momentCount: 1 },
         ]}
       />,
     );
@@ -61,7 +61,7 @@ describe("TimelineSearchForm active filters", () => {
     render(
       <TimelineSearchForm
         filters={{ keyword: "", tagIds: [], favoriteOnly: false }}
-        tags={[{ id: "tag-1", name: "work" }]}
+        tags={[{ id: "tag-1", name: "work", momentCount: 3 }]}
       />,
     );
 
@@ -89,5 +89,31 @@ describe("TimelineSearchForm active filters", () => {
     });
 
     expect(push).toHaveBeenCalledWith("/timeline?q=sunset", { scroll: false });
+  });
+
+  it("collapses long tag lists and offers a filter field", () => {
+    const manyTags = Array.from({ length: 14 }, (_, index) => ({
+      id: `tag-${index + 1}`,
+      name: `tag-${index + 1}`,
+      momentCount: 14 - index,
+    }));
+
+    render(
+      <TimelineSearchForm
+        filters={{ keyword: "", tagIds: [], favoriteOnly: false }}
+        tags={manyTags}
+      />,
+    );
+
+    expect(
+      screen.getByRole("searchbox", { name: "Filter tags" }),
+    ).toBeVisible();
+    expect(screen.getByRole("button", { name: "tag-1" })).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: "tag-14" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Show 2 more tags" }),
+    ).toBeVisible();
   });
 });

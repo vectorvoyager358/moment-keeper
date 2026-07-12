@@ -1,8 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-import { getAuthRedirect } from "@/lib/auth/routes";
+import { getAuthRedirect, getProfileNameRedirect } from "@/lib/auth/routes";
 import { getSupabaseConfig } from "@/lib/env";
+import { hasProfileName } from "@/lib/profile/validation";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -31,7 +32,28 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const redirectPath = getAuthRedirect(request.nextUrl.pathname, Boolean(user));
+  const isAuthenticated = Boolean(user);
+  let redirectPath = getAuthRedirect(request.nextUrl.pathname, isAuthenticated);
+
+  if (isAuthenticated && user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const profileHasName = hasProfileName(profile?.display_name);
+    const profileRedirect = getProfileNameRedirect(
+      request.nextUrl.pathname,
+      profileHasName,
+    );
+
+    if (profileRedirect) {
+      redirectPath = profileRedirect;
+    } else if (redirectPath === "/timeline" && !profileHasName) {
+      redirectPath = "/settings?setup=1";
+    }
+  }
 
   if (redirectPath) {
     const url = request.nextUrl.clone();

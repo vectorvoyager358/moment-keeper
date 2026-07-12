@@ -2,6 +2,7 @@ import { Heart, ImageIcon, Mic, Video } from "lucide-react";
 import Link from "next/link";
 
 import { MomentDate } from "@/components/moments/MomentDate";
+import { MomentLocation } from "@/components/moments/MomentLocation";
 import { TimelineMediaImage } from "@/components/timeline/TimelineMediaImage";
 import { buttonClassName } from "@/components/ui/Button";
 import { Tag } from "@/components/ui/Tag";
@@ -187,6 +188,13 @@ export function MomentCard({
               ) : null}
             </span>
           </div>
+          {moment.location ? (
+            <MomentLocation
+              location={moment.location}
+              compact
+              className="mt-1"
+            />
+          ) : null}
 
           <p className="mt-3 min-w-0 truncate font-display text-[1.05rem] leading-7 text-ink">
             {bodySegments.map((segment, index) =>

@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { AppNav } from "@/components/AppNav";
 import { BrowseTabs } from "@/components/browse/BrowseTabs";
+import { JournalGreeting } from "@/components/timeline/JournalGreeting";
 
 afterEach(cleanup);
 
@@ -23,6 +24,12 @@ describe("journal-focused navigation copy", () => {
     expect(mobileNavs).toHaveLength(2);
     expect(mobileNavs[1]).toHaveClass("md:hidden");
     expect(mobileNavs[1]).toHaveClass("bottom-0");
+  });
+
+  it("types a greeting on the journal home", async () => {
+    render(<JournalGreeting name="Alex" />);
+
+    expect(await screen.findByLabelText("Hi Alex")).toBeVisible();
   });
 
   it("describes browse views by user intent", () => {

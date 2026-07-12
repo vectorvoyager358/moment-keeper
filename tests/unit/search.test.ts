@@ -4,6 +4,7 @@ import {
   buildTimelineSearchUrl,
   getHighlightedSegments,
   hasActiveSearchFilters,
+  normalizeSearchKeyword,
   orderByIds,
   parseSearchParams,
 } from "@/lib/moments/search";
@@ -51,6 +52,12 @@ describe("buildTimelineSearchUrl", () => {
   });
 });
 
+describe("normalizeSearchKeyword", () => {
+  it("trims and collapses whitespace", () => {
+    expect(normalizeSearchKeyword("  family   trip  ")).toBe("family trip");
+  });
+});
+
 describe("getHighlightedSegments", () => {
   it("marks keyword terms without changing their casing", () => {
     expect(
@@ -64,6 +71,20 @@ describe("getHighlightedSegments", () => {
       { text: " ", highlighted: false },
       { text: "presentation", highlighted: true },
       { text: " today", highlighted: false },
+    ]);
+  });
+
+  it("highlights quoted phrases and ignores the or keyword", () => {
+    expect(
+      getHighlightedSegments(
+        "A trip to Central Park with family",
+        '"Central Park" family',
+      ),
+    ).toEqual([
+      { text: "A trip to ", highlighted: false },
+      { text: "Central Park", highlighted: true },
+      { text: " with ", highlighted: false },
+      { text: "family", highlighted: true },
     ]);
   });
 });

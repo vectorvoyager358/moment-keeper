@@ -11,6 +11,7 @@ type SavedToastProps = {
   message?: string;
   queryParam?: string;
   hint?: string | null;
+  autoDismissMs?: number;
 };
 
 const DEFAULT_MESSAGE = "Saved — it's now part of your journal.";
@@ -20,6 +21,7 @@ export function SavedToast({
   message = DEFAULT_MESSAGE,
   queryParam = "saved",
   hint = null,
+  autoDismissMs = AUTO_DISMISS_MS,
 }: SavedToastProps) {
   const router = useRouter();
   const shouldShowRef = useRef(initialVisible);
@@ -39,12 +41,12 @@ export function SavedToast({
 
     const timer = window.setTimeout(() => {
       setVisible(false);
-    }, AUTO_DISMISS_MS);
+    }, autoDismissMs);
 
     return () => {
       window.clearTimeout(timer);
     };
-  }, [queryParam, router]);
+  }, [autoDismissMs, queryParam, router]);
 
   if (!visible) {
     return null;

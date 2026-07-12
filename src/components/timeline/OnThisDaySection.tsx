@@ -6,12 +6,13 @@ import { Card } from "@/components/ui/Card";
 import { toUserErrorMessage } from "@/lib/errors";
 import {
   formatOnThisDayHeading,
-  getUtcCalendarParts,
+  getLocalCalendarParts,
   yearsAgoLabel,
 } from "@/lib/moments/on-this-day";
 import { getOnThisDayMoments } from "@/lib/moments/queries";
 import { hasActiveSearchFilters } from "@/lib/moments/search";
 import type { TimelineSearchFilters } from "@/lib/moments/search";
+import { getRequestTimeZone } from "@/lib/timezone.server";
 
 type OnThisDaySectionProps = {
   filters: TimelineSearchFilters;
@@ -23,17 +24,18 @@ export async function OnThisDaySection({ filters }: OnThisDaySectionProps) {
   }
 
   const today = new Date();
+  const timeZone = await getRequestTimeZone();
   let moments;
 
   try {
-    moments = await getOnThisDayMoments(today);
+    moments = await getOnThisDayMoments(today, timeZone);
   } catch (error) {
     throw new Error(
       toUserErrorMessage(error, "Could not load on-this-day memories."),
     );
   }
 
-  const heading = formatOnThisDayHeading(today);
+  const heading = formatOnThisDayHeading(today, timeZone);
 
   return (
     <section className="mb-8" aria-labelledby="on-this-day-heading">
@@ -64,14 +66,16 @@ export async function OnThisDaySection({ filters }: OnThisDaySectionProps) {
             >
               <MomentCard
                 moment={moment}
-                yearsAgo={yearsAgoLabel(moment.occurred_at, today)}
+                yearsAgo={yearsAgoLabel(moment.occurred_at, today, timeZone)}
                 balanceLayout
               />
             </li>
           ))}
         </ul>
       ) : (
-        <OnThisDayEmptyState month={getUtcCalendarParts(today).month} />
+        <OnThisDayEmptyState
+          month={getLocalCalendarParts(today, timeZone).month}
+        />
       )}
     </section>
   );
