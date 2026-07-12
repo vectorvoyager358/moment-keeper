@@ -108,7 +108,7 @@ export async function ResurfacingSection({
           </p>
           <div className="mt-4 flex justify-center gap-4 text-sm font-medium">
             <Link href="/capture" className="text-accent hover:underline">
-              Keep a moment
+              Capture a moment
             </Link>
             <Link href="/timeline" className="text-muted hover:text-ink">
               Try other themes

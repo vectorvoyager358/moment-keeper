@@ -146,7 +146,7 @@ export async function MediaGallery({ mediaType }: MediaGalleryProps) {
             href="/capture"
             className="mt-5 inline-flex text-sm font-medium text-accent hover:underline"
           >
-            Keep a moment with media
+            Capture a moment with media
           </Link>
         </Card>
       )}

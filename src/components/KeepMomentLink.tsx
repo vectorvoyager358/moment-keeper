@@ -12,7 +12,7 @@ export function KeepMomentLink({ className }: KeepMomentLinkProps) {
   return (
     <Link
       href="/capture"
-      aria-label="Keep a moment"
+      aria-label="Capture a moment"
       className={buttonClassName({
         size: "sm",
         className: cn(
@@ -22,7 +22,7 @@ export function KeepMomentLink({ className }: KeepMomentLinkProps) {
       })}
     >
       <PenLine className="h-4 w-4" aria-hidden />
-      <span className="hidden sm:inline">Keep a moment</span>
+      <span className="hidden sm:inline">Capture a moment</span>
     </Link>
   );
 }

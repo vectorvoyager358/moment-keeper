@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Lora, Source_Sans_3 } from "next/font/google";
 
 import { AnalyticsProvider } from "@/components/AnalyticsProvider";
+import { AppSerwistProvider } from "@/components/pwa/AppSerwistProvider";
 
 import "./globals.css";
 
@@ -48,8 +49,23 @@ const forceLightThemeCss = `
 `;
 
 export const metadata: Metadata = {
-  title: "Moment Keeper",
+  applicationName: "Moment Keeper",
+  title: {
+    default: "Moment Keeper",
+    template: "%s — Moment Keeper",
+  },
   description: "A home for life's moments",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Moment Keeper",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  icons: {
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
+  },
 };
 
 export const viewport: Viewport = {
@@ -76,7 +92,9 @@ export default function RootLayout({
         <style dangerouslySetInnerHTML={{ __html: forceLightThemeCss }} />
       </head>
       <body className="flex min-h-full flex-col bg-paper pb-[env(safe-area-inset-bottom)] text-ink">
-        {children}
+        <AppSerwistProvider swUrl="/serwist/sw.js">
+          {children}
+        </AppSerwistProvider>
         <AnalyticsProvider />
       </body>
     </html>

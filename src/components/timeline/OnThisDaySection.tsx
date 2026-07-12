@@ -103,7 +103,7 @@ function OnThisDayEmptyState({ month }: { month: number }) {
         href="/capture"
         className="mt-4 inline-flex text-sm font-medium text-accent underline-offset-4 transition hover:text-accent-hover hover:underline"
       >
-        Keep today&apos;s moment
+        Capture today&apos;s moment
       </Link>
     </Card>
   );

@@ -6,6 +6,7 @@ import {
   isAuthCallbackRoute,
   isPublicApiRoute,
   isPublicRoute,
+  isPwaSupportRoute,
 } from "@/lib/auth/routes";
 
 describe("isPublicRoute", () => {
@@ -55,6 +56,15 @@ describe("getSafeAuthCallbackRedirect", () => {
   });
 });
 
+describe("isPwaSupportRoute", () => {
+  it("recognizes service worker, manifest, and offline fallback routes", () => {
+    expect(isPwaSupportRoute("/serwist/sw.js")).toBe(true);
+    expect(isPwaSupportRoute("/manifest.webmanifest")).toBe(true);
+    expect(isPwaSupportRoute("/~offline")).toBe(true);
+    expect(isPwaSupportRoute("/timeline")).toBe(false);
+  });
+});
+
 describe("getAuthRedirect", () => {
   it("redirects unauthenticated users to login", () => {
     expect(getAuthRedirect("/timeline", false)).toBe("/login");
@@ -72,6 +82,13 @@ describe("getAuthRedirect", () => {
     expect(getAuthRedirect("/auth/callback", false)).toBeNull();
     expect(getAuthRedirect("/auth/callback", true)).toBeNull();
     expect(getAuthRedirect("/api/health", false)).toBeNull();
+  });
+
+  it("does not redirect PWA support routes", () => {
+    expect(getAuthRedirect("/serwist/sw.js", false)).toBeNull();
+    expect(getAuthRedirect("/manifest.webmanifest", true)).toBeNull();
+    expect(getAuthRedirect("/~offline", false)).toBeNull();
+    expect(getAuthRedirect("/~offline", true)).toBeNull();
   });
 
   it("allows authenticated users on reset-password", () => {

@@ -10,13 +10,11 @@ import { cn } from "@/lib/cn";
 type FavoriteMomentButtonProps = {
   momentId: string;
   initialFavorite: boolean;
-  showLabel?: boolean;
 };
 
 export function FavoriteMomentButton({
   momentId,
   initialFavorite,
-  showLabel = false,
 }: FavoriteMomentButtonProps) {
   const [favorite, setFavorite] = useState(initialFavorite);
   const [error, setError] = useState<string | null>(null);
@@ -44,26 +42,15 @@ export function FavoriteMomentButton({
         size="sm"
         disabled={pending}
         aria-pressed={favorite}
-        aria-label={
-          favorite ? "Remove from keep close" : "Keep this moment close"
-        }
-        title={favorite ? "Remove from keep close" : "Keep this moment close"}
+        aria-label={favorite ? "Remove from favorites" : "Add to favorites"}
+        title={favorite ? "Remove from favorites" : "Add to favorites"}
         onClick={toggleFavorite}
-        className={cn(
-          "px-2.5",
-          favorite && "text-accent",
-          showLabel && "gap-1.5",
-        )}
+        className={cn("px-2.5", favorite && "text-accent")}
       >
         <Heart
           className={cn("h-4 w-4", favorite && "fill-current")}
           aria-hidden
         />
-        {showLabel ? (
-          <span className="hidden text-sm font-medium sm:inline">
-            {favorite ? "Kept close" : "Keep close"}
-          </span>
-        ) : null}
       </Button>
       {error ? (
         <p className="mt-1 text-right text-xs text-danger" role="alert">

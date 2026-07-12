@@ -341,7 +341,7 @@ export async function CalendarView({
             href="/capture"
             className={buttonClassName({ className: "mt-5" })}
           >
-            Keep today&apos;s moment
+            Capture today&apos;s moment
           </Link>
         </Card>
       )}

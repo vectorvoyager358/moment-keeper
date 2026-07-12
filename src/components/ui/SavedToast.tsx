@@ -13,7 +13,7 @@ type SavedToastProps = {
   hint?: string | null;
 };
 
-const DEFAULT_MESSAGE = "Kept — it's now part of your journal.";
+const DEFAULT_MESSAGE = "Saved — it's now part of your journal.";
 
 export function SavedToast({
   initialVisible,

@@ -11,7 +11,7 @@ describe("journal-focused navigation copy", () => {
     render(<AppNav current="timeline" />);
 
     expect(screen.getAllByRole("link", { name: "Journal" })[0]).toBeVisible();
-    expect(screen.getAllByRole("link", { name: "Keep" })[0]).toBeVisible();
+    expect(screen.getAllByRole("link", { name: "Capture" })[0]).toBeVisible();
     expect(screen.getAllByRole("link", { name: "Look back" })[0]).toBeVisible();
     expect(screen.getAllByRole("link", { name: "Account" })[0]).toBeVisible();
   });

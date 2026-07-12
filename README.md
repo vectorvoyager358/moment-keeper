@@ -96,15 +96,34 @@ See [`supabase/README.md`](supabase/README.md) for verification steps.
 
 ## Scripts
 
-| Command                | Description                  |
-| ---------------------- | ---------------------------- |
-| `npm run dev`          | Start local dev server       |
-| `npm run build`        | Production build             |
-| `npm run start`        | Run production build locally |
-| `npm run lint`         | ESLint                       |
-| `npm run format`       | Prettier write               |
-| `npm run format:check` | Prettier check               |
-| `npm run test`         | Run unit tests (Vitest)      |
+| Command                  | Description                                       |
+| ------------------------ | ------------------------------------------------- |
+| `npm run dev`            | Start local dev server                            |
+| `npm run build`          | Production build                                  |
+| `npm run start`          | Run production build locally                      |
+| `npm run lint`           | ESLint                                            |
+| `npm run format`         | Prettier write                                    |
+| `npm run format:check`   | Prettier check                                    |
+| `npm run test`           | Run unit tests (Vitest)                           |
+| `npm run icons:generate` | Regenerate PWA icons from `public/icons/icon.svg` |
+
+## Install as an app (PWA)
+
+Moment Keeper is a Progressive Web App. On **production** (HTTPS), you can install it from the browser:
+
+- **iPhone / iPad (Safari):** Share → **Add to Home Screen**
+- **Android (Chrome):** Menu → **Install app** or **Add to Home screen**
+- **Desktop (Chrome / Edge):** Install icon in the address bar
+
+The app opens in standalone mode with your journal theme color. Static assets are cached for faster loads; when you are offline, a fallback page explains that a connection is needed to sync entries.
+
+Regenerate the Apple touch icon (180×180) after replacing `public/icons/icon-512.png`:
+
+```bash
+sips -z 180 180 public/icons/icon-512.png --out public/icons/apple-touch-icon.png
+```
+
+Legacy SVG-based generation is still available via `npm run icons:generate` if needed.
 
 ## CI
 

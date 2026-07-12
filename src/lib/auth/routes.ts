@@ -5,6 +5,15 @@ export const PUBLIC_ROUTES = [
   "/forgot-password",
 ] as const;
 
+/** Service worker and manifest must bypass auth redirects. */
+export function isPwaSupportRoute(pathname: string): boolean {
+  return (
+    pathname.startsWith("/serwist/") ||
+    pathname === "/manifest.webmanifest" ||
+    pathname === "/~offline"
+  );
+}
+
 /** PKCE callback must run without auth redirects interfering. */
 export function isAuthCallbackRoute(pathname: string): boolean {
   return (
@@ -39,7 +48,11 @@ export function getAuthRedirect(
   pathname: string,
   isAuthenticated: boolean,
 ): string | null {
-  if (isAuthCallbackRoute(pathname) || isPublicApiRoute(pathname)) {
+  if (
+    isAuthCallbackRoute(pathname) ||
+    isPublicApiRoute(pathname) ||
+    isPwaSupportRoute(pathname)
+  ) {
     return null;
   }
 

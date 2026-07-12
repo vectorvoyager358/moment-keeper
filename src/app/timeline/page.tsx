@@ -62,14 +62,14 @@ export default async function TimelinePage({
           initialVisible={showSavedToast}
           hint={
             showSavedToast && momentCount === 1
-              ? "Next time, open Add more on Keep to attach a photo or voice memo."
+              ? "Next time, open Add more on Capture to attach a photo or voice memo."
               : null
           }
         />
 
         {hasMoments && rawParams.surprise === "empty" ? (
           <Alert className="mb-8">
-            Keep your first moment, then “Surprise me” can bring one back.
+            Capture your first moment, then “Surprise me” can bring one back.
           </Alert>
         ) : null}
 
@@ -77,7 +77,7 @@ export default async function TimelinePage({
           <TimelineCollapsiblePanel
             panelId="find"
             title="Find"
-            description="Search your journal by words, tags, or keep-close moments."
+            description="Search your journal by words, tags, or favorites."
             initialOpen={hasSearchFilters}
             className="mt-6"
           >

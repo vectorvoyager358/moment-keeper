@@ -33,7 +33,7 @@ describe("SavedToast", () => {
     );
 
     expect(
-      screen.getByText("Kept — it's now part of your journal."),
+      screen.getByText("Saved — it's now part of your journal."),
     ).toBeVisible();
     expect(
       screen.getByText(
@@ -50,7 +50,7 @@ describe("SavedToast", () => {
     });
 
     expect(
-      screen.queryByText("Kept — it's now part of your journal."),
+      screen.queryByText("Saved — it's now part of your journal."),
     ).not.toBeInTheDocument();
   });
 
