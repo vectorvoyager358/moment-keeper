@@ -1,11 +1,20 @@
-import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { AppNav } from "@/components/AppNav";
+const { routerPush } = vi.hoisted(() => ({ routerPush: vi.fn() }));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: routerPush }),
+}));
+
+import { AppNav, getMobileNavPosition } from "@/components/AppNav";
 import { BrowseTabs } from "@/components/browse/BrowseTabs";
 import { JournalGreeting } from "@/components/timeline/JournalGreeting";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  routerPush.mockReset();
+});
 
 describe("journal-focused navigation copy", () => {
   it("uses warm, consistent labels in the main navigation", () => {
@@ -25,11 +34,64 @@ describe("journal-focused navigation copy", () => {
     expect(mobileNavs[1]).toHaveClass("md:hidden");
     expect(mobileNavs[1]).toHaveClass("rounded-[2rem]");
     expect(mobileNavs[1]).toHaveClass("max-w-sm");
+    expect(mobileNavs[1]).toHaveClass("bg-surface/40");
+    expect(mobileNavs[1]).not.toHaveClass("backdrop-blur-md");
     expect(screen.getAllByRole("link", { name: "Capture" })[1]).toHaveAttribute(
       "aria-current",
       "page",
     );
     expect(mobileNavs[1]).not.toHaveTextContent("Journal");
+    expect(screen.getByTestId("mobile-nav-lens")).toHaveStyle({
+      transform: "translateX(200%)",
+    });
+  });
+
+  it("maps a horizontal swipe continuously across the mobile tabs", () => {
+    expect(getMobileNavPosition(0, 0, 400, 4)).toBe(0);
+    expect(getMobileNavPosition(200, 0, 400, 4)).toBe(1.5);
+    expect(getMobileNavPosition(400, 0, 400, 4)).toBe(3);
+  });
+
+  it("opens the nearest tab after dragging across the mobile navigation", () => {
+    render(<AppNav current="timeline" />);
+
+    const mobileNav = screen.getAllByRole("navigation", { name: "Main" })[1];
+    vi.spyOn(mobileNav, "getBoundingClientRect").mockReturnValue({
+      bottom: 64,
+      height: 64,
+      left: 0,
+      right: 400,
+      top: 0,
+      width: 400,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+
+    fireEvent.pointerDown(mobileNav, {
+      button: 0,
+      clientX: 50,
+      pointerId: 1,
+    });
+    fireEvent.pointerMove(mobileNav, { clientX: 350, pointerId: 1 });
+    fireEvent.pointerUp(mobileNav, { clientX: 350, pointerId: 1 });
+
+    expect(routerPush).toHaveBeenCalledWith("/settings");
+  });
+
+  it("smoothly compacts the mobile navigation after scrolling", () => {
+    render(<AppNav current="timeline" />);
+
+    const mobileNav = screen.getAllByRole("navigation", { name: "Main" })[1];
+    Object.defineProperty(window, "scrollY", { configurable: true, value: 80 });
+    fireEvent.scroll(window);
+
+    expect(mobileNav).toHaveAttribute("data-compact", "true");
+    expect(mobileNav).toHaveClass("h-14");
+    expect(mobileNav).toHaveClass("max-w-xs");
+
+    Object.defineProperty(window, "scrollY", { configurable: true, value: 0 });
+    fireEvent.scroll(window);
   });
 
   it("types a greeting on the journal home", async () => {
