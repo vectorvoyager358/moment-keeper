@@ -51,6 +51,7 @@ export async function TimelineResults({
       key={`${filters.keyword}:${filters.tagIds.join(",")}:${filters.favoriteOnly}`}
       initialMoments={timelinePage.items}
       initialHasMore={timelinePage.hasMore}
+      initialNextCursor={timelinePage.nextCursor ?? null}
       filters={filters}
     />
   );

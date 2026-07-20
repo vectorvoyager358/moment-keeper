@@ -5,6 +5,7 @@ import {
   getTimelineMoments,
   type TimelineMoment,
   type TimelinePageResult,
+  type TimelinePagination,
 } from "@/lib/moments/queries";
 import type { TimelineSearchFilters } from "@/lib/moments/search";
 
@@ -14,10 +15,10 @@ export type LoadMoreTimelineState = TimelinePageResult<TimelineMoment> & {
 
 export async function loadMoreTimelineMoments(
   filters: TimelineSearchFilters,
-  offset: number,
+  pagination: TimelinePagination,
 ): Promise<LoadMoreTimelineState> {
   try {
-    return await getTimelineMoments(filters, { offset });
+    return await getTimelineMoments(filters, pagination);
   } catch (error) {
     return {
       items: [],

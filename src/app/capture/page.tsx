@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 
 import { CaptureForm } from "@/components/capture/CaptureForm";
 import { WelcomeBanner } from "@/components/capture/WelcomeBanner";
-import { AppNav } from "@/components/AppNav";
 import { Card } from "@/components/ui/Card";
 import { PageHeader, PageShell } from "@/components/ui/PageShell";
 import { createClient } from "@/lib/supabase/server";
@@ -28,7 +27,6 @@ export default async function CapturePage({ searchParams }: CapturePageProps) {
 
   return (
     <PageShell>
-      <AppNav current="capture" />
       <main className="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-12">
         <WelcomeBanner initialVisible={showWelcomeBanner} />
 
