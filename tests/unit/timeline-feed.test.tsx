@@ -42,7 +42,7 @@ beforeEach(() => {
   disconnect.mockReset();
   vi.stubGlobal(
     "IntersectionObserver",
-    vi.fn((callback: IntersectionObserverCallback) => {
+    vi.fn(function(callback: IntersectionObserverCallback) {
       intersectionCallback = callback;
       return { disconnect, observe, unobserve: vi.fn() };
     }),
