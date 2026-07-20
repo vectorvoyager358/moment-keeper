@@ -39,7 +39,7 @@ export function ScrollToTopButton({ className }: ScrollToTopButtonProps) {
       onClick={scrollToTop}
       className={cn(
         "fixed right-4 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-border-strong bg-surface text-accent shadow-card transition duration-[var(--duration-normal)] hover:border-accent/50 hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 touch-manipulation",
-        "bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-8",
+        "bottom-[calc(6rem+env(safe-area-inset-bottom))] md:bottom-8",
         visible
           ? "translate-y-0 opacity-100"
           : "pointer-events-none translate-y-2 opacity-0",

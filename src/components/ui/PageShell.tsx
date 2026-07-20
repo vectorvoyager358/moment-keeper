@@ -11,7 +11,7 @@ export function PageShell({ children, className }: PageShellProps) {
   return (
     <div
       className={cn(
-        "min-h-full pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0",
+        "min-h-full pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0",
         className,
       )}
     >

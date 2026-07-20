@@ -1,4 +1,12 @@
-import { BookOpen, Camera, Images, LayoutList, Settings } from "lucide-react";
+import {
+  BookOpen,
+  Camera,
+  CircleUserRound,
+  House,
+  Images,
+  LayoutList,
+  Settings,
+} from "lucide-react";
 import Link from "next/link";
 
 import { cn } from "@/lib/cn";
@@ -13,18 +21,39 @@ const navItems = [
     href: "/timeline",
     label: "Journal",
     icon: LayoutList,
+    mobileIcon: House,
   },
-  { id: "capture" as const, href: "/capture", label: "Capture", icon: Camera },
-  { id: "browse" as const, href: "/browse", label: "Look back", icon: Images },
+  {
+    id: "capture" as const,
+    href: "/capture",
+    label: "Capture",
+    icon: Camera,
+    mobileIcon: Camera,
+  },
+  {
+    id: "browse" as const,
+    href: "/browse",
+    label: "Look back",
+    icon: Images,
+    mobileIcon: Images,
+  },
   {
     id: "settings" as const,
     href: "/settings",
     label: "Account",
     icon: Settings,
+    mobileIcon: CircleUserRound,
   },
 ];
 
 type NavItem = (typeof navItems)[number];
+
+const mobileNavItems: NavItem[] = [
+  navItems[0],
+  navItems[2],
+  navItems[1],
+  navItems[3],
+];
 
 function NavLink({
   item,
@@ -35,37 +64,35 @@ function NavLink({
   active: boolean;
   mobile: boolean;
 }) {
-  const Icon = item.icon;
+  const Icon = mobile ? item.mobileIcon : item.icon;
 
   return (
     <Link
       href={item.href}
+      aria-label={mobile ? item.label : undefined}
+      aria-current={active ? "page" : undefined}
       className={cn(
         mobile
-          ? "flex w-full min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[0.625rem] font-medium leading-tight transition"
+          ? "flex min-h-11 min-w-11 items-center justify-center rounded-[1.55rem] transition duration-200 touch-manipulation"
           : "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition",
         active
           ? mobile
-            ? "bg-accent-subtle text-accent"
+            ? "bg-accent-subtle text-accent shadow-[inset_0_0_0_1px_rgba(184,121,46,0.08)]"
             : "bg-accent text-white shadow-sm"
           : mobile
-            ? "text-muted hover:bg-accent-subtle hover:text-ink"
+            ? "text-muted hover:bg-accent-subtle/70 hover:text-ink active:scale-95"
             : "text-muted hover:bg-accent-subtle hover:text-ink",
         item.id === "capture" &&
           !active &&
           "text-accent hover:text-accent-hover",
       )}
     >
-      <Icon className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
-      <span
-        className={cn(
-          mobile
-            ? "line-clamp-2 w-full max-w-[4.5rem] text-center"
-            : "whitespace-nowrap",
-        )}
-      >
-        {item.label}
-      </span>
+      <Icon
+        className={cn(mobile ? "h-6 w-6" : "h-4 w-4", "shrink-0")}
+        strokeWidth={active && mobile ? 2.4 : 2}
+        aria-hidden
+      />
+      {mobile ? null : <span className="whitespace-nowrap">{item.label}</span>}
     </Link>
   );
 }
@@ -119,10 +146,10 @@ export function AppNav({ current }: AppNavProps) {
       </header>
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-border/80 bg-surface/95 px-1 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(42,33,24,0.08)] backdrop-blur-xl md:hidden"
+        className="fixed inset-x-4 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 mx-auto grid h-16 max-w-sm grid-cols-4 gap-1 rounded-[2rem] border border-border/90 bg-surface/90 p-1.5 shadow-[0_10px_32px_rgba(42,33,24,0.14)] backdrop-blur-xl md:hidden"
         aria-label="Main"
       >
-        {navItems.map((item) => (
+        {mobileNavItems.map((item) => (
           <NavLink
             key={item.id}
             item={item}

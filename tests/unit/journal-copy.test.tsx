@@ -23,7 +23,13 @@ describe("journal-focused navigation copy", () => {
     const mobileNavs = screen.getAllByRole("navigation", { name: "Main" });
     expect(mobileNavs).toHaveLength(2);
     expect(mobileNavs[1]).toHaveClass("md:hidden");
-    expect(mobileNavs[1]).toHaveClass("bottom-0");
+    expect(mobileNavs[1]).toHaveClass("rounded-[2rem]");
+    expect(mobileNavs[1]).toHaveClass("max-w-sm");
+    expect(screen.getAllByRole("link", { name: "Capture" })[1]).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(mobileNavs[1]).not.toHaveTextContent("Journal");
   });
 
   it("types a greeting on the journal home", async () => {
