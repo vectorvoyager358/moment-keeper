@@ -126,6 +126,43 @@ describe("moment theme saving", () => {
     );
   });
 
+  it("normalizes and stores an optional link on a new moment", async () => {
+    const insert = vi.fn(() => ({
+      select: () => ({
+        single: vi.fn().mockResolvedValue({
+          data: { id: "moment-1" },
+          error: null,
+        }),
+      }),
+    }));
+    createClientMock.mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: "u1" } } }),
+      },
+      from: vi.fn(() => ({ insert })),
+    });
+    const formData = validFormData();
+    formData.set("link_url", " example.com/story ");
+
+    await saveNewMoment(formData);
+
+    expect(insert).toHaveBeenCalledWith(
+      expect.objectContaining({ link_url: "https://example.com/story" }),
+    );
+  });
+
+  it("rejects unsafe links before accessing the database", async () => {
+    const formData = validFormData();
+    formData.set("link_url", "javascript:alert(1)");
+
+    expect(await saveNewMoment(formData)).toEqual({
+      ok: false,
+      error: "Link must use http:// or https://.",
+      status: 400,
+    });
+    expect(createClientMock).not.toHaveBeenCalled();
+  });
+
   it("stores the favorite flag on a new moment", async () => {
     const insert = vi.fn(() => ({
       select: () => ({
@@ -212,7 +249,11 @@ describe("moment theme saving", () => {
 
     expect(result.ok).toBe(true);
     expect(update).toHaveBeenCalledWith(
-      expect.objectContaining({ themes: [], is_favorite: false }),
+      expect.objectContaining({
+        themes: [],
+        is_favorite: false,
+        link_url: null,
+      }),
     );
   });
 

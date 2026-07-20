@@ -14,6 +14,8 @@ describe("MomentCard", () => {
           id: "moment-1",
           body: "A video memory",
           occurred_at: "2026-07-09T12:00:00.000Z",
+          location: null,
+          linkUrl: "https://example.com/video",
           isFavorite: true,
           tags: [{ id: "tag-1", name: "travel" }],
           hasMedia: true,
@@ -41,6 +43,8 @@ describe("MomentCard", () => {
           id: "moment-2",
           body: "A proud day",
           occurred_at: "2026-07-09T12:00:00.000Z",
+          location: null,
+          linkUrl: null,
           isFavorite: false,
           tags: [],
           hasMedia: false,
@@ -66,6 +70,8 @@ describe("MomentDetailView", () => {
           id: "moment-1",
           body: "A photo memory",
           occurred_at: "2026-07-09T12:00:00.000Z",
+          location: null,
+          link_url: "https://www.example.com/family-story",
           is_favorite: true,
           themes: ["joy"],
           tags: [{ id: "tag-1", name: "family" }],
@@ -97,5 +103,10 @@ describe("MomentDetailView", () => {
       "href",
       "/timeline?theme=joy",
     );
+    expect(
+      screen.getByRole("link", {
+        name: "Open link to example.com in a new tab",
+      }),
+    ).toHaveAttribute("rel", "noopener noreferrer");
   });
 });

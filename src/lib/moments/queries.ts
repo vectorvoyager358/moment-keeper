@@ -53,6 +53,7 @@ const MOMENT_SELECT = `
   body,
   occurred_at,
   location,
+  link_url,
   is_favorite,
   themes,
   moment_tags (
@@ -77,6 +78,7 @@ const TIMELINE_SELECT = `
   body,
   occurred_at,
   location,
+  link_url,
   is_favorite,
   moment_tags (
     tags (

@@ -5,6 +5,7 @@ export type TimelineMoment = {
   body: string;
   occurred_at: string;
   location: string | null;
+  linkUrl: string | null;
   isFavorite: boolean;
   tags: { id: string; name: string }[];
   hasMedia: boolean;
@@ -21,6 +22,7 @@ export type TimelineQueryRow = {
   body: string;
   occurred_at: string;
   location: string | null;
+  link_url: string | null;
   is_favorite: boolean;
   moment_tags:
     | {
@@ -78,6 +80,7 @@ export function mapTimelineRow(
     body: moment.body,
     occurred_at: moment.occurred_at,
     location: moment.location,
+    linkUrl: moment.link_url,
     isFavorite: moment.is_favorite,
     tags,
     hasMedia: Boolean(attachment),

@@ -10,6 +10,7 @@ describe("mapMomentDetailRow", () => {
         body: "A proud moment.",
         occurred_at: "2026-07-07T12:00:00.000Z",
         location: null,
+        link_url: "https://example.com/story",
         is_favorite: false,
         themes: ["achievement"],
         moment_tags: [{ tags: { id: "tag-1", name: "work" } }],
@@ -21,6 +22,7 @@ describe("mapMomentDetailRow", () => {
     expect(result.media).toEqual([]);
     expect(result.themes).toEqual(["achievement"]);
     expect(result.tags).toEqual([{ id: "tag-1", name: "work" }]);
+    expect(result.link_url).toBe("https://example.com/story");
   });
 
   it("includes signed media when available", () => {
@@ -30,6 +32,7 @@ describe("mapMomentDetailRow", () => {
         body: "Photo moment.",
         occurred_at: "2026-07-07T12:00:00.000Z",
         location: null,
+        link_url: null,
         is_favorite: true,
         themes: [],
         moment_tags: null,
@@ -67,6 +70,7 @@ describe("mapMomentDetailRow", () => {
         body: "Video moment.",
         occurred_at: "2026-07-07T12:00:00.000Z",
         location: null,
+        link_url: null,
         is_favorite: false,
         themes: [],
         moment_tags: null,
@@ -103,6 +107,7 @@ describe("mapMomentDetailRow", () => {
         body: "Mixed moment.",
         occurred_at: "2026-07-07T12:00:00.000Z",
         location: null,
+        link_url: null,
         is_favorite: false,
         themes: [],
         moment_tags: null,

@@ -15,6 +15,7 @@ const firstMoment: TimelineMoment = {
   body: "First memory",
   occurred_at: "2026-07-19T12:00:00.000Z",
   location: null,
+  linkUrl: null,
   isFavorite: false,
   tags: [],
   hasMedia: false,
@@ -42,7 +43,7 @@ beforeEach(() => {
   disconnect.mockReset();
   vi.stubGlobal(
     "IntersectionObserver",
-    vi.fn(function(callback: IntersectionObserverCallback) {
+    vi.fn(function (callback: IntersectionObserverCallback) {
       intersectionCallback = callback;
       return { disconnect, observe, unobserve: vi.fn() };
     }),
