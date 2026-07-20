@@ -6,6 +6,7 @@ import { memoryThemeLabel } from "@/lib/moments/themes";
 import { MomentDate } from "@/components/moments/MomentDate";
 import { FavoriteMomentButton } from "@/components/moments/FavoriteMomentButton";
 import { MomentLocation } from "@/components/moments/MomentLocation";
+import { MomentLink } from "@/components/moments/MomentLink";
 import { MomentMediaDisplay } from "@/components/moments/MomentMediaDisplay";
 import { Button } from "@/components/ui/Button";
 import { Tag } from "@/components/ui/Tag";
@@ -55,6 +56,8 @@ export function MomentDetailView({ moment, onEdit }: MomentDetailViewProps) {
       <p className="whitespace-pre-wrap font-display text-xl leading-8 text-ink">
         {moment.body}
       </p>
+
+      {moment.link_url ? <MomentLink url={moment.link_url} /> : null}
 
       {audioMedia.length > 0 ? (
         <div className="space-y-3">

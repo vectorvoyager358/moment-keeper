@@ -66,6 +66,8 @@ describe("CaptureForm drafts", () => {
       body: "Restored memory",
       occurredAt: "2026-07-08T09:15",
       tags: "family",
+      location: "Grandma's house",
+      linkUrl: "https://example.com/family",
       themes: ["joy"],
       isFavorite: true,
     });
@@ -75,6 +77,10 @@ describe("CaptureForm drafts", () => {
     expect(await screen.findByDisplayValue("Restored memory")).toBeVisible();
     expect(screen.getByDisplayValue("2026-07-08T09:15")).toBeVisible();
     expect(screen.getByDisplayValue("family")).toBeVisible();
+    expect(screen.getByDisplayValue("Grandma's house")).toBeVisible();
+    expect(
+      screen.getByDisplayValue("https://example.com/family"),
+    ).toBeVisible();
     expect(screen.getByRole("checkbox", { name: "Joy" })).toBeChecked();
     expect(
       screen.getByRole("checkbox", { name: "Remove from favorites" }),
@@ -160,6 +166,28 @@ describe("CaptureForm drafts", () => {
     });
     const formData = postFormDataWithProgress.mock.calls[0][1] as FormData;
     expect(formData.get("favorite")).toBe("1");
+  });
+
+  it("normalizes a bare domain before submitting it", async () => {
+    postFormDataWithProgress.mockResolvedValue({ redirectTo: "/timeline" });
+    render(<CaptureForm userId="user-1" />);
+
+    fireEvent.change(screen.getByLabelText("What happened?"), {
+      target: { value: "A useful article" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Add more" }));
+    fireEvent.change(screen.getByLabelText("Link (optional)"), {
+      target: { value: "example.com/article" },
+    });
+    fireEvent.submit(
+      screen.getByRole("button", { name: "Capture this moment" }),
+    );
+
+    await waitFor(() => {
+      expect(postFormDataWithProgress).toHaveBeenCalled();
+    });
+    const formData = postFormDataWithProgress.mock.calls[0][1] as FormData;
+    expect(formData.get("link_url")).toBe("https://example.com/article");
   });
 
   it("keeps optional fields behind Add more until expanded", () => {

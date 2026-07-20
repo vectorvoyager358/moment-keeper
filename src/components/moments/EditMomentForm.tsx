@@ -13,6 +13,7 @@ import { SaveProgress } from "@/components/ui/SaveProgress";
 import { toUserErrorMessage } from "@/lib/errors";
 import type { MemoryTheme } from "@/lib/database.types";
 import { toDatetimeLocalValueFromIso } from "@/lib/moments/dates";
+import { parseMomentLinkUrl } from "@/lib/moments/link";
 import type { MomentDetail } from "@/lib/moments/queries";
 import { formatTagInput } from "@/lib/moments/tags";
 import { cn } from "@/lib/cn";
@@ -35,6 +36,7 @@ export function EditMomentForm({
   const router = useRouter();
   const [themes, setThemes] = useState<MemoryTheme[]>(moment.themes);
   const [isFavorite, setIsFavorite] = useState(moment.is_favorite);
+  const [linkUrl, setLinkUrl] = useState(moment.link_url ?? "");
   const [preparedMediaFiles, setPreparedMediaFiles] = useState<File[]>([]);
   const [mediaValid, setMediaValid] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +56,17 @@ export function EditMomentForm({
 
     const form = event.currentTarget;
     const formData = new FormData(form);
+    const linkInput = parseMomentLinkUrl(linkUrl);
+
+    if (linkInput.error) {
+      setError(linkInput.error);
+      return;
+    }
+
+    formData.set("link_url", linkInput.url ?? "");
+    if (linkInput.url) {
+      setLinkUrl(linkInput.url);
+    }
 
     formData.delete("media");
     preparedMediaFiles.forEach((file) => formData.append("media", file));
@@ -151,6 +164,24 @@ export function EditMomentForm({
           defaultValue={moment.location ?? ""}
           placeholder="Central Park, Mom's kitchen"
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="link_url">
+          Link <span className="font-normal text-muted">(optional)</span>
+        </Label>
+        <Input
+          id="link_url"
+          name="link_url"
+          type="text"
+          inputMode="url"
+          autoCapitalize="none"
+          autoCorrect="off"
+          value={linkUrl}
+          onChange={(event) => setLinkUrl(event.target.value)}
+          placeholder="example.com or https://example.com"
+        />
+        <FieldHint>Replace the link, or leave it blank to remove it.</FieldHint>
       </div>
 
       <div className="space-y-2">

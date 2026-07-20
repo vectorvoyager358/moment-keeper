@@ -27,6 +27,7 @@ import {
   parseLocationFormData,
   validateMomentLocation,
 } from "@/lib/moments/location";
+import { parseMomentLinkFormData } from "@/lib/moments/link";
 import { validateMomentBody } from "@/lib/moments/validation";
 import { createClient } from "@/lib/supabase/server";
 
@@ -46,9 +47,14 @@ export async function saveNewMoment(
   const tagsRaw = String(formData.get("tags") ?? "");
   const themeInput = parseMemoryThemeFormData(formData);
   const mediaFiles = getMediaFilesFromFormData(formData);
+  const linkInput = parseMomentLinkFormData(formData);
 
   if (themeInput.error) {
     return { ok: false, error: themeInput.error, status: 400 };
+  }
+
+  if (linkInput.error) {
+    return { ok: false, error: linkInput.error, status: 400 };
   }
 
   const bodyError = validateMomentBody(body);
@@ -97,6 +103,7 @@ export async function saveNewMoment(
       occurred_at: occurredAt,
       is_favorite: parseFavoriteFormData(formData),
       location,
+      link_url: linkInput.url,
     })
     .select("id")
     .single();
@@ -141,8 +148,13 @@ export async function saveUpdatedMoment(
   const themeInput = parseMemoryThemeFormData(formData);
   const mediaFiles = getMediaFilesFromFormData(formData);
   const removedMediaIds = getRemovedMediaIds(formData);
+  const linkInput = parseMomentLinkFormData(formData);
   if (themeInput.error) {
     return { ok: false, error: themeInput.error, status: 400 };
+  }
+
+  if (linkInput.error) {
+    return { ok: false, error: linkInput.error, status: 400 };
   }
 
   const bodyError = validateMomentBody(body);
@@ -215,6 +227,7 @@ export async function saveUpdatedMoment(
       occurred_at: occurredAt,
       is_favorite: parseFavoriteFormData(formData),
       location,
+      link_url: linkInput.url,
     })
     .eq("id", momentId);
 

@@ -1,4 +1,4 @@
-import { Heart, ImageIcon, Mic, Video } from "lucide-react";
+import { Heart, ImageIcon, Link2, Mic, Video } from "lucide-react";
 import Link from "next/link";
 
 import { MomentDate } from "@/components/moments/MomentDate";
@@ -185,6 +185,15 @@ export function MomentCard({
                   mediaType={moment.mediaType}
                   attachmentCount={moment.attachmentCount}
                 />
+              ) : null}
+              {moment.linkUrl ? (
+                <span
+                  className="inline-flex items-center gap-1 text-xs font-medium text-accent"
+                  title="Has a link"
+                >
+                  <Link2 className="h-3.5 w-3.5" aria-hidden />
+                  <span className="sr-only">Has a link</span>
+                </span>
               ) : null}
             </span>
           </div>

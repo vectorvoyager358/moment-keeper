@@ -12,6 +12,7 @@ const draft: CaptureDraft = {
   occurredAt: "2026-07-09T14:30",
   tags: "personal",
   location: "Back porch",
+  linkUrl: "https://example.com/story",
   themes: ["joy", "connection"],
   isFavorite: false,
 };
@@ -37,6 +38,7 @@ describe("capture drafts", () => {
         occurredAt: draft.occurredAt,
         tags: "",
         location: "",
+        linkUrl: "",
         themes: [],
         isFavorite: false,
       }),
@@ -51,6 +53,26 @@ describe("capture drafts", () => {
     );
 
     expect(readCaptureDraft("user-1")).toBeNull();
+  });
+
+  it("restores older drafts that predate link attachments", () => {
+    const legacyDraft = {
+      body: draft.body,
+      occurredAt: draft.occurredAt,
+      tags: draft.tags,
+      location: draft.location,
+      themes: draft.themes,
+      isFavorite: draft.isFavorite,
+    };
+    localStorage.setItem(
+      "moment-keeper:capture-draft:user-1",
+      JSON.stringify(legacyDraft),
+    );
+
+    expect(readCaptureDraft("user-1")).toEqual({
+      ...legacyDraft,
+      linkUrl: "",
+    });
   });
 
   it("clears a saved draft", () => {

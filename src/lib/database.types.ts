@@ -21,6 +21,7 @@ export interface Moment {
   user_id: string;
   body: string;
   location: string | null;
+  link_url: string | null;
   themes: MemoryTheme[];
   is_favorite: boolean;
   occurred_at: string;
@@ -81,6 +82,7 @@ export type Database = {
           user_id: string;
           body: string;
           location?: string | null;
+          link_url?: string | null;
           themes?: MemoryTheme[];
           is_favorite?: boolean;
           occurred_at?: string;
@@ -90,6 +92,7 @@ export type Database = {
         Update: {
           body?: string;
           location?: string | null;
+          link_url?: string | null;
           themes?: MemoryTheme[];
           is_favorite?: boolean;
           occurred_at?: string;

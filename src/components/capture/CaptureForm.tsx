@@ -18,6 +18,7 @@ import {
   writeCaptureDraft,
 } from "@/lib/moments/capture-draft";
 import { toDatetimeLocalValue } from "@/lib/moments/dates";
+import { parseMomentLinkUrl } from "@/lib/moments/link";
 import { cn } from "@/lib/cn";
 import {
   postFormDataWithProgress,
@@ -37,12 +38,14 @@ const CAPTURE_PROMPTS = [
 function draftUsesAddMore(draft: {
   tags: string;
   location: string;
+  linkUrl: string;
   themes: MemoryTheme[];
   isFavorite: boolean;
 }): boolean {
   return (
     draft.tags.trim().length > 0 ||
     draft.location.trim().length > 0 ||
+    draft.linkUrl.trim().length > 0 ||
     draft.themes.length > 0 ||
     draft.isFavorite
   );
@@ -56,6 +59,7 @@ export function CaptureForm({ userId }: CaptureFormProps) {
   );
   const [tags, setTags] = useState("");
   const [location, setLocation] = useState("");
+  const [linkUrl, setLinkUrl] = useState("");
   const [themes, setThemes] = useState<MemoryTheme[]>([]);
   const [isFavorite, setIsFavorite] = useState(false);
   const [preparedMediaFiles, setPreparedMediaFiles] = useState<File[]>([]);
@@ -84,6 +88,7 @@ export function CaptureForm({ userId }: CaptureFormProps) {
         setOccurredAt(draft.occurredAt);
         setTags(draft.tags);
         setLocation(draft.location ?? "");
+        setLinkUrl(draft.linkUrl ?? "");
         setThemes(draft.themes);
         setIsFavorite(draft.isFavorite);
         if (draftUsesAddMore(draft)) {
@@ -110,6 +115,7 @@ export function CaptureForm({ userId }: CaptureFormProps) {
         occurredAt,
         tags,
         location,
+        linkUrl,
         themes,
         isFavorite,
       });
@@ -121,6 +127,7 @@ export function CaptureForm({ userId }: CaptureFormProps) {
     draftLoaded,
     isFavorite,
     location,
+    linkUrl,
     occurredAt,
     pending,
     tags,
@@ -144,6 +151,17 @@ export function CaptureForm({ userId }: CaptureFormProps) {
 
     const form = event.currentTarget;
     const formData = new FormData(form);
+    const linkInput = parseMomentLinkUrl(linkUrl);
+
+    if (linkInput.error) {
+      setError(linkInput.error);
+      return;
+    }
+
+    formData.set("link_url", linkInput.url ?? "");
+    if (linkInput.url) {
+      setLinkUrl(linkInput.url);
+    }
 
     formData.delete("media");
     preparedMediaFiles.forEach((file) => formData.append("media", file));
@@ -314,6 +332,26 @@ export function CaptureForm({ userId }: CaptureFormProps) {
                 setLocation(event.target.value);
               }}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="link_url">
+              Link <span className="font-normal text-muted">(optional)</span>
+            </Label>
+            <Input
+              id="link_url"
+              name="link_url"
+              type="text"
+              inputMode="url"
+              autoCapitalize="none"
+              autoCorrect="off"
+              placeholder="example.com or https://example.com"
+              value={linkUrl}
+              onChange={(event) => {
+                setLinkUrl(event.target.value);
+              }}
+            />
+            <FieldHint>Attach one webpage to this moment.</FieldHint>
           </div>
 
           <div className="space-y-2">
