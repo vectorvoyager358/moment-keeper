@@ -1,5 +1,4 @@
 import { logout } from "@/app/auth/actions";
-import { AppNav } from "@/components/AppNav";
 import { ChangePasswordForm } from "@/components/settings/ChangePasswordForm";
 import { ProfileNameForm } from "@/components/settings/ProfileNameForm";
 import { Alert } from "@/components/ui/Alert";
@@ -43,7 +42,6 @@ export default async function SettingsPage({
 
   return (
     <PageShell>
-      <AppNav current="settings" />
       <main className="mx-auto max-w-3xl px-6 py-10">
         <PageHeader
           title={needsProfileName ? "Welcome" : "Your account"}

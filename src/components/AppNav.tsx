@@ -10,7 +10,7 @@ import {
   Settings,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
@@ -21,9 +21,9 @@ import {
 
 import { cn } from "@/lib/cn";
 
-type AppNavProps = {
-  current: "timeline" | "capture" | "browse" | "settings";
-};
+type NavId = "timeline" | "capture" | "browse" | "settings";
+
+type AppNavProps = { current: NavId };
 
 const MOBILE_NAV_COMPACT_SCROLL_Y = 48;
 
@@ -76,10 +76,30 @@ type NavItem = (typeof navItems)[number];
 
 const mobileNavItems: NavItem[] = [
   navItems[0],
-  navItems[2],
   navItems[1],
+  navItems[2],
   navItems[3],
 ];
+
+export function getNavIdForPathname(pathname: string): NavId | null {
+  if (pathname === "/timeline" || pathname.startsWith("/moments/")) {
+    return "timeline";
+  }
+
+  if (pathname === "/capture" || pathname.startsWith("/capture/")) {
+    return "capture";
+  }
+
+  if (pathname === "/browse" || pathname.startsWith("/browse/")) {
+    return "browse";
+  }
+
+  if (pathname === "/settings" || pathname.startsWith("/settings/")) {
+    return "settings";
+  }
+
+  return null;
+}
 
 function NavLink({
   item,
@@ -170,6 +190,9 @@ export function AppNav({ current }: AppNavProps) {
   const dragPointerId = useRef<number | null>(null);
   const dragStartX = useRef(0);
   const didDrag = useRef(false);
+  const gestureStartIndex = useRef(activeMobileIndex);
+  const previewedIndex = useRef(activeMobileIndex);
+  const pushedPreviewRoute = useRef(false);
 
   useEffect(() => {
     function handleScroll() {
@@ -187,6 +210,35 @@ export function AppNav({ current }: AppNavProps) {
       setIndicatorPosition(activeMobileIndex < 0 ? 0 : activeMobileIndex);
     }
   }, [activeMobileIndex]);
+
+  useEffect(() => {
+    const prefetchTimer = window.setTimeout(() => {
+      for (const index of [activeMobileIndex - 1, activeMobileIndex + 1]) {
+        const adjacentItem = mobileNavItems[index];
+        if (adjacentItem) {
+          router.prefetch(adjacentItem.href);
+        }
+      }
+    }, 150);
+
+    return () => window.clearTimeout(prefetchTimer);
+  }, [activeMobileIndex, router]);
+
+  function previewTab(index: number) {
+    const target = mobileNavItems[index];
+    if (!target || previewedIndex.current === index) {
+      return;
+    }
+
+    router.prefetch(target.href);
+    if (pushedPreviewRoute.current) {
+      router.replace(target.href, { scroll: false });
+    } else {
+      router.push(target.href, { scroll: false });
+      pushedPreviewRoute.current = true;
+    }
+    previewedIndex.current = index;
+  }
 
   function positionForPointer(event: ReactPointerEvent<HTMLElement>): number {
     const bounds = event.currentTarget.getBoundingClientRect();
@@ -206,6 +258,9 @@ export function AppNav({ current }: AppNavProps) {
     dragPointerId.current = event.pointerId;
     dragStartX.current = event.clientX;
     didDrag.current = false;
+    gestureStartIndex.current = activeMobileIndex;
+    previewedIndex.current = activeMobileIndex;
+    pushedPreviewRoute.current = false;
     setDragging(true);
     setIndicatorPosition(positionForPointer(event));
     event.currentTarget.setPointerCapture?.(event.pointerId);
@@ -220,7 +275,11 @@ export function AppNav({ current }: AppNavProps) {
       didDrag.current = true;
     }
 
-    setIndicatorPosition(positionForPointer(event));
+    const nextPosition = positionForPointer(event);
+    setIndicatorPosition(nextPosition);
+    if (didDrag.current) {
+      previewTab(Math.round(nextPosition));
+    }
   }
 
   function finishPointerGesture(event: ReactPointerEvent<HTMLElement>) {
@@ -229,14 +288,13 @@ export function AppNav({ current }: AppNavProps) {
     }
 
     const targetIndex = Math.round(positionForPointer(event));
-    const target = mobileNavItems[targetIndex];
     dragPointerId.current = null;
     setDragging(false);
     setIndicatorPosition(targetIndex);
     event.currentTarget.releasePointerCapture?.(event.pointerId);
 
-    if (didDrag.current && target && target.id !== current) {
-      router.push(target.href);
+    if (didDrag.current) {
+      previewTab(targetIndex);
     }
   }
 
@@ -249,6 +307,13 @@ export function AppNav({ current }: AppNavProps) {
     didDrag.current = false;
     setDragging(false);
     setIndicatorPosition(activeMobileIndex < 0 ? 0 : activeMobileIndex);
+
+    if (pushedPreviewRoute.current) {
+      const startingItem = mobileNavItems[gestureStartIndex.current];
+      if (startingItem) {
+        router.replace(startingItem.href, { scroll: false });
+      }
+    }
   }
 
   function suppressLinkClickAfterDrag(event: ReactMouseEvent<HTMLElement>) {
@@ -325,4 +390,11 @@ export function AppNav({ current }: AppNavProps) {
       </nav>
     </>
   );
+}
+
+export function PersistentAppNav() {
+  const pathname = usePathname();
+  const current = getNavIdForPathname(pathname);
+
+  return current ? <AppNav current={current} /> : null;
 }

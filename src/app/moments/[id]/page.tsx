@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { AppNav } from "@/components/AppNav";
 import { DeleteMomentButton } from "@/components/moments/DeleteMomentButton";
 import { MomentDetailNav } from "@/components/moments/MomentDetailNav";
 import { MomentDetailPanel } from "@/components/moments/MomentDetailPanel";
@@ -42,7 +41,6 @@ export default async function MomentDetailPage({
 
   return (
     <PageShell>
-      <AppNav current="timeline" />
       <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
         <p className="mb-6 text-sm">
           <Link

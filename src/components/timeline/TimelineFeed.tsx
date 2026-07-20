@@ -1,17 +1,22 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
 import { loadMoreTimelineMoments } from "@/app/timeline/actions";
 import { MomentCard } from "@/components/timeline/MomentCard";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import type { TimelineMoment } from "@/lib/moments/queries";
-import type { TimelineSearchFilters } from "@/lib/moments/search";
+import type { TimelineCursor } from "@/lib/moments/pagination";
+import {
+  hasActiveSearchFilters,
+  type TimelineSearchFilters,
+} from "@/lib/moments/search";
 
 type TimelineFeedProps = {
   initialMoments: TimelineMoment[];
   initialHasMore: boolean;
+  initialNextCursor?: TimelineCursor | null;
   filters: TimelineSearchFilters;
 };
 
@@ -21,28 +26,69 @@ const STAGGER_MS = 50;
 export function TimelineFeed({
   initialMoments,
   initialHasMore,
+  initialNextCursor = null,
   filters,
 }: TimelineFeedProps) {
   const [moments, setMoments] = useState(initialMoments);
   const [hasMore, setHasMore] = useState(initialHasMore);
+  const [nextCursor, setNextCursor] = useState(initialNextCursor);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const loadAheadRef = useRef<HTMLDivElement>(null);
+  const loadingRef = useRef(false);
 
-  function handleLoadMore() {
+  const handleLoadMore = useCallback(() => {
+    if (loadingRef.current || !hasMore) {
+      return;
+    }
+
+    loadingRef.current = true;
     setError(null);
 
     startTransition(async () => {
-      const result = await loadMoreTimelineMoments(filters, moments.length);
+      try {
+        const pagination = hasActiveSearchFilters(filters)
+          ? { offset: moments.length }
+          : { cursor: nextCursor };
+        const result = await loadMoreTimelineMoments(filters, pagination);
 
-      if (result.error) {
-        setError(result.error);
-        return;
+        if (result.error) {
+          setError(result.error);
+          return;
+        }
+
+        setMoments((current) => [...current, ...result.items]);
+        setHasMore(result.hasMore);
+        setNextCursor(result.nextCursor ?? null);
+      } finally {
+        loadingRef.current = false;
       }
-
-      setMoments((current) => [...current, ...result.items]);
-      setHasMore(result.hasMore);
     });
-  }
+  }, [filters, hasMore, moments.length, nextCursor]);
+
+  useEffect(() => {
+    const loadAhead = loadAheadRef.current;
+    if (
+      !loadAhead ||
+      !hasMore ||
+      error ||
+      !("IntersectionObserver" in window)
+    ) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          handleLoadMore();
+        }
+      },
+      { rootMargin: "600px 0px" },
+    );
+
+    observer.observe(loadAhead);
+    return () => observer.disconnect();
+  }, [error, handleLoadMore, hasMore]);
 
   return (
     <>
@@ -67,14 +113,17 @@ export function TimelineFeed({
       ) : null}
 
       {hasMore ? (
-        <div className="mt-8 flex justify-center">
+        <div
+          ref={loadAheadRef}
+          className="mt-8 flex min-h-16 items-center justify-center"
+        >
           <Button
             type="button"
             variant="secondary"
             onClick={handleLoadMore}
             disabled={isPending}
           >
-            {isPending ? "Finding more…" : "Show earlier moments"}
+            {isPending ? "Loading earlier moments…" : "Load earlier moments"}
           </Button>
         </div>
       ) : null}

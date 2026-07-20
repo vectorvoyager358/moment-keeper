@@ -6,8 +6,10 @@ import {
 import type { MediaType, MemoryTheme } from "@/lib/database.types";
 import { getCalendarMonthRange } from "@/lib/moments/calendar";
 import {
+  buildTimelineCursorFilter,
   paginateItems,
   TIMELINE_PAGE_SIZE,
+  type TimelineCursor,
   type TimelinePageResult,
   type TimelinePagination,
 } from "@/lib/moments/pagination";
@@ -434,7 +436,7 @@ export async function getTimelineMoments(
   const offset = pagination.offset ?? 0;
 
   if (!hasActiveSearchFilters(filters)) {
-    return fetchAllTimelineMoments(limit, offset);
+    return fetchAllTimelineMoments(limit, pagination.cursor ?? null);
   }
 
   return searchTimelineMoments(filters, limit, offset);
@@ -442,16 +444,22 @@ export async function getTimelineMoments(
 
 async function fetchAllTimelineMoments(
   limit: number,
-  offset: number,
+  cursor: TimelineCursor | null,
 ): Promise<TimelinePageResult<TimelineMoment>> {
   const supabase = await createClient();
   const fetchSize = limit + 1;
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("moments")
     .select(TIMELINE_SELECT)
     .order("occurred_at", { ascending: false })
-    .range(offset, offset + fetchSize - 1);
+    .order("id", { ascending: false });
+
+  if (cursor) {
+    query = query.or(buildTimelineCursorFilter(cursor));
+  }
+
+  const { data, error } = await query.limit(fetchSize);
 
   if (error) {
     throw error;
@@ -459,7 +467,16 @@ async function fetchAllTimelineMoments(
 
   const rows = await withSignedThumbnails((data ?? []) as TimelineQueryRow[]);
 
-  return paginateItems(rows, limit);
+  const page = paginateItems(rows, limit);
+  const lastMoment = page.items.at(-1);
+
+  return {
+    ...page,
+    nextCursor:
+      page.hasMore && lastMoment
+        ? { occurredAt: lastMoment.occurred_at, id: lastMoment.id }
+        : null,
+  };
 }
 
 async function searchTimelineMoments(
@@ -589,14 +606,20 @@ export async function getAdjacentMomentIds(momentId: string): Promise<{
     supabase
       .from("moments")
       .select("id")
-      .lt("occurred_at", current.occurred_at)
+      .or(
+        `occurred_at.lt.${current.occurred_at},and(occurred_at.eq.${current.occurred_at},id.lt.${momentId})`,
+      )
       .order("occurred_at", { ascending: false })
+      .order("id", { ascending: false })
       .limit(1),
     supabase
       .from("moments")
       .select("id")
-      .gt("occurred_at", current.occurred_at)
+      .or(
+        `occurred_at.gt.${current.occurred_at},and(occurred_at.eq.${current.occurred_at},id.gt.${momentId})`,
+      )
       .order("occurred_at", { ascending: true })
+      .order("id", { ascending: true })
       .limit(1),
   ]);
 

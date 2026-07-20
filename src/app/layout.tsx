@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Lora, Source_Sans_3 } from "next/font/google";
 
 import { AnalyticsProvider } from "@/components/AnalyticsProvider";
+import { PersistentAppNav } from "@/components/AppNav";
 import { AppSerwistProvider } from "@/components/pwa/AppSerwistProvider";
 import { TimezoneSync } from "@/components/TimezoneSync";
 
@@ -94,6 +95,7 @@ export default function RootLayout({
       </head>
       <body className="flex min-h-full flex-col bg-paper pb-[env(safe-area-inset-bottom)] text-ink">
         <AppSerwistProvider swUrl="/serwist/sw.js">
+          <PersistentAppNav />
           {children}
         </AppSerwistProvider>
         <TimezoneSync />

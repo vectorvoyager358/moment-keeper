@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 
-import { AppNav } from "@/components/AppNav";
 import { BrowseTabs } from "@/components/browse/BrowseTabs";
 import { CalendarView } from "@/components/browse/CalendarView";
 import { MediaGallery } from "@/components/browse/MediaGallery";
@@ -37,7 +36,6 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
 
   return (
     <PageShell>
-      <AppNav current="browse" />
       <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
         <PageHeader
           title="Look back"

@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 
-import { AppNav } from "@/components/AppNav";
 import { KeepMomentLink } from "@/components/KeepMomentLink";
 import { JournalGreeting } from "@/components/timeline/JournalGreeting";
 import { OnThisDaySection } from "@/components/timeline/OnThisDaySection";
@@ -54,7 +53,6 @@ export default async function TimelinePage({
 
   return (
     <PageShell>
-      <AppNav current="timeline" />
       <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
         {profile?.hasDisplayName ? (
           <JournalGreeting

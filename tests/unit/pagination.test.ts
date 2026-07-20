@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { paginateItems, TIMELINE_PAGE_SIZE } from "@/lib/moments/pagination";
+import {
+  buildTimelineCursorFilter,
+  paginateItems,
+  TIMELINE_PAGE_SIZE,
+} from "@/lib/moments/pagination";
 
 describe("paginateItems", () => {
   it("returns all items when within the page size", () => {
@@ -19,5 +23,16 @@ describe("paginateItems", () => {
 
   it("uses the default timeline page size constant", () => {
     expect(TIMELINE_PAGE_SIZE).toBe(20);
+  });
+
+  it("builds a stable timestamp and id cursor filter", () => {
+    expect(
+      buildTimelineCursorFilter({
+        occurredAt: "2026-07-19T12:00:00.000Z",
+        id: "00000000-0000-4000-8000-000000000002",
+      }),
+    ).toBe(
+      "occurred_at.lt.2026-07-19T12:00:00.000Z,and(occurred_at.eq.2026-07-19T12:00:00.000Z,id.lt.00000000-0000-4000-8000-000000000002)",
+    );
   });
 });
