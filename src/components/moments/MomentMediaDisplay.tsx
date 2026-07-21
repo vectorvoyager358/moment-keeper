@@ -36,7 +36,7 @@ export function MomentMediaDisplay({ media }: MomentMediaDisplayProps) {
             src={media.signedUrl}
             alt={alt}
             draggable={false}
-            className="pointer-events-none max-h-[34rem] w-full rounded-2xl bg-accent-subtle object-contain select-none"
+            className="pointer-events-none mx-auto h-auto max-h-[46svh] w-auto max-w-full rounded-2xl bg-accent-subtle object-contain select-none sm:max-h-[34rem] sm:w-full"
           />
         </div>
         <MediaPreviewOverlay
@@ -54,7 +54,7 @@ export function MomentMediaDisplay({ media }: MomentMediaDisplayProps) {
       <video
         controls
         src={media.signedUrl}
-        className="max-h-[34rem] w-full rounded-2xl bg-black"
+        className="max-h-[46svh] w-full rounded-2xl bg-black object-contain sm:max-h-[34rem]"
       >
         Your browser does not support video playback.
       </video>

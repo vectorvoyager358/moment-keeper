@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
+import { CalendarDayThumbnail } from "@/components/browse/CalendarDayThumbnail";
 import { MomentCard } from "@/components/timeline/MomentCard";
 import { buttonClassName } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -83,7 +84,7 @@ export async function CalendarView({
   const todayKey = localDateKey();
 
   return (
-    <div className="space-y-8">
+    <div className="min-w-0 max-w-full space-y-8">
       <Card padding="md" className="rounded-[1.5rem]">
         <div className="mb-5 flex items-center justify-between gap-3">
           <Link
@@ -170,22 +171,24 @@ export async function CalendarView({
             </form>
 
             <form
-              action="/browse"
+              action="/browse#selected-day"
               method="get"
               className="flex min-w-0 flex-col gap-3"
             >
               <input type="hidden" name="view" value="calendar" />
-              <Label className="block min-w-0 text-xs font-semibold text-muted">
+              <Label className="block w-full min-w-0 max-w-full text-xs font-semibold text-muted">
                 Choose a date
-                <Input
-                  type="date"
-                  name="date"
-                  min="1900-01-01"
-                  max="2100-12-31"
-                  defaultValue={selectedDay ?? ""}
-                  required
-                  className="date-field mt-1 box-border h-10 py-2"
-                />
+                <span className="relative mt-1 block h-10 w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-border-strong bg-surface-elevated transition focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20">
+                  <Input
+                    type="date"
+                    name="date"
+                    min="1900-01-01"
+                    max="2100-12-31"
+                    defaultValue={selectedDay ?? ""}
+                    required
+                    className="date-field absolute inset-0 m-0 block h-full min-h-0 rounded-none border-0 bg-transparent px-3.5 py-0 focus:border-transparent focus:ring-0"
+                  />
+                </span>
               </Label>
               <div className="mt-auto">
                 <button
@@ -215,28 +218,18 @@ export async function CalendarView({
 
           {calendarDays.map((day) => {
             const dayMoments = momentsByDay.get(day.dateKey) ?? [];
-            const thumbnail = dayMoments.find(
-              (moment) => moment.thumbnailUrl,
-            )?.thumbnailUrl;
+            const previewSrc = dayMoments.find(
+              (moment) => moment.photoUrl,
+            )?.photoUrl;
             const selected = selectedDay === day.dateKey;
             const populated = day.inMonth && dayMoments.length > 0;
             const content = (
               <>
-                {thumbnail ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URL
-                  <img
-                    src={thumbnail}
-                    alt=""
-                    className="absolute inset-0 h-full w-full object-cover"
-                  />
-                ) : null}
-                {thumbnail ? (
-                  <span className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-transparent" />
-                ) : null}
+                {previewSrc ? <CalendarDayThumbnail src={previewSrc} /> : null}
                 <span
                   className={cn(
                     "relative z-10 flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold sm:h-7 sm:w-7 sm:text-sm",
-                    thumbnail
+                    previewSrc
                       ? "text-white"
                       : selected
                         ? "bg-accent text-white"
@@ -251,7 +244,7 @@ export async function CalendarView({
                   <span
                     className={cn(
                       "relative z-10 mt-auto text-[0.6rem] font-semibold sm:text-xs",
-                      thumbnail ? "text-white" : "text-accent",
+                      previewSrc ? "text-white" : "text-accent",
                     )}
                   >
                     {dayMoments.length}
@@ -263,7 +256,7 @@ export async function CalendarView({
             return populated ? (
               <Link
                 key={day.dateKey}
-                href={monthUrl(calendarMonth, day.dateKey)}
+                href={`${monthUrl(calendarMonth, day.dateKey)}#selected-day`}
                 aria-label={`${day.dateKey}: ${dayMoments.length} moments`}
                 className={cn(
                   "relative flex aspect-square min-w-0 flex-col overflow-hidden rounded-lg border p-1 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 sm:rounded-xl sm:p-1.5",
@@ -291,9 +284,13 @@ export async function CalendarView({
       </Card>
 
       {selectedDay ? (
-        <section aria-labelledby="selected-day-heading">
-          <div className="mb-4 flex items-center justify-between gap-4">
-            <div>
+        <section
+          id="selected-day"
+          aria-labelledby="selected-day-heading"
+          className="min-w-0 max-w-full scroll-mt-24 overflow-x-hidden"
+        >
+          <div className="mb-4 flex min-w-0 items-center justify-between gap-4">
+            <div className="min-w-0 flex-1">
               <h2
                 id="selected-day-heading"
                 className="font-display text-xl font-semibold text-ink"
@@ -310,15 +307,15 @@ export async function CalendarView({
             </div>
             <Link
               href={monthUrl(calendarMonth)}
-              className="text-sm font-medium text-accent hover:underline"
+              className="shrink-0 text-sm font-medium text-accent hover:underline"
             >
               Back to month
             </Link>
           </div>
-          <ul className="grid gap-4 sm:grid-cols-2">
+          <ul className="grid min-w-0 max-w-full grid-cols-1 gap-4 sm:grid-cols-2">
             {selectedMoments.map((moment) => (
-              <li key={moment.id}>
-                <MomentCard moment={moment} />
+              <li key={moment.id} className="min-w-0 max-w-full">
+                <MomentCard moment={moment} preferOriginalPhoto compact />
               </li>
             ))}
           </ul>
