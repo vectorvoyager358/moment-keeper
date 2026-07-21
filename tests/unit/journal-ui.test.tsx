@@ -7,6 +7,104 @@ import { MomentCard } from "@/components/timeline/MomentCard";
 afterEach(cleanup);
 
 describe("MomentCard", () => {
+  it("can server-render the original photo for resilient calendar cards", () => {
+    render(
+      <MomentCard
+        preferOriginalPhoto
+        moment={{
+          id: "moment-photo",
+          body: "A photo memory",
+          occurred_at: "2026-07-09T12:00:00.000Z",
+          location: null,
+          linkUrl: null,
+          isFavorite: false,
+          tags: [],
+          hasMedia: true,
+          attachmentCount: 1,
+          mediaType: "photo",
+          thumbnailPath: "photo.thumb.jpg",
+          thumbnailUrl: "https://example.com/broken-thumb.jpg",
+          photoStoragePath: "photo.jpg",
+          photoUrl: "https://example.com/original.jpg",
+        }}
+      />,
+    );
+
+    expect(document.querySelector("article img")).toHaveAttribute(
+      "src",
+      "https://example.com/original.jpg",
+    );
+  });
+
+  it("uses a viewport-aware media frame for compact previews", () => {
+    render(
+      <MomentCard
+        compact
+        moment={{
+          id: "moment-compact",
+          body: "A compact memory",
+          occurred_at: "2026-07-09T12:00:00.000Z",
+          location: null,
+          linkUrl: null,
+          isFavorite: false,
+          tags: [],
+          hasMedia: true,
+          attachmentCount: 1,
+          mediaType: "photo",
+          thumbnailPath: null,
+          thumbnailUrl: null,
+          photoStoragePath: "photo.jpg",
+          photoUrl: "https://example.com/photo.jpg",
+        }}
+      />,
+    );
+
+    const article = document.querySelector("article");
+    const cardLink = document.querySelector("article > a");
+    const previewImage = document.querySelector("article img");
+
+    expect(document.querySelector("article a > div")).toHaveClass(
+      "h-[clamp(7rem,22svh,10rem)]",
+    );
+    expect(previewImage).toHaveClass("object-cover");
+    expect(previewImage).not.toHaveClass("object-contain");
+    expect(article).toHaveClass("w-full", "min-w-0", "max-w-full");
+    expect(cardLink).toHaveClass(
+      "w-full",
+      "min-w-0",
+      "max-w-full",
+      "overflow-hidden",
+    );
+  });
+
+  it("uses the same preview frame for videos without poster images", () => {
+    render(
+      <MomentCard
+        compact
+        moment={{
+          id: "moment-video",
+          body: "A video memory",
+          occurred_at: "2026-07-09T12:00:00.000Z",
+          location: null,
+          linkUrl: null,
+          isFavorite: false,
+          tags: [],
+          hasMedia: true,
+          attachmentCount: 1,
+          mediaType: "video",
+          thumbnailPath: null,
+          thumbnailUrl: null,
+          photoStoragePath: null,
+          photoUrl: null,
+        }}
+      />,
+    );
+
+    expect(
+      screen.getByText("A video").parentElement?.parentElement,
+    ).toHaveClass("h-52", "h-[clamp(7rem,22svh,10rem)]", "sm:aspect-[3/2]");
+  });
+
   it("shows a visual tile for media without a thumbnail", () => {
     render(
       <MomentCard

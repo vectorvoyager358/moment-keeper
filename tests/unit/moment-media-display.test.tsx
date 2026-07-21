@@ -17,6 +17,15 @@ const photo: MomentMedia = {
 };
 
 describe("MomentMediaDisplay", () => {
+  it("constrains an inline photo to the mobile viewport", () => {
+    render(<MomentMediaDisplay media={photo} />);
+
+    expect(screen.getByRole("img", { name: "sunset.jpg" })).toHaveClass(
+      "max-h-[46svh]",
+      "object-contain",
+    );
+  });
+
   it("opens a full-screen preview when a photo is clicked", () => {
     render(<MomentMediaDisplay media={photo} />);
 

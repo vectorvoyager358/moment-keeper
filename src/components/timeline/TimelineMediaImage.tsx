@@ -7,6 +7,7 @@ type TimelineMediaImageProps = {
   fallbackSrc?: string | null;
   alt?: string;
   className?: string;
+  onUnavailable?: () => void;
 };
 
 export function TimelineMediaImage({
@@ -14,14 +15,24 @@ export function TimelineMediaImage({
   fallbackSrc = null,
   alt = "",
   className,
+  onUnavailable,
 }: TimelineMediaImageProps) {
-  const [currentSrc, setCurrentSrc] = useState(src);
-  const [failedFallback, setFailedFallback] = useState(false);
+  const [failedSources, setFailedSources] = useState<string[]>([]);
+  const currentSrc = !failedSources.includes(src)
+    ? src
+    : fallbackSrc && !failedSources.includes(fallbackSrc)
+      ? fallbackSrc
+      : null;
+
+  if (!currentSrc) {
+    return null;
+  }
 
   return (
     // Signed Supabase URLs are short-lived; next/image is not used here.
     // eslint-disable-next-line @next/next/no-img-element
     <img
+      key={currentSrc}
       src={currentSrc}
       alt={alt}
       loading="lazy"
@@ -29,9 +40,18 @@ export function TimelineMediaImage({
       draggable={false}
       className={className}
       onError={() => {
-        if (fallbackSrc && !failedFallback && currentSrc !== fallbackSrc) {
-          setFailedFallback(true);
-          setCurrentSrc(fallbackSrc);
+        const hasNextSource = Boolean(
+          fallbackSrc &&
+            fallbackSrc !== currentSrc &&
+            !failedSources.includes(fallbackSrc),
+        );
+
+        setFailedSources((failed) =>
+          failed.includes(currentSrc) ? failed : [...failed, currentSrc],
+        );
+
+        if (!hasNextSource) {
+          onUnavailable?.();
         }
       }}
     />
