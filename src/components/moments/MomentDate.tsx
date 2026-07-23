@@ -2,12 +2,17 @@
 
 import { useSyncExternalStore } from "react";
 
-import { formatMomentDate, formatMomentDateCompact } from "@/lib/moments/dates";
+import {
+  formatMomentDate,
+  formatMomentDateCompact,
+  formatMomentDateDetail,
+} from "@/lib/moments/dates";
 
 type MomentDateProps = {
   iso: string;
   className?: string;
   compact?: boolean;
+  detail?: boolean;
 };
 
 function subscribeToClientEnvironment() {
@@ -18,6 +23,7 @@ export function MomentDate({
   iso,
   className,
   compact = false,
+  detail = false,
 }: MomentDateProps) {
   const isClient = useSyncExternalStore(
     subscribeToClientEnvironment,
@@ -25,9 +31,11 @@ export function MomentDate({
     () => false,
   );
   const timeZone = isClient ? undefined : "UTC";
-  const formatted = compact
-    ? formatMomentDateCompact(iso, timeZone)
-    : formatMomentDate(iso, timeZone);
+  const formatted = detail
+    ? formatMomentDateDetail(iso, timeZone)
+    : compact
+      ? formatMomentDateCompact(iso, timeZone)
+      : formatMomentDate(iso, timeZone);
 
   return (
     <time dateTime={iso} className={className} suppressHydrationWarning>

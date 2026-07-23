@@ -96,6 +96,23 @@ export function formatMomentDateCompact(
   }).format(new Date(iso));
 }
 
+export function formatMomentDateDetail(iso: string, timeZone?: string): string {
+  const date = new Date(iso);
+  const calendarDate = new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone,
+  }).format(date);
+  const time = new Intl.DateTimeFormat(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone,
+  }).format(date);
+
+  return `${calendarDate} · ${time}`;
+}
+
 export function truncateBody(body: string, maxLength = 160): string {
   if (body.length <= maxLength) {
     return body;

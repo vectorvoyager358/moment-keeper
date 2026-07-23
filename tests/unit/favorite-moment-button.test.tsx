@@ -29,9 +29,19 @@ describe("FavoriteMomentButton", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Add to favorites" }));
 
+    const favoriteButton = screen.getByRole("button", {
+      name: "Remove from favorites",
+    });
+
+    expect(favoriteButton).toHaveAttribute("aria-pressed", "true");
+    expect(favoriteButton).toHaveClass("!text-[#ed4956]");
+    expect(favoriteButton.querySelector("svg")).toHaveClass(
+      "fill-current",
+      "animate-heart-pop",
+    );
     expect(
-      screen.getByRole("button", { name: "Remove from favorites" }),
-    ).toHaveAttribute("aria-pressed", "true");
+      favoriteButton.querySelector(".favorite-heart-burst"),
+    ).toBeInTheDocument();
     await waitFor(() => {
       expect(setMomentFavorite).toHaveBeenCalledWith("moment-1", true);
     });

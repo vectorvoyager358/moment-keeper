@@ -3,6 +3,34 @@ import { describe, expect, it, vi } from "vitest";
 import { uploadMediaFilesForMoment } from "@/lib/moments/media-storage";
 
 describe("uploadMediaFilesForMoment", () => {
+  it("stores a gallery MOV with normalized QuickTime metadata", async () => {
+    const upload = vi.fn().mockResolvedValue({ error: null });
+    const insert = vi.fn().mockResolvedValue({ error: null });
+    const supabase = {
+      storage: {
+        from: vi.fn(() => ({ upload })),
+      },
+      from: vi.fn(() => ({ insert })),
+    };
+    const file = new File(["video"], "iphone-video.MOV", { type: "" });
+
+    await uploadMediaFilesForMoment(supabase as never, "user-1", "moment-1", [
+      file,
+    ]);
+
+    expect(upload).toHaveBeenCalledWith(
+      expect.stringMatching(/^user-1\/moment-1\/.+\.mov$/),
+      file,
+      expect.objectContaining({ contentType: "video/quicktime" }),
+    );
+    expect(insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        media_type: "video",
+        mime_type: "video/quicktime",
+      }),
+    );
+  });
+
   it("cleans up earlier uploads when a later file fails", async () => {
     const upload = vi
       .fn()

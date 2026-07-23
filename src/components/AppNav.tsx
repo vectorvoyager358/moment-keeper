@@ -117,6 +117,7 @@ function NavLink({
   return (
     <Link
       href={item.href}
+      prefetch={item.id === "capture" ? true : undefined}
       aria-label={mobile ? item.label : undefined}
       aria-current={active ? "page" : undefined}
       className={cn(

@@ -16,6 +16,15 @@ const photo: MomentMedia = {
   display_order: 0,
 };
 
+const video: MomentMedia = {
+  id: "media-2",
+  media_type: "video",
+  mime_type: "video/quicktime",
+  original_filename: "memory.mov",
+  signedUrl: "https://example.com/memory.mov",
+  display_order: 0,
+};
+
 describe("MomentMediaDisplay", () => {
   it("constrains an inline photo to the mobile viewport", () => {
     render(<MomentMediaDisplay media={photo} />);
@@ -27,7 +36,13 @@ describe("MomentMediaDisplay", () => {
   });
 
   it("opens a full-screen preview when a photo is clicked", () => {
-    render(<MomentMediaDisplay media={photo} />);
+    const { container } = render(
+      <MomentMediaDisplay media={photo} mode="viewer" />,
+    );
+
+    expect(container.querySelector('img[alt="sunset.jpg"]')).toHaveClass(
+      "object-cover",
+    );
 
     fireEvent.click(
       screen.getByRole("button", { name: "View photo full screen" }),
@@ -37,5 +52,16 @@ describe("MomentMediaDisplay", () => {
       screen.getAllByRole("button", { name: "Close photo preview" }),
     ).toHaveLength(2);
     expect(screen.getAllByRole("img", { name: "sunset.jpg" })).toHaveLength(2);
+  });
+
+  it("fills the same immersive viewer before opening the original ratio", () => {
+    const { container } = render(
+      <MomentMediaDisplay media={video} mode="viewer" />,
+    );
+
+    const player = container.querySelector("video");
+
+    expect(player).toHaveAttribute("playsinline");
+    expect(player).toHaveClass("h-full", "object-cover");
   });
 });

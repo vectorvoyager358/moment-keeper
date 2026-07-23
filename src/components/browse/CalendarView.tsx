@@ -1,8 +1,8 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
-import { CalendarDayThumbnail } from "@/components/browse/CalendarDayThumbnail";
 import { MomentCard } from "@/components/timeline/MomentCard";
+import { VideoThumbnail } from "@/components/moments/VideoThumbnail";
 import { buttonClassName } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input, Label, Select } from "@/components/ui/Input";
@@ -218,18 +218,38 @@ export async function CalendarView({
 
           {calendarDays.map((day) => {
             const dayMoments = momentsByDay.get(day.dateKey) ?? [];
-            const previewSrc = dayMoments.find(
-              (moment) => moment.photoUrl,
-            )?.photoUrl;
+            const visualMoment = dayMoments.find(
+              (moment) => moment.thumbnailUrl || moment.videoUrl,
+            );
+            const thumbnail = visualMoment?.thumbnailUrl;
+            const videoUrl = thumbnail ? null : visualMoment?.videoUrl;
+            const hasVisual = Boolean(thumbnail || videoUrl);
             const selected = selectedDay === day.dateKey;
             const populated = day.inMonth && dayMoments.length > 0;
             const content = (
               <>
-                {previewSrc ? <CalendarDayThumbnail src={previewSrc} /> : null}
+                {thumbnail ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URL
+                  <img
+                    src={thumbnail}
+                    alt=""
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                ) : null}
+                {videoUrl ? (
+                  <VideoThumbnail
+                    src={videoUrl}
+                    fill
+                    className="[&>span]:hidden"
+                  />
+                ) : null}
+                {hasVisual ? (
+                  <span className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-transparent" />
+                ) : null}
                 <span
                   className={cn(
                     "relative z-10 flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold sm:h-7 sm:w-7 sm:text-sm",
-                    previewSrc
+                    hasVisual
                       ? "text-white"
                       : selected
                         ? "bg-accent text-white"
@@ -244,7 +264,7 @@ export async function CalendarView({
                   <span
                     className={cn(
                       "relative z-10 mt-auto text-[0.6rem] font-semibold sm:text-xs",
-                      previewSrc ? "text-white" : "text-accent",
+                      hasVisual ? "text-white" : "text-accent",
                     )}
                   >
                     {dayMoments.length}

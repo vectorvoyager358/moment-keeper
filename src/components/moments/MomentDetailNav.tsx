@@ -16,14 +16,15 @@ export function MomentDetailNav({ earlierId, laterId }: MomentDetailNavProps) {
   return (
     <nav
       aria-label="Nearby moments"
-      className="mt-8 flex items-center justify-between gap-3 border-t border-border pt-6"
+      className="flex items-center justify-between gap-3 border-t border-border/80 pt-5"
     >
       {earlierId ? (
         <Link
           href={`/moments/${earlierId}`}
           className={buttonClassName({
-            variant: "secondary",
+            variant: "ghost",
             size: "sm",
+            className: "rounded-full px-2 text-muted hover:text-ink",
           })}
         >
           <ChevronLeft className="h-4 w-4" aria-hidden />
@@ -36,8 +37,9 @@ export function MomentDetailNav({ earlierId, laterId }: MomentDetailNavProps) {
         <Link
           href={`/moments/${laterId}`}
           className={buttonClassName({
-            variant: "secondary",
+            variant: "ghost",
             size: "sm",
+            className: "rounded-full px-2 text-muted hover:text-ink",
           })}
         >
           Later

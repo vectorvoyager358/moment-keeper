@@ -1,5 +1,6 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
 
 import { deleteMoment } from "@/app/moments/[id]/actions";
@@ -8,17 +9,29 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 type DeleteMomentButtonProps = {
   momentId: string;
+  className?: string;
 };
 
-export function DeleteMomentButton({ momentId }: DeleteMomentButtonProps) {
+export function DeleteMomentButton({
+  momentId,
+  className,
+}: DeleteMomentButtonProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const [open, setOpen] = useState(false);
 
   return (
     <>
       <form ref={formRef} action={deleteMoment.bind(null, momentId)}>
-        <Button type="button" variant="danger" onClick={() => setOpen(true)}>
-          Delete moment
+        <Button
+          type="button"
+          variant="danger"
+          size="sm"
+          aria-label="Delete moment"
+          title="Delete moment"
+          className={`h-11 w-11 rounded-full px-0 ${className ?? ""}`}
+          onClick={() => setOpen(true)}
+        >
+          <Trash2 className="h-5 w-5" aria-hidden />
         </Button>
       </form>
 

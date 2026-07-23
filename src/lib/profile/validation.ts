@@ -26,6 +26,15 @@ export function hasProfileName(value: string | null | undefined): boolean {
   return formatProfileName(value).length > 0;
 }
 
+export function getProfileNameFromMetadata(metadata: unknown): string | null {
+  if (!metadata || typeof metadata !== "object") {
+    return null;
+  }
+
+  const displayName = Reflect.get(metadata, "display_name");
+  return typeof displayName === "string" ? displayName : null;
+}
+
 /** Title-case each word for journal display (e.g. "john doe" → "John Doe"). */
 export function formatProfileNameForDisplay(value: string): string {
   const normalized = formatProfileName(value);

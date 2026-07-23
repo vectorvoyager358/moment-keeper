@@ -76,6 +76,23 @@ describe("MediaFileInput", () => {
     expect(screen.getByText("1/5")).toBeVisible();
   });
 
+  it("normalizes a MOV selected from a gallery without MIME metadata", async () => {
+    const onPreparedFilesChange = vi.fn();
+    render(<MediaFileInput onPreparedFilesChange={onPreparedFilesChange} />);
+    const file = new File(["video"], "iphone-video.MOV", { type: "" });
+
+    fireEvent.change(screen.getByLabelText(/Add from your device/), {
+      target: { files: [file] },
+    });
+
+    await waitFor(() => {
+      expect(onPreparedFilesChange).toHaveBeenCalled();
+    });
+    const prepared = onPreparedFilesChange.mock.calls.at(-1)?.[0]?.[0] as File;
+    expect(prepared.name).toBe("iphone-video.MOV");
+    expect(prepared.type).toBe("video/quicktime");
+  });
+
   it("marks an existing attachment for selective removal", () => {
     const { container } = render(
       <MediaFileInput

@@ -13,8 +13,9 @@ import {
 } from "@/lib/moments/compress-image";
 import { cn } from "@/lib/cn";
 import {
-  getMediaTypeFromMime,
+  getMediaTypeFromFile,
   MAX_MEDIA_ATTACHMENTS,
+  normalizeMediaFileType,
   validateMediaFile,
   validateMediaFiles,
 } from "@/lib/moments/media";
@@ -98,7 +99,8 @@ export function MediaFileInput({
       return;
     }
 
-    const initialError = files
+    const normalizedFiles = files.map(normalizeMediaFileType);
+    const initialError = normalizedFiles
       .map(validateMediaFile)
       .find((message): message is string => Boolean(message));
     if (initialError) {
@@ -111,7 +113,7 @@ export function MediaFileInput({
     const nextItems: PreparedMedia[] = [];
 
     try {
-      for (const file of files) {
+      for (const file of normalizedFiles) {
         const validationError = validateMediaFile(file);
         if (validationError) {
           throw new Error(validationError);
@@ -119,14 +121,14 @@ export function MediaFileInput({
 
         setPreparingName(file.name);
         const shouldPrepareImage =
-          getMediaTypeFromMime(file.type) === "photo" &&
+          getMediaTypeFromFile(file) === "photo" &&
           (source === "camera" ||
             (source === "file" && shouldCompressImage(file)));
         const prepared = shouldPrepareImage
           ? await compressImageFile(file)
           : file;
         const preparedError = validateMediaFile(prepared);
-        const mediaType = getMediaTypeFromMime(prepared.type);
+        const mediaType = getMediaTypeFromFile(prepared);
 
         if (preparedError || !mediaType) {
           throw new Error(preparedError ?? "Unsupported media type.");

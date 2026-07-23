@@ -2,7 +2,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
   extensionFromFile,
-  getMediaTypeFromMime,
+  getMediaTypeFromFile,
+  getNormalizedMediaMimeType,
   MEDIA_BUCKET,
   validateMediaFile,
 } from "@/lib/moments/media";
@@ -102,9 +103,10 @@ export async function uploadMediaForMoment(
     throw new Error(validationError);
   }
 
-  const mediaType = getMediaTypeFromMime(file.type);
+  const mediaType = getMediaTypeFromFile(file);
+  const normalizedMimeType = getNormalizedMediaMimeType(file);
 
-  if (!mediaType) {
+  if (!mediaType || !normalizedMimeType) {
     throw new Error("Unsupported file type.");
   }
 
@@ -116,7 +118,7 @@ export async function uploadMediaForMoment(
   const { error: uploadError } = await supabase.storage
     .from(MEDIA_BUCKET)
     .upload(storagePath, file, {
-      contentType: file.type,
+      contentType: normalizedMimeType,
       upsert: false,
     });
 
@@ -126,7 +128,7 @@ export async function uploadMediaForMoment(
 
   let thumbnailPath: string | null = null;
 
-  if (shouldGenerateThumbnail(mediaType, file.type)) {
+  if (shouldGenerateThumbnail(mediaType, normalizedMimeType)) {
     thumbnailPath = await uploadPhotoThumbnail(supabase, file, storagePath);
     if (thumbnailPath) {
       uploadedPaths.push(thumbnailPath);
@@ -143,7 +145,7 @@ export async function uploadMediaForMoment(
       display_order: displayOrder,
       storage_path: storagePath,
       thumbnail_path: thumbnailPath,
-      mime_type: file.type,
+      mime_type: normalizedMimeType,
       file_size_bytes: file.size,
       original_filename: file.name,
     });

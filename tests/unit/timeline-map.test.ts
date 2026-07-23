@@ -30,6 +30,8 @@ describe("mapTimelineRow", () => {
       thumbnailUrl: null,
       photoStoragePath: null,
       photoUrl: null,
+      videoStoragePath: null,
+      videoUrl: null,
     });
   });
 
@@ -75,6 +77,7 @@ describe("mapTimelineRow", () => {
         media_attachments: {
           id: "media-2",
           media_type: "video",
+          storage_path: "user/m/video.mp4",
           thumbnail_path: null,
           display_order: 0,
         },
@@ -85,6 +88,7 @@ describe("mapTimelineRow", () => {
     expect(result.hasMedia).toBe(true);
     expect(result.mediaType).toBe("video");
     expect(result.thumbnailUrl).toBeNull();
+    expect(result.videoStoragePath).toBe("user/m/video.mp4");
   });
 
   it("uses the first photo thumbnail while preserving attachment order", () => {

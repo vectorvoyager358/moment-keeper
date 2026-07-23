@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   formatProfileName,
   formatProfileNameForDisplay,
+  getProfileNameFromMetadata,
   hasProfileName,
   normalizeProfileName,
   validateProfileName,
@@ -42,6 +43,19 @@ describe("hasProfileName", () => {
 
   it("returns true when a name is stored", () => {
     expect(hasProfileName("Vector")).toBe(true);
+  });
+});
+
+describe("getProfileNameFromMetadata", () => {
+  it("reads a string display name from auth metadata", () => {
+    expect(getProfileNameFromMetadata({ display_name: "Vector" })).toBe(
+      "Vector",
+    );
+  });
+
+  it("ignores missing or invalid metadata", () => {
+    expect(getProfileNameFromMetadata(null)).toBeNull();
+    expect(getProfileNameFromMetadata({ display_name: 42 })).toBeNull();
   });
 });
 

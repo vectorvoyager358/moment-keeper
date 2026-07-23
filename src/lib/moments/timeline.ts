@@ -15,6 +15,8 @@ export type TimelineMoment = {
   thumbnailUrl: string | null;
   photoStoragePath: string | null;
   photoUrl: string | null;
+  videoStoragePath: string | null;
+  videoUrl: string | null;
 };
 
 export type TimelineQueryRow = {
@@ -68,6 +70,8 @@ export function mapTimelineRow(
   const attachment = attachments[0] ?? null;
   const primaryPhoto =
     attachments.find((item) => item.media_type === "photo") ?? null;
+  const primaryVideo =
+    attachments.find((item) => item.media_type === "video") ?? null;
   const primaryVisual =
     attachments.find(
       (item) => item.media_type === "photo" && item.thumbnail_path,
@@ -90,5 +94,7 @@ export function mapTimelineRow(
     thumbnailUrl,
     photoStoragePath: primaryPhoto?.storage_path ?? null,
     photoUrl: null,
+    videoStoragePath: primaryVideo?.storage_path ?? null,
+    videoUrl: null,
   };
 }
