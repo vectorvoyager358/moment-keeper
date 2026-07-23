@@ -133,7 +133,7 @@ describe("CaptureForm drafts", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Add more" }));
     fireEvent.click(
-      screen.getByRole("button", { name: "Attach generated photo" }),
+      await screen.findByRole("button", { name: "Attach generated photo" }),
     );
     fireEvent.submit(
       screen.getByRole("button", { name: "Capture this moment" }),
@@ -201,6 +201,9 @@ describe("CaptureForm drafts", () => {
       "false",
     );
     expect(screen.queryByLabelText("When did it happen?")).not.toBeVisible();
+    expect(
+      screen.queryByText("Attach generated photo"),
+    ).not.toBeInTheDocument();
   });
 
   it("reveals optional fields when Add more is opened", () => {

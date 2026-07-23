@@ -1,10 +1,6 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { DeleteMomentButton } from "@/components/moments/DeleteMomentButton";
-import { MomentDetailNav } from "@/components/moments/MomentDetailNav";
 import { MomentDetailPanel } from "@/components/moments/MomentDetailPanel";
-import { Card } from "@/components/ui/Card";
 import { PageShell } from "@/components/ui/PageShell";
 import { SavedToast } from "@/components/ui/SavedToast";
 import { toUserErrorMessage } from "@/lib/errors";
@@ -41,34 +37,18 @@ export default async function MomentDetailPage({
 
   return (
     <PageShell>
-      <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
-        <p className="mb-6 text-sm">
-          <Link
-            href="/timeline"
-            className="text-muted underline-offset-4 transition hover:text-accent hover:underline"
-          >
-            ← Back to your journal
-          </Link>
-        </p>
-
+      <main className="mx-auto max-w-[90rem] sm:px-5 sm:py-6 lg:px-8 lg:py-8">
         <SavedToast
           initialVisible={showUpdatedToast}
           queryParam="updated"
           message="Saved — your changes are kept."
         />
 
-        <Card padding="lg" className="rounded-[1.5rem]">
-          <MomentDetailPanel moment={moment} />
-        </Card>
-
-        <MomentDetailNav
+        <MomentDetailPanel
+          moment={moment}
           earlierId={adjacent.earlierId}
           laterId={adjacent.laterId}
         />
-
-        <div className="mt-8 border-t border-border pt-6">
-          <DeleteMomentButton momentId={moment.id} />
-        </div>
       </main>
     </PageShell>
   );

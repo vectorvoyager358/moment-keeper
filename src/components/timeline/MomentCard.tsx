@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { MomentDate } from "@/components/moments/MomentDate";
 import { MomentLocation } from "@/components/moments/MomentLocation";
+import { VideoThumbnail } from "@/components/moments/VideoThumbnail";
 import { TimelineMediaImage } from "@/components/timeline/TimelineMediaImage";
 import { buttonClassName } from "@/components/ui/Button";
 import { Tag } from "@/components/ui/Tag";
@@ -193,6 +194,15 @@ export function MomentCard({
             )}
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/20 to-transparent" />
           </div>
+        ) : moment.videoUrl ? (
+          <VideoThumbnail
+            src={moment.videoUrl}
+            className={cn(
+              timelineMediaFrame,
+              "w-full min-w-0 max-w-full",
+              compact && "h-[clamp(7rem,22svh,10rem)] sm:h-auto",
+            )}
+          />
         ) : balanceLayout ? (
           <BalancedMediaPlaceholder
             mediaType={moment.hasMedia ? moment.mediaType : null}

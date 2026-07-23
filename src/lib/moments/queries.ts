@@ -117,6 +117,7 @@ const MEDIA_GALLERY_SELECT = `
 `;
 
 export const MEDIA_GALLERY_LIMIT = 60;
+const SIGNED_MEDIA_URL_TTL_SECONDS = 60 * 60;
 
 export type MediaGalleryItem = {
   id: string;
@@ -127,7 +128,63 @@ export type MediaGalleryItem = {
   mediaType: MediaType;
   thumbnailUrl: string | null;
   photoUrl: string | null;
+  videoUrl: string | null;
 };
+
+type ServerSupabase = Awaited<ReturnType<typeof createClient>>;
+
+async function createSignedMediaUrlMap(
+  supabase: ServerSupabase,
+  paths: string[],
+): Promise<Map<string, string>> {
+  const urlByPath = new Map<string, string>();
+
+  if (paths.length === 0) {
+    return urlByPath;
+  }
+
+  const bucket = supabase.storage.from(MEDIA_BUCKET);
+  const { data } = await bucket.createSignedUrls(
+    paths,
+    SIGNED_MEDIA_URL_TTL_SECONDS,
+  );
+
+  // Supabase can return successful entries alongside a batch-level error.
+  // Preserve every usable URL instead of dropping the whole batch.
+  for (const item of data ?? []) {
+    if (item.path && item.signedUrl) {
+      urlByPath.set(item.path, item.signedUrl);
+    }
+  }
+
+  const missingPaths = paths.filter((path) => !urlByPath.has(path));
+
+  if (
+    missingPaths.length === 0 ||
+    typeof bucket.createSignedUrl !== "function"
+  ) {
+    return urlByPath;
+  }
+
+  await Promise.all(
+    missingPaths.map(async (path) => {
+      try {
+        const { data: signedData } = await bucket.createSignedUrl(
+          path,
+          SIGNED_MEDIA_URL_TTL_SECONDS,
+        );
+
+        if (signedData?.signedUrl) {
+          urlByPath.set(path, signedData.signedUrl);
+        }
+      } catch {
+        // Keep other media previews available when one stored path is invalid.
+      }
+    }),
+  );
+
+  return urlByPath;
+}
 
 async function withSignedThumbnails(
   rows: TimelineQueryRow[],
@@ -137,28 +194,16 @@ async function withSignedThumbnails(
     ...new Set(
       rows.flatMap((row) => {
         const mapped = mapTimelineRow(row);
-        return [mapped.thumbnailPath, mapped.photoStoragePath].filter(
-          (path): path is string => Boolean(path),
-        );
+        return [
+          mapped.thumbnailPath,
+          mapped.photoStoragePath,
+          mapped.videoStoragePath,
+        ].filter((path): path is string => Boolean(path));
       }),
     ),
   ];
 
-  const urlByPath = new Map<string, string>();
-
-  if (paths.length > 0) {
-    const { data, error } = await supabase.storage
-      .from(MEDIA_BUCKET)
-      .createSignedUrls(paths, 60 * 60);
-
-    if (!error && data) {
-      for (const item of data) {
-        if (item.path && item.signedUrl) {
-          urlByPath.set(item.path, item.signedUrl);
-        }
-      }
-    }
-  }
+  const urlByPath = await createSignedMediaUrlMap(supabase, paths);
 
   return rows.map((row) => {
     const mapped = mapTimelineRow(row);
@@ -168,11 +213,15 @@ async function withSignedThumbnails(
     const photoUrl = mapped.photoStoragePath
       ? (urlByPath.get(mapped.photoStoragePath) ?? null)
       : null;
+    const videoUrl = mapped.videoStoragePath
+      ? (urlByPath.get(mapped.videoStoragePath) ?? null)
+      : null;
 
     return {
       ...mapped,
       thumbnailUrl,
       photoUrl,
+      videoUrl,
     };
   });
 }
@@ -285,48 +334,46 @@ export async function getMediaGalleryMoments(
             attachment.media_type === "photo"
               ? (attachment.storage_path ?? null)
               : null,
+          videoStoragePath:
+            attachment.media_type === "video"
+              ? (attachment.storage_path ?? null)
+              : null,
         })),
     )
     .slice(0, MEDIA_GALLERY_LIMIT);
   const storagePaths = [
     ...new Set(
       items.flatMap((item) =>
-        [item.thumbnailPath, item.photoStoragePath].filter(
-          (path): path is string => Boolean(path),
-        ),
+        [
+          item.thumbnailPath,
+          item.photoStoragePath,
+          item.videoStoragePath,
+        ].filter((path): path is string => Boolean(path)),
       ),
     ),
   ];
-  const signedUrlByPath = new Map<string, string>();
+  const signedUrlByPath = await createSignedMediaUrlMap(supabase, storagePaths);
 
-  if (storagePaths.length > 0) {
-    const { data: signedData, error: signedError } = await supabase.storage
-      .from(MEDIA_BUCKET)
-      .createSignedUrls(storagePaths, 60 * 60);
+  return items.map(
+    ({ thumbnailPath, photoStoragePath, videoStoragePath, ...item }) => {
+      const thumbnailUrl = thumbnailPath
+        ? (signedUrlByPath.get(thumbnailPath) ?? null)
+        : null;
+      const photoUrl = photoStoragePath
+        ? (signedUrlByPath.get(photoStoragePath) ?? null)
+        : null;
+      const videoUrl = videoStoragePath
+        ? (signedUrlByPath.get(videoStoragePath) ?? null)
+        : null;
 
-    if (!signedError && signedData) {
-      for (const item of signedData) {
-        if (item.path && item.signedUrl) {
-          signedUrlByPath.set(item.path, item.signedUrl);
-        }
-      }
-    }
-  }
-
-  return items.map(({ thumbnailPath, photoStoragePath, ...item }) => {
-    const thumbnailUrl = thumbnailPath
-      ? (signedUrlByPath.get(thumbnailPath) ?? null)
-      : null;
-    const photoUrl = photoStoragePath
-      ? (signedUrlByPath.get(photoStoragePath) ?? null)
-      : null;
-
-    return {
-      ...item,
-      thumbnailUrl,
-      photoUrl,
-    };
-  });
+      return {
+        ...item,
+        thumbnailUrl,
+        photoUrl,
+        videoUrl,
+      };
+    },
+  );
 }
 
 export async function getOnThisDayMoments(

@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 import {
   extensionFromFile,
   getMediaFilesFromFormData,
+  getMediaTypeFromFile,
   getMediaTypeFromMime,
+  getNormalizedMediaMimeType,
   MAX_MEDIA_ATTACHMENTS,
   MEDIA_SIZE_LIMITS,
   validateMediaFile,
@@ -20,7 +22,32 @@ describe("getMediaTypeFromMime", () => {
     expect(getMediaTypeFromMime("image/jpeg")).toBe("photo");
     expect(getMediaTypeFromMime("video/mp4")).toBe("video");
     expect(getMediaTypeFromMime("audio/mpeg")).toBe("audio");
+    expect(getMediaTypeFromMime("video/x-quicktime")).toBe("video");
+    expect(getMediaTypeFromMime("video/hevc")).toBe("video");
     expect(getMediaTypeFromMime("application/pdf")).toBeNull();
+  });
+});
+
+describe("gallery file metadata", () => {
+  it("recognizes a MOV selected without a browser MIME type", () => {
+    const file = makeFile("family-video.MOV", "", 5 * 1024 * 1024);
+
+    expect(getMediaTypeFromFile(file)).toBe("video");
+    expect(getNormalizedMediaMimeType(file)).toBe("video/quicktime");
+    expect(validateMediaFile(file)).toBeNull();
+  });
+
+  it("normalizes iPhone HEVC metadata for MOV uploads", () => {
+    const file = makeFile("family-video.mov", "video/hevc", 1024);
+
+    expect(getMediaTypeFromFile(file)).toBe("video");
+    expect(getNormalizedMediaMimeType(file)).toBe("video/quicktime");
+  });
+
+  it("does not trust an unsupported MIME just because the name ends in MOV", () => {
+    const file = makeFile("renamed.mov", "application/pdf", 1024);
+
+    expect(getMediaTypeFromFile(file)).toBeNull();
   });
 });
 

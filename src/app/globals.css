@@ -139,6 +139,56 @@ input[type="date"].date-field::-webkit-datetime-edit {
   }
 }
 
+@keyframes heart-pop {
+  0% {
+    transform: scale(0.72);
+  }
+
+  45% {
+    transform: scale(1.38);
+  }
+
+  72% {
+    transform: scale(0.92);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes heart-ring {
+  0% {
+    opacity: 0;
+    transform: scale(0.25);
+  }
+
+  35% {
+    opacity: 0.9;
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.35);
+  }
+}
+
+@keyframes heart-sparks {
+  0% {
+    opacity: 0;
+    transform: scale(0.2) rotate(-12deg);
+  }
+
+  42% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.15) rotate(8deg);
+  }
+}
+
 .animate-fade-in-up {
   animation: fade-in-up var(--duration-normal) ease-out both;
 }
@@ -147,9 +197,49 @@ input[type="date"].date-field::-webkit-datetime-edit {
   animation: toast-in var(--duration-normal) ease-out both;
 }
 
+.animate-heart-pop {
+  animation: heart-pop 520ms cubic-bezier(0.2, 0.85, 0.3, 1) both;
+}
+
+.favorite-heart-burst {
+  position: absolute;
+  inset: -0.625rem;
+  border: 1.5px solid rgba(237, 73, 86, 0.75);
+  border-radius: 9999px;
+  pointer-events: none;
+  animation: heart-ring 520ms ease-out both;
+}
+
+.favorite-heart-burst::before {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3px;
+  height: 3px;
+  margin: -1.5px;
+  border-radius: 9999px;
+  background: #ed4956;
+  box-shadow:
+    0 -15px 0 #ed4956,
+    11px -11px 0 #ff9f43,
+    15px 0 0 #ed4956,
+    11px 11px 0 #ff6b81,
+    0 15px 0 #ed4956,
+    -11px 11px 0 #ff9f43,
+    -15px 0 0 #ed4956,
+    -11px -11px 0 #ff6b81;
+  content: "";
+  animation: heart-sparks 520ms ease-out both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in-up,
-  .animate-toast-in {
+  .animate-toast-in,
+  .animate-heart-pop {
     animation: none;
+  }
+
+  .favorite-heart-burst {
+    display: none;
   }
 }

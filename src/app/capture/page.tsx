@@ -17,11 +17,10 @@ export default async function CapturePage({ searchParams }: CapturePageProps) {
   const rawParams = await searchParams;
   const showWelcomeBanner = rawParams.welcome === "1";
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const userId = claimsData?.claims.sub;
 
-  if (!user) {
+  if (!userId) {
     redirect("/login");
   }
 
@@ -36,7 +35,7 @@ export default async function CapturePage({ searchParams }: CapturePageProps) {
         />
 
         <Card padding="lg" className="rounded-[1.5rem]">
-          <CaptureForm userId={user.id} />
+          <CaptureForm userId={userId} />
         </Card>
 
         <p className="mt-4 text-center text-sm text-muted">

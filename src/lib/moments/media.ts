@@ -31,6 +31,12 @@ const AUDIO_MIME_TYPES = new Set([
   "audio/ogg",
 ]);
 
+const MIME_ALIASES: Record<string, string> = {
+  "video/x-quicktime": "video/quicktime",
+  "video/hevc": "video/quicktime",
+  "video/h265": "video/quicktime",
+};
+
 export const MIME_TO_EXTENSION: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
@@ -46,31 +52,95 @@ export const MIME_TO_EXTENSION: Record<string, string> = {
   "audio/ogg": "ogg",
 };
 
+const EXTENSION_TO_MIME: Record<string, string> = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  gif: "image/gif",
+  webp: "image/webp",
+  mp4: "video/mp4",
+  mov: "video/quicktime",
+  mp3: "audio/mpeg",
+  m4a: "audio/mp4",
+  wav: "audio/wav",
+  ogg: "audio/ogg",
+};
+
+function normalizedMimeValue(mimeType: string): string {
+  const normalized = mimeType.toLowerCase().split(";", 1)[0].trim();
+  return MIME_ALIASES[normalized] ?? normalized;
+}
+
 export function getMediaTypeFromMime(mimeType: string): MediaType | null {
-  if (PHOTO_MIME_TYPES.has(mimeType)) {
+  const normalized = normalizedMimeValue(mimeType);
+
+  if (PHOTO_MIME_TYPES.has(normalized)) {
     return "photo";
   }
 
-  if (VIDEO_MIME_TYPES.has(mimeType)) {
+  if (VIDEO_MIME_TYPES.has(normalized)) {
     return "video";
   }
 
-  if (AUDIO_MIME_TYPES.has(mimeType)) {
+  if (AUDIO_MIME_TYPES.has(normalized)) {
     return "audio";
   }
 
   return null;
 }
 
-export function extensionFromFile(file: Pick<File, "name" | "type">): string {
-  const parts = file.name.split(".");
-  const fromName = parts.length > 1 ? parts.pop()?.toLowerCase() : undefined;
+export function getNormalizedMediaMimeType(
+  file: Pick<File, "name" | "type">,
+): string | null {
+  const normalized = normalizedMimeValue(file.type);
 
-  if (fromName && fromName.length <= 5) {
+  if (getMediaTypeFromMime(normalized)) {
+    return normalized;
+  }
+
+  if (normalized && normalized !== "application/octet-stream") {
+    return null;
+  }
+
+  const extension = extensionFromFileName(file.name);
+  return extension ? (EXTENSION_TO_MIME[extension] ?? null) : null;
+}
+
+export function getMediaTypeFromFile(
+  file: Pick<File, "name" | "type">,
+): MediaType | null {
+  const mimeType = getNormalizedMediaMimeType(file);
+  return mimeType ? getMediaTypeFromMime(mimeType) : null;
+}
+
+export function normalizeMediaFileType(file: File): File {
+  const mimeType = getNormalizedMediaMimeType(file);
+
+  if (!mimeType || mimeType === file.type) {
+    return file;
+  }
+
+  return new File([file], file.name, {
+    type: mimeType,
+    lastModified: file.lastModified,
+  });
+}
+
+function extensionFromFileName(name: string): string | null {
+  const parts = name.split(".");
+  const extension = parts.length > 1 ? parts.pop()?.toLowerCase() : undefined;
+  return extension && extension.length <= 5 ? extension : null;
+}
+
+export function extensionFromFile(file: Pick<File, "name" | "type">): string {
+  const fromName = extensionFromFileName(file.name);
+
+  if (fromName) {
     return fromName;
   }
 
-  return MIME_TO_EXTENSION[file.type] ?? "bin";
+  const mimeType = getNormalizedMediaMimeType(file);
+  return mimeType ? (MIME_TO_EXTENSION[mimeType] ?? "bin") : "bin";
 }
 
 export function getMediaFilesFromFormData(formData: FormData): File[] {
@@ -80,7 +150,7 @@ export function getMediaFilesFromFormData(formData: FormData): File[] {
 }
 
 export function validateMediaFile(file: File): string | null {
-  const mediaType = getMediaTypeFromMime(file.type);
+  const mediaType = getMediaTypeFromFile(file);
 
   if (!mediaType) {
     return "Unsupported file type. Use a photo, video, or audio file.";

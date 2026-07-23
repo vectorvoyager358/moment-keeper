@@ -1,10 +1,10 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { ChevronDown, Sparkles, Heart } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 
-import { MediaFileInput } from "@/components/capture/MediaFileInput";
 import { MemoryThemePicker } from "@/components/capture/MemoryThemePicker";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
@@ -28,6 +28,20 @@ import {
 type CaptureFormProps = {
   userId: string;
 };
+
+const loadMediaFileInput = () =>
+  import("@/components/capture/MediaFileInput").then(
+    (module) => module.MediaFileInput,
+  );
+
+const LazyMediaFileInput = dynamic(loadMediaFileInput, {
+  ssr: false,
+  loading: () => (
+    <p role="status" className="py-3 text-sm text-muted">
+      Getting media tools ready…
+    </p>
+  ),
+});
 
 const CAPTURE_PROMPTS = [
   "What made you smile?",
@@ -64,6 +78,7 @@ export function CaptureForm({ userId }: CaptureFormProps) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [preparedMediaFiles, setPreparedMediaFiles] = useState<File[]>([]);
   const [addMoreOpen, setAddMoreOpen] = useState(false);
+  const [mediaToolsLoaded, setMediaToolsLoaded] = useState(false);
   const [draftLoaded, setDraftLoaded] = useState(false);
   const [mediaValid, setMediaValid] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -93,6 +108,7 @@ export function CaptureForm({ userId }: CaptureFormProps) {
         setIsFavorite(draft.isFavorite);
         if (draftUsesAddMore(draft)) {
           setAddMoreOpen(true);
+          setMediaToolsLoaded(true);
         }
       }
 
@@ -140,6 +156,14 @@ export function CaptureForm({ userId }: CaptureFormProps) {
     if (files.length > 0) {
       setAddMoreOpen(true);
     }
+  }
+
+  function handleAddMoreToggle() {
+    if (!addMoreOpen) {
+      setMediaToolsLoaded(true);
+    }
+
+    setAddMoreOpen(!addMoreOpen);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -264,7 +288,9 @@ export function CaptureForm({ userId }: CaptureFormProps) {
           type="button"
           aria-expanded={addMoreOpen}
           disabled={pending}
-          onClick={() => setAddMoreOpen((open) => !open)}
+          onPointerEnter={() => void loadMediaFileInput()}
+          onFocus={() => void loadMediaFileInput()}
+          onClick={handleAddMoreToggle}
           className="flex w-full items-center justify-between rounded-2xl border border-border-strong bg-surface px-4 py-3 text-left text-sm font-medium text-ink transition hover:border-accent/50 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:opacity-60"
         >
           <span>Add more</span>
@@ -386,10 +412,12 @@ export function CaptureForm({ userId }: CaptureFormProps) {
             </label>
           </div>
 
-          <MediaFileInput
-            onValidityChange={setMediaValid}
-            onPreparedFilesChange={handlePreparedFilesChange}
-          />
+          {mediaToolsLoaded ? (
+            <LazyMediaFileInput
+              onValidityChange={setMediaValid}
+              onPreparedFilesChange={handlePreparedFilesChange}
+            />
+          ) : null}
         </div>
       </div>
     </form>

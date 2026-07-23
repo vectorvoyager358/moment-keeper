@@ -3,7 +3,10 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { getAuthRedirect, getProfileNameRedirect } from "@/lib/auth/routes";
 import { getSupabaseConfig } from "@/lib/env";
-import { hasProfileName } from "@/lib/profile/validation";
+import {
+  getProfileNameFromMetadata,
+  hasProfileName,
+} from "@/lib/profile/validation";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -28,21 +31,29 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const claims = claimsData?.claims;
 
-  const isAuthenticated = Boolean(user);
+  const isAuthenticated = Boolean(claims?.sub);
   let redirectPath = getAuthRedirect(request.nextUrl.pathname, isAuthenticated);
 
-  if (isAuthenticated && user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("display_name")
-      .eq("id", user.id)
-      .maybeSingle();
+  if (isAuthenticated && claims?.sub) {
+    let profileHasName = hasProfileName(
+      getProfileNameFromMetadata(claims.user_metadata),
+    );
 
-    const profileHasName = hasProfileName(profile?.display_name);
+    // Existing accounts may predate display_name being copied into auth
+    // metadata. Only those accounts need the profile-table fallback.
+    if (!profileHasName) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("id", claims.sub)
+        .maybeSingle();
+
+      profileHasName = hasProfileName(profile?.display_name);
+    }
+
     const profileRedirect = getProfileNameRedirect(
       request.nextUrl.pathname,
       profileHasName,

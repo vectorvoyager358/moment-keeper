@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   formatMomentDate,
+  formatMomentDateDetail,
   parseOccurredAtFormValue,
   truncateBody,
   validateOccurredAt,
@@ -43,6 +44,14 @@ describe("formatMomentDate", () => {
     expect(formatMomentDate(iso, "America/Chicago")).not.toBe(
       formatMomentDate(iso, "UTC"),
     );
+  });
+});
+
+describe("formatMomentDateDetail", () => {
+  it("uses an abbreviated month and separates the time", () => {
+    expect(
+      formatMomentDateDetail("2026-07-09T12:00:00.000Z", "America/Chicago"),
+    ).toBe("Jul 9, 2026 · 7:00 AM");
   });
 });
 

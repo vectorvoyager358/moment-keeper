@@ -86,7 +86,8 @@ describe("browse queries", () => {
           media_attachments: [
             {
               id: "media-2",
-              media_type: "audio",
+              media_type: "video",
+              storage_path: "user/video.mp4",
               thumbnail_path: null,
               display_order: 1,
             },
@@ -114,6 +115,10 @@ describe("browse queries", () => {
             path: "user/photo.jpg",
             signedUrl: "https://example.com/photo.jpg",
           },
+          {
+            path: "user/video.mp4",
+            signedUrl: "https://example.com/video.mp4",
+          },
         ],
         error: null,
       }),
@@ -130,5 +135,55 @@ describe("browse queries", () => {
         photoUrl: "https://example.com/photo.jpg",
       }),
     );
+    expect(result[1]).toEqual(
+      expect.objectContaining({
+        videoUrl: "https://example.com/video.mp4",
+      }),
+    );
+  });
+
+  it("retries a missing video URL without discarding the media card", async () => {
+    const builder: Record<string, ReturnType<typeof vi.fn>> = {};
+    builder.gte = vi.fn(() => builder);
+    builder.lt = vi.fn(() => builder);
+    builder.order = vi.fn().mockResolvedValue({
+      data: [
+        {
+          id: "moment-video",
+          body: "A saved video",
+          occurred_at: "2026-07-21T12:00:00.000Z",
+          location: null,
+          link_url: null,
+          is_favorite: false,
+          moment_tags: [],
+          media_attachments: [
+            {
+              id: "video-1",
+              media_type: "video",
+              storage_path: "user/moment/video.mp4",
+              thumbnail_path: null,
+              display_order: 0,
+            },
+          ],
+        },
+      ],
+      error: null,
+    });
+    const client = createClientWithBuilder(builder);
+    client.storage.from = vi.fn(() => ({
+      createSignedUrls: vi.fn().mockResolvedValue({
+        data: null,
+        error: new Error("one batch path failed"),
+      }),
+      createSignedUrl: vi.fn().mockResolvedValue({
+        data: { signedUrl: "https://example.com/recovered-video.mp4" },
+        error: null,
+      }),
+    }));
+    createClientMock.mockResolvedValue(client);
+
+    const result = await getCalendarMoments(2026, 7);
+
+    expect(result[0].videoUrl).toBe("https://example.com/recovered-video.mp4");
   });
 });

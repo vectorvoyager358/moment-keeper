@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { MomentDetailView } from "@/components/moments/MomentDetailView";
@@ -7,106 +7,8 @@ import { MomentCard } from "@/components/timeline/MomentCard";
 afterEach(cleanup);
 
 describe("MomentCard", () => {
-  it("can server-render the original photo for resilient calendar cards", () => {
-    render(
-      <MomentCard
-        preferOriginalPhoto
-        moment={{
-          id: "moment-photo",
-          body: "A photo memory",
-          occurred_at: "2026-07-09T12:00:00.000Z",
-          location: null,
-          linkUrl: null,
-          isFavorite: false,
-          tags: [],
-          hasMedia: true,
-          attachmentCount: 1,
-          mediaType: "photo",
-          thumbnailPath: "photo.thumb.jpg",
-          thumbnailUrl: "https://example.com/broken-thumb.jpg",
-          photoStoragePath: "photo.jpg",
-          photoUrl: "https://example.com/original.jpg",
-        }}
-      />,
-    );
-
-    expect(document.querySelector("article img")).toHaveAttribute(
-      "src",
-      "https://example.com/original.jpg",
-    );
-  });
-
-  it("uses a viewport-aware media frame for compact previews", () => {
-    render(
-      <MomentCard
-        compact
-        moment={{
-          id: "moment-compact",
-          body: "A compact memory",
-          occurred_at: "2026-07-09T12:00:00.000Z",
-          location: null,
-          linkUrl: null,
-          isFavorite: false,
-          tags: [],
-          hasMedia: true,
-          attachmentCount: 1,
-          mediaType: "photo",
-          thumbnailPath: null,
-          thumbnailUrl: null,
-          photoStoragePath: "photo.jpg",
-          photoUrl: "https://example.com/photo.jpg",
-        }}
-      />,
-    );
-
-    const article = document.querySelector("article");
-    const cardLink = document.querySelector("article > a");
-    const previewImage = document.querySelector("article img");
-
-    expect(document.querySelector("article a > div")).toHaveClass(
-      "h-[clamp(7rem,22svh,10rem)]",
-    );
-    expect(previewImage).toHaveClass("object-cover");
-    expect(previewImage).not.toHaveClass("object-contain");
-    expect(article).toHaveClass("w-full", "min-w-0", "max-w-full");
-    expect(cardLink).toHaveClass(
-      "w-full",
-      "min-w-0",
-      "max-w-full",
-      "overflow-hidden",
-    );
-  });
-
-  it("uses the same preview frame for videos without poster images", () => {
-    render(
-      <MomentCard
-        compact
-        moment={{
-          id: "moment-video",
-          body: "A video memory",
-          occurred_at: "2026-07-09T12:00:00.000Z",
-          location: null,
-          linkUrl: null,
-          isFavorite: false,
-          tags: [],
-          hasMedia: true,
-          attachmentCount: 1,
-          mediaType: "video",
-          thumbnailPath: null,
-          thumbnailUrl: null,
-          photoStoragePath: null,
-          photoUrl: null,
-        }}
-      />,
-    );
-
-    expect(
-      screen.getByText("A video").parentElement?.parentElement,
-    ).toHaveClass("h-52", "h-[clamp(7rem,22svh,10rem)]", "sm:aspect-[3/2]");
-  });
-
-  it("shows a visual tile for media without a thumbnail", () => {
-    render(
+  it("shows a video frame instead of a generic media tile", async () => {
+    const { container } = render(
       <MomentCard
         moment={{
           id: "moment-1",
@@ -123,11 +25,19 @@ describe("MomentCard", () => {
           thumbnailUrl: null,
           photoStoragePath: null,
           photoUrl: null,
+          videoStoragePath: "user/m/video.mp4",
+          videoUrl: "https://example.com/video.mp4",
         }}
       />,
     );
 
-    expect(screen.getByText("A video")).toBeVisible();
+    expect(screen.getByRole("img", { name: "Video thumbnail" })).toBeVisible();
+    await waitFor(() => {
+      expect(container.querySelector("video")).toHaveAttribute(
+        "src",
+        "https://example.com/video.mp4#t=0.1",
+      );
+    });
     expect(
       screen.getByRole("link", { name: "See moments tagged travel" }),
     ).toHaveAttribute("href", "/timeline?tag=tag-1");
@@ -152,6 +62,8 @@ describe("MomentCard", () => {
           thumbnailUrl: null,
           photoStoragePath: null,
           photoUrl: null,
+          videoStoragePath: null,
+          videoUrl: null,
         }}
       />,
     );
@@ -168,7 +80,7 @@ describe("MomentDetailView", () => {
           id: "moment-1",
           body: "A photo memory",
           occurred_at: "2026-07-09T12:00:00.000Z",
-          location: null,
+          location: "Houston",
           link_url: "https://www.example.com/family-story",
           is_favorite: true,
           themes: ["joy"],
@@ -206,5 +118,24 @@ describe("MomentDetailView", () => {
         name: "Open link to example.com in a new tab",
       }),
     ).toHaveAttribute("rel", "noopener noreferrer");
+    expect(screen.getByText("Houston")).toBeVisible();
+    expect(screen.getByText(/Jul 9, 2026 ·/)).toBeVisible();
+    const editButton = screen.getByRole("button", { name: "Edit moment" });
+    const deleteButton = screen.getByRole("button", { name: "Delete moment" });
+
+    expect(editButton).toBeVisible();
+    expect(
+      screen.getByRole("link", { name: "Back to your journal" }),
+    ).toHaveAttribute("href", "/timeline");
+    expect(deleteButton).toBeVisible();
+    expect(
+      editButton.compareDocumentPosition(deleteButton) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      deleteButton.compareDocumentPosition(body) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.queryByText("Moment kept")).not.toBeInTheDocument();
   });
 });

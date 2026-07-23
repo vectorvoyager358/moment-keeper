@@ -2,6 +2,7 @@ import { ImageIcon, Mic, Video } from "lucide-react";
 import Link from "next/link";
 
 import { MomentDate } from "@/components/moments/MomentDate";
+import { VideoThumbnail } from "@/components/moments/VideoThumbnail";
 import { TimelineMediaImage } from "@/components/timeline/TimelineMediaImage";
 import { Card } from "@/components/ui/Card";
 import { cn } from "@/lib/cn";
@@ -102,6 +103,12 @@ export async function MediaGallery({ mediaType }: MediaGalleryProps) {
                           : null
                       }
                       className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+                    />
+                  ) : moment.videoUrl ? (
+                    <VideoThumbnail
+                      src={moment.videoUrl}
+                      fill
+                      className="transition duration-500 group-hover:scale-[1.03]"
                     />
                   ) : (
                     <span className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-accent-subtle to-tag text-accent">

@@ -15,7 +15,12 @@ describe("DeleteMomentButton", () => {
   it("asks for confirmation in a branded dialog before deleting", () => {
     render(<DeleteMomentButton momentId="moment-1" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Delete moment" }));
+    const deleteButton = screen.getByRole("button", { name: "Delete moment" });
+
+    expect(deleteButton).not.toHaveTextContent("Delete moment");
+    expect(deleteButton.querySelector("svg")).toBeInTheDocument();
+
+    fireEvent.click(deleteButton);
 
     expect(
       screen.getByRole("alertdialog", { name: "Remove this moment?" }),
