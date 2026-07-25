@@ -1,5 +1,8 @@
+"use client";
+
 import { ArrowLeft, Images, MapPin, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 
 import { DeleteMomentButton } from "@/components/moments/DeleteMomentButton";
 import { FavoriteMomentButton } from "@/components/moments/FavoriteMomentButton";
@@ -32,6 +35,14 @@ export function MomentDetailView({
     (media) => media.media_type === "audio",
   );
   const hasVisualMedia = visualMedia.length > 0;
+  const mediaOrderKey = visualMedia.map((media) => media.id).join(":");
+  const mediaCarouselRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (mediaCarouselRef.current) {
+      mediaCarouselRef.current.scrollLeft = 0;
+    }
+  }, [mediaOrderKey]);
 
   const overlayActions = (
     <div className="flex items-center gap-2">
@@ -86,7 +97,11 @@ export function MomentDetailView({
             {overlayActions}
           </div>
 
-          <div className="flex h-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div
+            ref={mediaCarouselRef}
+            data-testid="moment-media-carousel"
+            className="flex h-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
             {visualMedia.map((media) => (
               <div
                 key={media.id}

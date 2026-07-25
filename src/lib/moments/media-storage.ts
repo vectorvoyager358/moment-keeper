@@ -165,7 +165,7 @@ export async function uploadMediaFilesForMoment(
   files: File[],
   startOrder = 0,
   displayOrders?: number[],
-): Promise<void> {
+): Promise<string[]> {
   const uploaded: UploadedAttachment[] = [];
 
   try {
@@ -194,6 +194,27 @@ export async function uploadMediaFilesForMoment(
         );
     }
 
+    throw error;
+  }
+
+  return uploaded.map((attachment) => attachment.id);
+}
+
+export async function reorderMediaAttachments(
+  supabase: StorageSupabase,
+  momentId: string,
+  attachmentIds: string[],
+): Promise<void> {
+  if (attachmentIds.length === 0) {
+    return;
+  }
+
+  const { error } = await supabase.rpc("reorder_moment_media", {
+    p_moment_id: momentId,
+    p_attachment_ids: attachmentIds,
+  });
+
+  if (error) {
     throw error;
   }
 }

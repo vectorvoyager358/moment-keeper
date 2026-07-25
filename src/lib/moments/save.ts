@@ -14,6 +14,7 @@ import {
 } from "@/lib/moments/media";
 import {
   removeMediaAttachmentsById,
+  reorderMediaAttachments,
   uploadMediaFilesForMoment,
 } from "@/lib/moments/media-storage";
 import {
@@ -37,6 +38,43 @@ export type SaveMomentResult =
 
 function parseFavoriteFormData(formData: FormData): boolean {
   return formData.get("favorite") === "1";
+}
+
+function getRequestedMediaOrder(formData: FormData): string[] {
+  return formData
+    .getAll("media_order")
+    .map(String)
+    .filter((token) => token.length > 0);
+}
+
+function resolveMediaOrder(
+  requestedOrder: string[],
+  existingMediaIds: string[],
+  newMediaIds: string[],
+): string[] {
+  const tokenToId = new Map<string, string>();
+  existingMediaIds.forEach((id) => tokenToId.set(`existing:${id}`, id));
+  newMediaIds.forEach((id, index) => tokenToId.set(`new:${index}`, id));
+
+  const orderedIds: string[] = [];
+  const seenIds = new Set<string>();
+
+  for (const token of requestedOrder) {
+    const id = tokenToId.get(token);
+    if (id && !seenIds.has(id)) {
+      seenIds.add(id);
+      orderedIds.push(id);
+    }
+  }
+
+  for (const id of [...existingMediaIds, ...newMediaIds]) {
+    if (!seenIds.has(id)) {
+      seenIds.add(id);
+      orderedIds.push(id);
+    }
+  }
+
+  return orderedIds;
 }
 
 export async function saveNewMoment(
@@ -148,6 +186,7 @@ export async function saveUpdatedMoment(
   const themeInput = parseMemoryThemeFormData(formData);
   const mediaFiles = getMediaFilesFromFormData(formData);
   const removedMediaIds = getRemovedMediaIds(formData);
+  const requestedMediaOrder = getRequestedMediaOrder(formData);
   const linkInput = parseMomentLinkFormData(formData);
   if (themeInput.error) {
     return { ok: false, error: themeInput.error, status: 400 };
@@ -251,6 +290,7 @@ export async function saveUpdatedMoment(
       await removeMediaAttachmentsById(supabase, momentId, validRemovedIds);
     }
 
+    let uploadedMediaIds: string[] = [];
     if (mediaFiles.length > 0) {
       const occupiedOrders = new Set(
         remainingMedia.map((attachment) => attachment.display_order),
@@ -260,7 +300,7 @@ export async function saveUpdatedMoment(
         (_, index) => index,
       ).filter((order) => !occupiedOrders.has(order));
 
-      await uploadMediaFilesForMoment(
+      uploadedMediaIds = await uploadMediaFilesForMoment(
         supabase,
         user.id,
         momentId,
@@ -268,6 +308,15 @@ export async function saveUpdatedMoment(
         0,
         availableOrders,
       );
+    }
+
+    if (requestedMediaOrder.length > 0) {
+      const finalMediaOrder = resolveMediaOrder(
+        requestedMediaOrder,
+        remainingMedia.map((attachment) => attachment.id),
+        uploadedMediaIds,
+      );
+      await reorderMediaAttachments(supabase, momentId, finalMediaOrder);
     }
   } catch (error) {
     return {

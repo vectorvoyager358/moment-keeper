@@ -182,6 +182,13 @@ export type Database = {
           occurred_at: string;
         }[];
       };
+      reorder_moment_media: {
+        Args: {
+          p_moment_id: string;
+          p_attachment_ids: string[];
+        };
+        Returns: undefined;
+      };
       resurface_moment_ids: {
         Args: {
           p_themes: MemoryTheme[];

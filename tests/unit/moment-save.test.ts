@@ -4,12 +4,14 @@ const {
   createClientMock,
   revalidatePath,
   removeMediaAttachmentsById,
+  reorderMediaAttachments,
   replaceMomentTags,
   uploadMediaFilesForMoment,
 } = vi.hoisted(() => ({
   createClientMock: vi.fn(),
   revalidatePath: vi.fn(),
   removeMediaAttachmentsById: vi.fn(),
+  reorderMediaAttachments: vi.fn(),
   replaceMomentTags: vi.fn(),
   uploadMediaFilesForMoment: vi.fn(),
 }));
@@ -23,6 +25,7 @@ vi.mock("@/lib/moments/repository", () => ({
 }));
 vi.mock("@/lib/moments/media-storage", () => ({
   removeMediaAttachmentsById,
+  reorderMediaAttachments,
   uploadMediaFilesForMoment,
 }));
 
@@ -42,8 +45,9 @@ describe("moment theme saving", () => {
     createClientMock.mockReset();
     revalidatePath.mockReset();
     removeMediaAttachmentsById.mockReset().mockResolvedValue(undefined);
+    reorderMediaAttachments.mockReset().mockResolvedValue(undefined);
     replaceMomentTags.mockReset().mockResolvedValue(undefined);
-    uploadMediaFilesForMoment.mockReset().mockResolvedValue(undefined);
+    uploadMediaFilesForMoment.mockReset().mockResolvedValue([]);
   });
 
   it("stores selected themes on a new moment", async () => {
@@ -336,6 +340,51 @@ describe("moment theme saving", () => {
       0,
       [0, 2, 3, 4],
     );
+  });
+
+  it("persists a mixed existing and newly uploaded attachment order", async () => {
+    const eq = vi.fn().mockResolvedValue({ error: null });
+    const update = vi.fn(() => ({ eq }));
+    const supabase = {
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: "u1" } } }),
+      },
+      from: vi.fn((table: string) =>
+        table === "media_attachments"
+          ? {
+              select: vi.fn(() => ({
+                eq: vi.fn(() => ({
+                  order: vi.fn().mockResolvedValue({
+                    data: [
+                      { id: "media-1", display_order: 0 },
+                      { id: "media-2", display_order: 1 },
+                    ],
+                    error: null,
+                  }),
+                })),
+              })),
+            }
+          : { update },
+      ),
+    };
+    createClientMock.mockResolvedValue(supabase);
+    uploadMediaFilesForMoment.mockResolvedValue(["media-3"]);
+    const formData = validFormData();
+    const newFile = new File(["new"], "new.mp4", { type: "video/mp4" });
+    formData.append("media", newFile);
+    formData.append("media_order", "new:0");
+    formData.append("media_order", "existing:media-2");
+    formData.append("media_order", "existing:media-1");
+
+    expect(await saveUpdatedMoment("moment-1", formData)).toEqual({
+      ok: true,
+      redirectTo: "/moments/moment-1?updated=1",
+    });
+    expect(reorderMediaAttachments).toHaveBeenCalledWith(supabase, "moment-1", [
+      "media-3",
+      "media-2",
+      "media-1",
+    ]);
   });
 
   it("rejects tampered theme values before accessing the database", async () => {

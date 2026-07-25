@@ -91,7 +91,7 @@ describe("mapTimelineRow", () => {
     expect(result.videoStoragePath).toBe("user/m/video.mp4");
   });
 
-  it("uses the first photo thumbnail while preserving attachment order", () => {
+  it("uses the first visual attachment as the timeline cover", () => {
     const result = mapTimelineRow({
       id: "moment-4",
       body: "Mixed media.",
@@ -118,7 +118,8 @@ describe("mapTimelineRow", () => {
 
     expect(result.mediaType).toBe("video");
     expect(result.attachmentCount).toBe(2);
-    expect(result.thumbnailPath).toBe("user/m/photo.thumb.jpg");
+    expect(result.thumbnailPath).toBeNull();
+    expect(result.videoStoragePath).toBeNull();
   });
 
   it("tracks the original photo path for timeline fallbacks", () => {

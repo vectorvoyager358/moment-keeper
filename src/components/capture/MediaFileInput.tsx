@@ -1,6 +1,15 @@
 "use client";
 
-import { RotateCcw, Upload, X } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  FileAudio,
+  ImageIcon,
+  RotateCcw,
+  Upload,
+  Video,
+  X,
+} from "lucide-react";
 import { useEffect, useId, useRef, useState, type ChangeEvent } from "react";
 
 import { MediaCapture } from "@/components/capture/MediaCapture";
@@ -24,6 +33,7 @@ export type ExistingMediaInput = {
   id: string;
   media_type: MediaType;
   original_filename: string | null;
+  signedUrl?: string;
 };
 
 type MediaFileInputProps = {
@@ -43,6 +53,26 @@ type PreparedMedia = {
   source: "file" | "voice" | "camera";
 };
 
+type OrderedMediaItem =
+  | {
+      key: string;
+      kind: "existing";
+      media: ExistingMediaInput;
+    }
+  | {
+      key: string;
+      kind: "prepared";
+      media: PreparedMedia;
+    };
+
+function existingMediaKey(id: string): string {
+  return `existing:${id}`;
+}
+
+function preparedMediaKey(id: string): string {
+  return `prepared:${id}`;
+}
+
 export function MediaFileInput({
   id,
   existingMedia = [],
@@ -54,16 +84,39 @@ export function MediaFileInput({
   const inputRef = useRef<HTMLInputElement>(null);
   const previewUrlsRef = useRef<Set<string>>(new Set());
   const [preparedMedia, setPreparedMedia] = useState<PreparedMedia[]>([]);
+  const [mediaOrder, setMediaOrder] = useState<string[]>(() =>
+    existingMedia.map((media) => existingMediaKey(media.id)),
+  );
   const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
   const [preparingName, setPreparingName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
 
-  const activeExistingCount =
-    existingMedia.length -
-    existingMedia.filter((media) => removedIds.has(media.id)).length;
-  const totalCount = activeExistingCount + preparedMedia.length;
+  const existingByKey = new Map(
+    existingMedia.map((media) => [existingMediaKey(media.id), media]),
+  );
+  const preparedByKey = new Map(
+    preparedMedia.map((media) => [preparedMediaKey(media.id), media]),
+  );
+  const orderedMedia = mediaOrder.flatMap<OrderedMediaItem>((key) => {
+    const existing = existingByKey.get(key);
+    if (existing && !removedIds.has(existing.id)) {
+      return [{ key, kind: "existing", media: existing }];
+    }
+
+    const prepared = preparedByKey.get(key);
+    return prepared ? [{ key, kind: "prepared", media: prepared }] : [];
+  });
+  const activeExistingCount = orderedMedia.filter(
+    (item) => item.kind === "existing",
+  ).length;
+  const totalCount = orderedMedia.length;
+  const coverKey = orderedMedia.find((item) => {
+    const type =
+      item.kind === "existing" ? item.media.media_type : item.media.type;
+    return type === "photo" || type === "video";
+  })?.key;
   const mediaBusy = isRecording || isCameraActive || Boolean(preparingName);
 
   useEffect(() => {
@@ -73,9 +126,23 @@ export function MediaFileInput({
     };
   }, []);
 
-  function commitPrepared(next: PreparedMedia[]) {
+  function filesForOrder(nextOrder: string[], nextMedia: PreparedMedia[]) {
+    const nextByKey = new Map(
+      nextMedia.map((media) => [preparedMediaKey(media.id), media]),
+    );
+    return nextOrder.flatMap((key) => {
+      const media = nextByKey.get(key);
+      return media ? [media.file] : [];
+    });
+  }
+
+  function commitPrepared(
+    next: PreparedMedia[],
+    nextOrder: string[] = mediaOrder,
+  ) {
     setPreparedMedia(next);
-    onPreparedFilesChange(next.map((item) => item.file));
+    setMediaOrder(nextOrder);
+    onPreparedFilesChange(filesForOrder(nextOrder, next));
   }
 
   function removePrepared(id: string) {
@@ -84,8 +151,30 @@ export function MediaFileInput({
       URL.revokeObjectURL(item.url);
       previewUrlsRef.current.delete(item.url);
     }
-    commitPrepared(preparedMedia.filter((media) => media.id !== id));
+    const nextMedia = preparedMedia.filter((media) => media.id !== id);
+    const nextOrder = mediaOrder.filter((key) => key !== preparedMediaKey(id));
+    commitPrepared(nextMedia, nextOrder);
     setError(null);
+  }
+
+  function moveMedia(key: string, direction: -1 | 1) {
+    const activeKeys = orderedMedia.map((item) => item.key);
+    const currentIndex = activeKeys.indexOf(key);
+    const targetKey = activeKeys[currentIndex + direction];
+
+    if (currentIndex < 0 || !targetKey) {
+      return;
+    }
+
+    const nextOrder = [...mediaOrder];
+    const keyIndex = nextOrder.indexOf(key);
+    const targetIndex = nextOrder.indexOf(targetKey);
+    [nextOrder[keyIndex], nextOrder[targetIndex]] = [
+      nextOrder[targetIndex],
+      nextOrder[keyIndex],
+    ];
+    setMediaOrder(nextOrder);
+    onPreparedFilesChange(filesForOrder(nextOrder, preparedMedia));
   }
 
   async function prepareFiles(files: File[], source: PreparedMedia["source"]) {
@@ -155,7 +244,11 @@ export function MediaFileInput({
       if (combinedError) {
         throw new Error(combinedError);
       }
-      commitPrepared(next);
+      const nextOrder = [
+        ...mediaOrder,
+        ...nextItems.map((item) => preparedMediaKey(item.id)),
+      ];
+      commitPrepared(next, nextOrder);
     } catch (prepareError) {
       nextItems.forEach((item) => {
         URL.revokeObjectURL(item.url);
@@ -253,61 +346,172 @@ export function MediaFileInput({
         </div>
       ) : null}
 
-      {existingMedia.length > 0 ? (
+      {orderedMedia.length > 0 ? (
         <div className="space-y-2">
           <p className="text-xs font-semibold tracking-wide text-muted uppercase">
-            Already kept
+            Attachment order
           </p>
-          {existingMedia.map((media) => {
-            const removed = removedIds.has(media.id);
-            return (
+          <ul className="space-y-2">
+            {orderedMedia.map((item, index) => {
+              const mediaType =
+                item.kind === "existing"
+                  ? item.media.media_type
+                  : item.media.type;
+              const filename =
+                item.kind === "existing"
+                  ? (item.media.original_filename ?? `${mediaType} attachment`)
+                  : item.media.file.name;
+              const previewUrl =
+                item.kind === "existing"
+                  ? item.media.signedUrl
+                  : item.media.url;
+
+              return (
+                <li
+                  key={item.key}
+                  className="flex items-center gap-3 rounded-xl border border-border bg-surface p-2"
+                >
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-accent-subtle text-accent">
+                    {previewUrl && mediaType === "photo" ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- signed or local preview URL
+                      <img
+                        src={previewUrl}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    ) : previewUrl && mediaType === "video" ? (
+                      <video
+                        src={previewUrl}
+                        muted
+                        playsInline
+                        preload="metadata"
+                        aria-hidden="true"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : mediaType === "photo" ? (
+                      <ImageIcon className="h-5 w-5" aria-hidden />
+                    ) : mediaType === "video" ? (
+                      <Video className="h-5 w-5" aria-hidden />
+                    ) : (
+                      <FileAudio className="h-5 w-5" aria-hidden />
+                    )}
+                  </span>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-ink">
+                      {filename}
+                    </p>
+                    <p className="text-xs text-muted">
+                      {item.key === coverKey ? "Cover · " : ""}
+                      {mediaType}
+                      {item.kind === "prepared"
+                        ? ` · ${formatFileSize(item.media.file.size)}`
+                        : ""}
+                    </p>
+                  </div>
+
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button
+                      type="button"
+                      aria-label={`Move ${filename} earlier`}
+                      title="Move earlier"
+                      disabled={index === 0}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted transition hover:bg-accent-subtle hover:text-accent disabled:opacity-30"
+                      onClick={() => moveMedia(item.key, -1)}
+                    >
+                      <ArrowUp className="h-4 w-4" aria-hidden />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Move ${filename} later`}
+                      title="Move later"
+                      disabled={index === orderedMedia.length - 1}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted transition hover:bg-accent-subtle hover:text-accent disabled:opacity-30"
+                      onClick={() => moveMedia(item.key, 1)}
+                    >
+                      <ArrowDown className="h-4 w-4" aria-hidden />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Remove ${filename}`}
+                      title="Remove"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full text-danger transition hover:bg-danger-subtle"
+                      onClick={() => {
+                        if (item.kind === "existing") {
+                          setRemovedIds(new Set(removedIds).add(item.media.id));
+                          setError(null);
+                        } else {
+                          removePrepared(item.media.id);
+                        }
+                      }}
+                    >
+                      <X className="h-4 w-4" aria-hidden />
+                    </button>
+                  </div>
+
+                  <input
+                    type="hidden"
+                    name="media_order"
+                    value={
+                      item.kind === "existing"
+                        ? `existing:${item.media.id}`
+                        : `new:${
+                            orderedMedia
+                              .slice(0, index + 1)
+                              .filter((ordered) => ordered.kind === "prepared")
+                              .length - 1
+                          }`
+                    }
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ) : null}
+
+      {removedIds.size > 0 ? (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold tracking-wide text-muted uppercase">
+            Removed
+          </p>
+          {[...removedIds].flatMap((mediaId) => {
+            const media = existingMedia.find((item) => item.id === mediaId);
+            if (!media) {
+              return [];
+            }
+
+            const filename =
+              media.original_filename ?? `${media.media_type} attachment`;
+
+            return [
               <div
                 key={media.id}
                 className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface px-3 py-2"
               >
-                <span
-                  className={
-                    removed
-                      ? "text-sm text-muted line-through"
-                      : "text-sm text-ink"
-                  }
-                >
-                  {media.original_filename ?? `${media.media_type} attachment`}
+                <span className="truncate text-sm text-muted line-through">
+                  {filename}
                 </span>
-                {removed ? (
-                  <button
-                    type="button"
-                    className="inline-flex items-center gap-1 text-sm font-medium text-accent"
-                    onClick={() => {
-                      if (totalCount >= MAX_MEDIA_ATTACHMENTS) {
-                        setError(
-                          `Keep up to ${MAX_MEDIA_ATTACHMENTS} attachments per moment.`,
-                        );
-                        return;
-                      }
-                      const next = new Set(removedIds);
-                      next.delete(media.id);
-                      setRemovedIds(next);
-                    }}
-                  >
-                    <RotateCcw className="h-3.5 w-3.5" aria-hidden />
-                    Undo
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="inline-flex items-center gap-1 text-sm font-medium text-danger"
-                    onClick={() => {
-                      setRemovedIds(new Set(removedIds).add(media.id));
-                      setError(null);
-                    }}
-                  >
-                    <X className="h-3.5 w-3.5" aria-hidden />
-                    Remove
-                  </button>
-                )}
-              </div>
-            );
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 text-sm font-medium text-accent"
+                  onClick={() => {
+                    if (totalCount >= MAX_MEDIA_ATTACHMENTS) {
+                      setError(
+                        `Keep up to ${MAX_MEDIA_ATTACHMENTS} attachments per moment.`,
+                      );
+                      return;
+                    }
+                    const next = new Set(removedIds);
+                    next.delete(media.id);
+                    setRemovedIds(next);
+                  }}
+                >
+                  <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+                  Undo
+                </button>
+              </div>,
+            ];
           })}
           {[...removedIds].map((mediaId) => (
             <input
@@ -318,55 +522,6 @@ export function MediaFileInput({
             />
           ))}
         </div>
-      ) : null}
-
-      {preparedMedia.length > 0 ? (
-        <ul className="grid gap-3 sm:grid-cols-2">
-          {preparedMedia.map((media) => (
-            <li
-              key={media.id}
-              className="overflow-hidden rounded-2xl border border-border bg-surface"
-            >
-              {media.type === "photo" ? (
-                // eslint-disable-next-line @next/next/no-img-element -- local object URL
-                <img
-                  src={media.url}
-                  alt={`Preview of ${media.file.name}`}
-                  className="aspect-video w-full bg-accent-subtle object-contain"
-                />
-              ) : media.type === "video" ? (
-                <video
-                  controls
-                  src={media.url}
-                  className="aspect-video w-full bg-black object-contain"
-                >
-                  Your browser does not support video previews.
-                </video>
-              ) : (
-                <div className="p-4">
-                  <audio controls src={media.url} className="w-full">
-                    Your browser does not support audio previews.
-                  </audio>
-                </div>
-              )}
-              <div className="flex items-center justify-between gap-2 border-t border-border px-3 py-2">
-                <p className="min-w-0 truncate text-xs text-muted">
-                  {media.file.name} · {formatFileSize(media.file.size)}
-                  {media.compressed
-                    ? ` (from ${formatFileSize(media.originalBytes)})`
-                    : ""}
-                </p>
-                <button
-                  type="button"
-                  className="shrink-0 text-sm font-medium text-danger"
-                  onClick={() => removePrepared(media.id)}
-                >
-                  Remove
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
       ) : null}
 
       {error ? (
