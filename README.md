@@ -1,193 +1,103 @@
 # Moment Keeper
 
-A home for life's moments — capture and revisit meaningful memories without the pressure of daily journaling.
+**A quiet home for the moments you want to remember.**
 
-## Stack
+Moment Keeper is a private, media-rich journal for capturing everyday memories without the pressure of writing a traditional diary. Save a few words, places that mattered, attach media, and return to those moments whenever you need them.
 
-- **Frontend:** Next.js (App Router) + React + TypeScript + Tailwind CSS
-- **Hosting:** [Vercel](https://vercel.com)
-- **Backend:** [Supabase](https://supabase.com) (auth, Postgres, storage)
-- **CI:** GitHub Actions (lint, format, test, build)
+[Open Moment Keeper](https://moment-keeper-two.vercel.app)
 
-See [`docs/decisions.md`](docs/decisions.md) for architecture decisions and [`docs/mvp-backlog.md`](docs/mvp-backlog.md) for the implementation backlog.
+## What you can do
 
-## Prerequisites
+- Capture moments with text, photos, videos, voice memos, and links
+- Add dates, locations, themes, tags, and favorites
+- Browse memories through a journal, media gallery, or calendar
+- Search and filter moments by words, tags, themes, and media type
+- Revisit meaningful memories through resurfacing and “On this day”
+- View photos and videos in an immersive, responsive media viewer
+- Install the app on mobile or desktop as a Progressive Web App
+- Keep every account private with authenticated, user-scoped data
 
-- Node.js 20+ (22 LTS recommended)
+## Built with
+
+- [Next.js](https://nextjs.org) and [React](https://react.dev)
+- [TypeScript](https://www.typescriptlang.org)
+- [Tailwind CSS](https://tailwindcss.com)
+- [Supabase](https://supabase.com) for authentication, PostgreSQL, and storage
+- [Serwist](https://serwist.pages.dev) for Progressive Web App support
+- [Vercel](https://vercel.com) for hosting and analytics
+- [Sentry](https://sentry.io) for optional error monitoring
+- [Vitest](https://vitest.dev) and Testing Library for automated tests
+
+## Run locally
+
+### Requirements
+
+- Node.js 20 or newer
 - npm
-- A [Supabase](https://supabase.com) project (free tier)
+- A Supabase project
 
-## Local setup
+### Setup
 
-1. Clone the repo and install dependencies:
-
-   ```bash
-   npm install
-   ```
-
-2. Copy environment variables:
-
-   ```bash
-   cp .env.example .env.local
-   ```
-
-3. Add your Supabase project URL and publishable key from **Project Settings → API** in the [Supabase dashboard](https://supabase.com/dashboard).
-
-4. In Supabase, enable email auth: **Authentication → Providers → Email** (enabled by default). For faster local testing, you can disable **Confirm email** so new accounts can log in immediately.
-
-5. In Supabase → **Authentication → URL Configuration**, set **Site URL** to `http://localhost:3000` and add these **Redirect URLs**:
-   - `http://localhost:3000/auth/callback`
-   - `http://localhost:3000/**`
-
-6. Apply the database schema (one-time) — see [Database setup](#database-setup) below.
-
-7. Start the dev server:
-
-   ```bash
-   npm run dev
-   ```
-
-   Open [http://localhost:3000](http://localhost:3000).
-
-### Dev server errors (`@swc/helpers` / Turbopack)
-
-If you see a missing `@swc/helpers-...` module error, stop the dev server and clear the cache:
+1. Install the dependencies:
 
 ```bash
-npm run clean
-npm run dev
+ npm install
 ```
 
-Or in one step: `npm run dev:clean`
-
-If it persists: `rm -rf node_modules .next && npm install`
-
-## Routes
-
-| Route               | Access                                             |
-| ------------------- | -------------------------------------------------- |
-| `/login`            | Public                                             |
-| `/signup`           | Public                                             |
-| `/forgot-password`  | Public (request reset email)                       |
-| `/auth/callback`    | Public (PKCE code exchange for email links)        |
-| `/reset-password`   | Authenticated (set new password after reset email) |
-| `/api/health`       | Public (uptime / readiness JSON)                   |
-| `/api/moments`      | Authenticated (create moment; XHR upload progress) |
-| `/api/moments/[id]` | Authenticated (update moment; XHR upload progress) |
-| `/timeline`         | Authenticated (search + list)                      |
-| `/capture`          | Authenticated                                      |
-| `/browse`           | Authenticated (calendar + media gallery)           |
-| `/moments/[id]`     | Authenticated (view / edit / delete)               |
-| `/settings`         | Authenticated (account + change password)          |
-
-## Database setup
-
-1. Open **SQL Editor** in the [Supabase dashboard](https://supabase.com/dashboard).
-2. Run the SQL in [`supabase/migrations/20260707143000_initial_schema.sql`](supabase/migrations/20260707143000_initial_schema.sql).
-3. Run later migrations in order, including:
-   - [`supabase/migrations/20260708200000_search_moment_ids.sql`](supabase/migrations/20260708200000_search_moment_ids.sql) for full-text search
-   - [`supabase/migrations/20260708210000_media_thumbnail_path.sql`](supabase/migrations/20260708210000_media_thumbnail_path.sql) for photo thumbnails
-   - [`supabase/migrations/20260708220000_on_this_day_moment_ids.sql`](supabase/migrations/20260708220000_on_this_day_moment_ids.sql) for on-this-day memories
-   - [`supabase/migrations/20260710043000_memory_themes.sql`](supabase/migrations/20260710043000_memory_themes.sql) for theme and content resurfacing
-   - [`supabase/migrations/20260711100000_multiple_media_attachments.sql`](supabase/migrations/20260711100000_multiple_media_attachments.sql) for up to five ordered attachments per moment
-   - [`supabase/migrations/20260711103000_favorite_moments.sql`](supabase/migrations/20260711103000_favorite_moments.sql) for favorite moments and favorite-aware search
-   - [`supabase/migrations/20260711194500_on_this_day_timezone.sql`](supabase/migrations/20260711194500_on_this_day_timezone.sql) for timezone-aware on-this-day resurfacing
-   - [`supabase/migrations/20260711200000_moment_location.sql`](supabase/migrations/20260711200000_moment_location.sql) for optional moment location and search
-   - [`supabase/migrations/20260711213000_improve_search_query.sql`](supabase/migrations/20260711213000_improve_search_query.sql) for improved Find search ranking and parsing
-
-See [`supabase/README.md`](supabase/README.md) for verification steps.
-
-## Scripts
-
-| Command                  | Description                                       |
-| ------------------------ | ------------------------------------------------- |
-| `npm run dev`            | Start local dev server                            |
-| `npm run build`          | Production build                                  |
-| `npm run start`          | Run production build locally                      |
-| `npm run lint`           | ESLint                                            |
-| `npm run format`         | Prettier write                                    |
-| `npm run format:check`   | Prettier check                                    |
-| `npm run test`           | Run unit tests (Vitest)                           |
-| `npm run icons:generate` | Regenerate PWA icons from `public/icons/icon.svg` |
-
-## Install as an app (PWA)
-
-Moment Keeper is a Progressive Web App. On **production** (HTTPS), you can install it from the browser:
-
-- **iPhone / iPad (Safari):** Share → **Add to Home Screen**
-- **Android (Chrome):** Menu → **Install app** or **Add to Home screen**
-- **Desktop (Chrome / Edge):** Install icon in the address bar
-
-The app opens in standalone mode with your journal theme color. Static assets are cached for faster loads; when you are offline, a fallback page explains that a connection is needed to sync entries.
-
-Regenerate the Apple touch icon (180×180) after replacing `public/icons/icon-512.png`:
+2. Create your local environment file:
 
 ```bash
-sips -z 180 180 public/icons/icon-512.png --out public/icons/apple-touch-icon.png
+ cp .env.example .env.local
 ```
 
-Legacy SVG-based generation is still available via `npm run icons:generate` if needed.
+3. Add your Supabase project credentials to `.env.local`:
 
-## CI
+```env
+ NEXT_PUBLIC_SUPABASE_URL=your-project-url
+ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-publishable-key
+```
 
-On every push/PR to `main`, GitHub Actions runs lint, format check, tests, and build. See [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+4. In Supabase, enable email authentication and configure:
 
-## Deploy to Vercel
+- Site URL: `http://localhost:3000`
+- Redirect URL: `http://localhost:3000/auth/callback`
+- Redirect URL: `http://localhost:3000/**`
 
-### Option A: Vercel dashboard (recommended)
-
-1. Push this repo to GitHub.
-2. Go to [vercel.com/new](https://vercel.com/new) and import the `moment-keeper` repository.
-3. Add environment variables for **Production** (and Preview if you want PR deploys):
-
-   | Variable                        | Value                         |
-   | ------------------------------- | ----------------------------- |
-   | `NEXT_PUBLIC_SUPABASE_URL`      | Your Supabase project URL     |
-   | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase publishable key |
-   | `NEXT_PUBLIC_SENTRY_DSN`        | Optional Sentry DSN           |
-
-4. Click **Deploy**.
-
-### Option B: Vercel CLI
+5. Apply the SQL files in `supabase/migrations` in filename order.
+6. Start the app:
 
 ```bash
-npm i -g vercel          # if not installed
-vercel login
-vercel link              # link to a new or existing project
-vercel env add NEXT_PUBLIC_SUPABASE_URL
-vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY
-vercel --prod
+ npm run dev
 ```
 
-### After deploy
+Open [http://localhost:3000](http://localhost:3000).
 
-1. In Supabase → **Authentication → URL Configuration**, set **Site URL** to your Vercel URL and add **Redirect URLs** for:
-   - `https://your-app.vercel.app/**`
-   - `https://your-app.vercel.app/auth/callback`
-2. Visit your deployed URL and sign up / log in. Password reset emails use `/auth/callback?next=/reset-password`.
-3. Optional: create a Sentry project, set `NEXT_PUBLIC_SENTRY_DSN` on Vercel, and redeploy to enable production error tracking.
-4. Optional: Vercel dashboard → **Analytics** → **Enable** for aggregate page-view metrics (see [`docs/analytics.md`](docs/analytics.md)).
+## Commands
 
-## Project structure
+| Command                | Purpose                           |
+| ---------------------- | --------------------------------- |
+| `npm run dev`          | Start the development server      |
+| `npm run dev:clean`    | Clear the Next.js cache and start |
+| `npm run build`        | Create a production build         |
+| `npm run start`        | Run the production build locally  |
+| `npm run lint`         | Check the code with ESLint        |
+| `npm run format:check` | Check formatting with Prettier    |
+| `npm test`             | Run the Vitest test suite         |
+| `npm run test:watch`   | Run tests in watch mode           |
 
+## Deploy
+
+Import the repository into Vercel and add these environment variables:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your-project-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-publishable-key
 ```
-src/
-  app/          # Routes and layouts (Next.js App Router)
-  components/   # UI components
-  lib/          # Utilities and API clients (e.g. Supabase)
-tests/
-  unit/         # Unit tests
-docs/           # Data model, backlog, decision log
-supabase/
-  migrations/   # SQL schema + RLS
-.github/
-  workflows/    # CI
-```
 
-## Documentation
+After deployment, update the Supabase Site URL and allowed redirect URLs to use
+your production domain. Sentry and Vercel Analytics can be enabled independently
+when needed.
 
-- [`docs/data-model.md`](docs/data-model.md) — entities and schema
-- [`docs/mvp-backlog.md`](docs/mvp-backlog.md) — user stories and tickets
-- [`docs/decisions.md`](docs/decisions.md) — technical decisions + performance budgets
-- [`docs/analytics.md`](docs/analytics.md) — what analytics tracks (privacy)
-- [`docs/roadmap.md`](docs/roadmap.md) — post-MVP phases and epics
+## License
+
+Released under the [MIT License](LICENSE).

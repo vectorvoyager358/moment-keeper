@@ -68,16 +68,14 @@ export function mapTimelineRow(
     (a, b) => a.display_order - b.display_order,
   );
   const attachment = attachments[0] ?? null;
-  const primaryPhoto =
-    attachments.find((item) => item.media_type === "photo") ?? null;
-  const primaryVideo =
-    attachments.find((item) => item.media_type === "video") ?? null;
   const primaryVisual =
     attachments.find(
-      (item) => item.media_type === "photo" && item.thumbnail_path,
-    ) ??
-    primaryPhoto ??
-    attachment;
+      (item) => item.media_type === "photo" || item.media_type === "video",
+    ) ?? attachment;
+  const primaryPhoto =
+    primaryVisual?.media_type === "photo" ? primaryVisual : null;
+  const primaryVideo =
+    primaryVisual?.media_type === "video" ? primaryVisual : null;
 
   return {
     id: moment.id,
@@ -89,7 +87,7 @@ export function mapTimelineRow(
     tags,
     hasMedia: Boolean(attachment),
     attachmentCount: attachments.length,
-    mediaType: attachment?.media_type ?? null,
+    mediaType: primaryVisual?.media_type ?? null,
     thumbnailPath: primaryVisual?.thumbnail_path ?? null,
     thumbnailUrl,
     photoStoragePath: primaryPhoto?.storage_path ?? null,

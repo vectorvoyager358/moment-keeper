@@ -27,28 +27,22 @@ describe("MediaFileInput", () => {
     cleanup();
   });
 
-  it("previews selected media and allows removing it", async () => {
+  it("lists selected media and allows removing it", async () => {
     const onPreparedFilesChange = vi.fn();
-    const { container } = render(
-      <MediaFileInput onPreparedFilesChange={onPreparedFilesChange} />,
-    );
+    render(<MediaFileInput onPreparedFilesChange={onPreparedFilesChange} />);
     const input = screen.getByLabelText(/Add from your device/);
     const file = new File(["voice"], "memory.webm", { type: "audio/webm" });
 
     fireEvent.change(input, { target: { files: [file] } });
 
-    await waitFor(() => {
-      expect(container.querySelector("audio")).toHaveAttribute(
-        "src",
-        "blob:media-preview",
-      );
-    });
-    expect(screen.getByText(/memory\.webm/)).toBeVisible();
-    expect(onPreparedFilesChange).toHaveBeenCalledWith([file]);
+    await waitFor(() =>
+      expect(onPreparedFilesChange).toHaveBeenCalledWith([file]),
+    );
+    expect(screen.getByText("memory.webm")).toBeVisible();
 
-    fireEvent.click(screen.getByRole("button", { name: "Remove" }));
+    fireEvent.click(screen.getByRole("button", { name: "Remove memory.webm" }));
 
-    expect(container.querySelector("audio")).not.toBeInTheDocument();
+    expect(screen.queryByText("memory.webm")).not.toBeInTheDocument();
     expect(onPreparedFilesChange).toHaveBeenLastCalledWith([]);
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:media-preview");
   });
@@ -70,7 +64,7 @@ describe("MediaFileInput", () => {
     });
     expect(screen.getByText("2/5")).toBeVisible();
 
-    fireEvent.click(screen.getAllByRole("button", { name: "Remove" })[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Remove one.webm" }));
 
     expect(onPreparedFilesChange).toHaveBeenLastCalledWith([files[1]]);
     expect(screen.getByText("1/5")).toBeVisible();
@@ -107,12 +101,78 @@ describe("MediaFileInput", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Remove" }));
+    fireEvent.click(screen.getByRole("button", { name: "Remove kept.jpg" }));
 
     expect(
       container.querySelector('input[name="remove_media_id"]'),
     ).toHaveValue("media-1");
     expect(screen.getByText("0/5")).toBeVisible();
     expect(screen.getByRole("button", { name: "Undo" })).toBeVisible();
+  });
+
+  it("reorders newly selected files and sends them to the form in that order", async () => {
+    const onPreparedFilesChange = vi.fn();
+    const { container } = render(
+      <MediaFileInput onPreparedFilesChange={onPreparedFilesChange} />,
+    );
+    const files = [
+      new File(["one"], "one.jpg", { type: "image/jpeg" }),
+      new File(["two"], "two.mp4", { type: "video/mp4" }),
+    ];
+
+    fireEvent.change(screen.getByLabelText(/Add from your device/), {
+      target: { files },
+    });
+
+    await waitFor(() => {
+      expect(onPreparedFilesChange).toHaveBeenCalledWith(files);
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Move two.mp4 earlier" }),
+    );
+
+    expect(onPreparedFilesChange).toHaveBeenLastCalledWith([
+      files[1],
+      files[0],
+    ]);
+    expect(
+      Array.from(
+        container.querySelectorAll<HTMLInputElement>(
+          'input[name="media_order"]',
+        ),
+      ).map((input) => input.value),
+    ).toEqual(["new:0", "new:1"]);
+  });
+
+  it("allows a new attachment to move ahead of existing media", async () => {
+    const { container } = render(
+      <MediaFileInput
+        existingMedia={[
+          {
+            id: "media-1",
+            media_type: "photo",
+            original_filename: "kept.jpg",
+          },
+        ]}
+        onPreparedFilesChange={vi.fn()}
+      />,
+    );
+    const file = new File(["new"], "new.mp4", { type: "video/mp4" });
+
+    fireEvent.change(screen.getByLabelText(/Add from your device/), {
+      target: { files: [file] },
+    });
+    await screen.findByText("new.mp4");
+    fireEvent.click(
+      screen.getByRole("button", { name: "Move new.mp4 earlier" }),
+    );
+
+    expect(
+      Array.from(
+        container.querySelectorAll<HTMLInputElement>(
+          'input[name="media_order"]',
+        ),
+      ).map((input) => input.value),
+    ).toEqual(["new:0", "existing:media-1"]);
   });
 });

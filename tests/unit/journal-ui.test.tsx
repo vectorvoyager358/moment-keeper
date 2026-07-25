@@ -138,4 +138,64 @@ describe("MomentDetailView", () => {
     ).toBeTruthy();
     expect(screen.queryByText("Moment kept")).not.toBeInTheDocument();
   });
+
+  it("returns to the new cover when the attachment order changes", () => {
+    const originalMoment = {
+      id: "moment-1",
+      body: "A photo memory",
+      occurred_at: "2026-07-09T12:00:00.000Z",
+      location: null,
+      link_url: null,
+      is_favorite: false,
+      themes: [],
+      tags: [],
+      media: [
+        {
+          id: "media-old",
+          media_type: "photo" as const,
+          mime_type: "image/jpeg",
+          original_filename: "old-cover.jpg",
+          signedUrl: "https://example.com/old-cover.jpg",
+          display_order: 0,
+        },
+      ],
+    };
+    const { rerender } = render(
+      <MomentDetailView moment={originalMoment} onEdit={vi.fn()} />,
+    );
+    const carousel = screen.getByTestId("moment-media-carousel");
+    carousel.scrollLeft = 390;
+
+    rerender(
+      <MomentDetailView
+        moment={{
+          ...originalMoment,
+          media: [
+            {
+              id: "media-new",
+              media_type: "photo",
+              mime_type: "image/jpeg",
+              original_filename: "new-cover.jpg",
+              signedUrl: "https://example.com/new-cover.jpg",
+              display_order: 0,
+            },
+            {
+              ...originalMoment.media[0],
+              display_order: 1,
+            },
+          ],
+        }}
+        onEdit={vi.fn()}
+      />,
+    );
+
+    expect(carousel.scrollLeft).toBe(0);
+    expect(
+      screen
+        .getByRole("img", { name: "new-cover.jpg" })
+        .compareDocumentPosition(
+          screen.getByRole("img", { name: "old-cover.jpg" }),
+        ) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
 });
