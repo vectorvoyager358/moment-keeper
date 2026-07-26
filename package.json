@@ -14,7 +14,17 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "icons:generate": "node scripts/generate-pwa-icons.mjs",
-    "icons:trim-corners": "node scripts/remove-icon-corner-white.mjs"
+    "icons:trim-corners": "node scripts/remove-icon-corner-white.mjs",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,css,scss,md,yml,yaml,html,mjs,cjs}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "@sentry/nextjs": "^10.64.0",
@@ -43,7 +53,9 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "eslint-config-prettier": "^10.1.8",
+    "husky": "^9.1.7",
     "jsdom": "^26.1.0",
+    "lint-staged": "^17.2.0",
     "prettier": "^3.6.2",
     "serwist": "^9.5.11",
     "tailwindcss": "^4",
