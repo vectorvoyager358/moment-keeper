@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
@@ -44,12 +45,12 @@ export function ConfirmDialog({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onCancel, open]);
 
-  if (!open) {
+  if (!open || typeof document === "undefined") {
     return null;
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-end justify-center p-4 sm:items-center">
       <button
         type="button"
         className="absolute inset-0 bg-ink/40"
@@ -91,6 +92,7 @@ export function ConfirmDialog({
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

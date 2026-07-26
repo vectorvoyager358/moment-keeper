@@ -22,23 +22,33 @@ const KEYWORD_DEBOUNCE_MS = 350;
 type TimelineSearchFormProps = {
   filters: TimelineSearchFilters;
   tags: UserTag[];
+  embedded?: boolean;
 };
 
 function filtersKey(filters: TimelineSearchFilters): string {
   return `${filters.keyword}|${filters.tagIds.join(",")}|${filters.favoriteOnly}`;
 }
 
-export function TimelineSearchForm({ filters, tags }: TimelineSearchFormProps) {
+export function TimelineSearchForm({
+  filters,
+  tags,
+  embedded = false,
+}: TimelineSearchFormProps) {
   return (
     <TimelineSearchFormFields
       key={filtersKey(filters)}
       filters={filters}
       tags={tags}
+      embedded={embedded}
     />
   );
 }
 
-function TimelineSearchFormFields({ filters, tags }: TimelineSearchFormProps) {
+function TimelineSearchFormFields({
+  filters,
+  tags,
+  embedded = false,
+}: TimelineSearchFormProps) {
   const router = useRouter();
   const [keyword, setKeyword] = useState(filters.keyword);
   const selectedTagIds = new Set(filters.tagIds);
@@ -93,7 +103,13 @@ function TimelineSearchFormFields({ filters, tags }: TimelineSearchFormProps) {
 
   return (
     <div className="space-y-4">
-      <Card padding="sm" className="space-y-3 rounded-[1.25rem]">
+      <Card
+        padding={embedded ? "none" : "sm"}
+        className={cn(
+          "space-y-3 rounded-[1.25rem]",
+          embedded && "rounded-none border-0 bg-transparent shadow-none",
+        )}
+      >
         <div className="relative min-w-0">
           <Label htmlFor="q" className="sr-only">
             Find a moment

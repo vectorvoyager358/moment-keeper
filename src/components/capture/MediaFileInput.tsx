@@ -28,6 +28,7 @@ import {
   validateMediaFile,
   validateMediaFiles,
 } from "@/lib/moments/media";
+import { createVideoPosterFile } from "@/lib/moments/video-poster";
 
 export type ExistingMediaInput = {
   id: string;
@@ -41,6 +42,7 @@ type MediaFileInputProps = {
   existingMedia?: ExistingMediaInput[];
   onValidityChange?: (isValid: boolean) => void;
   onPreparedFilesChange: (files: File[]) => void;
+  onPreparedThumbnailsChange?: (thumbnails: (File | null)[]) => void;
 };
 
 type PreparedMedia = {
@@ -51,6 +53,7 @@ type PreparedMedia = {
   originalBytes: number;
   compressed: boolean;
   source: "file" | "voice" | "camera";
+  thumbnail: File | null;
 };
 
 type OrderedMediaItem =
@@ -78,6 +81,7 @@ export function MediaFileInput({
   existingMedia = [],
   onValidityChange,
   onPreparedFilesChange,
+  onPreparedThumbnailsChange,
 }: MediaFileInputProps) {
   const generatedId = useId();
   const inputId = id ?? generatedId;
@@ -108,6 +112,16 @@ export function MediaFileInput({
     const prepared = preparedByKey.get(key);
     return prepared ? [{ key, kind: "prepared", media: prepared }] : [];
   });
+  const visualMedia = orderedMedia.filter((item) => {
+    const type =
+      item.kind === "existing" ? item.media.media_type : item.media.type;
+    return type === "photo" || type === "video";
+  });
+  const audioMedia = orderedMedia.filter((item) => {
+    const type =
+      item.kind === "existing" ? item.media.media_type : item.media.type;
+    return type === "audio";
+  });
   const activeExistingCount = orderedMedia.filter(
     (item) => item.kind === "existing",
   ).length;
@@ -136,13 +150,28 @@ export function MediaFileInput({
     });
   }
 
+  function thumbnailsForOrder(nextOrder: string[], nextMedia: PreparedMedia[]) {
+    const nextByKey = new Map(
+      nextMedia.map((media) => [preparedMediaKey(media.id), media]),
+    );
+    return nextOrder.flatMap((key) => {
+      const media = nextByKey.get(key);
+      return media ? [media.thumbnail] : [];
+    });
+  }
+
+  function notifyPrepared(nextOrder: string[], nextMedia: PreparedMedia[]) {
+    onPreparedFilesChange(filesForOrder(nextOrder, nextMedia));
+    onPreparedThumbnailsChange?.(thumbnailsForOrder(nextOrder, nextMedia));
+  }
+
   function commitPrepared(
     next: PreparedMedia[],
     nextOrder: string[] = mediaOrder,
   ) {
     setPreparedMedia(next);
     setMediaOrder(nextOrder);
-    onPreparedFilesChange(filesForOrder(nextOrder, next));
+    notifyPrepared(nextOrder, next);
   }
 
   function removePrepared(id: string) {
@@ -157,10 +186,10 @@ export function MediaFileInput({
     setError(null);
   }
 
-  function moveMedia(key: string, direction: -1 | 1) {
-    const activeKeys = orderedMedia.map((item) => item.key);
-    const currentIndex = activeKeys.indexOf(key);
-    const targetKey = activeKeys[currentIndex + direction];
+  function moveVisualMedia(key: string, direction: -1 | 1) {
+    const visualKeys = visualMedia.map((item) => item.key);
+    const currentIndex = visualKeys.indexOf(key);
+    const targetKey = visualKeys[currentIndex + direction];
 
     if (currentIndex < 0 || !targetKey) {
       return;
@@ -174,7 +203,7 @@ export function MediaFileInput({
       nextOrder[keyIndex],
     ];
     setMediaOrder(nextOrder);
-    onPreparedFilesChange(filesForOrder(nextOrder, preparedMedia));
+    notifyPrepared(nextOrder, preparedMedia);
   }
 
   async function prepareFiles(files: File[], source: PreparedMedia["source"]) {
@@ -223,6 +252,10 @@ export function MediaFileInput({
           throw new Error(preparedError ?? "Unsupported media type.");
         }
 
+        const thumbnail =
+          mediaType === "video" && onPreparedThumbnailsChange
+            ? await createVideoPosterFile(prepared)
+            : null;
         const url = URL.createObjectURL(prepared);
         previewUrlsRef.current.add(url);
         nextItems.push({
@@ -233,6 +266,7 @@ export function MediaFileInput({
           originalBytes: file.size,
           compressed: prepared.size < file.size,
           source,
+          thumbnail,
         });
       }
 
@@ -346,13 +380,13 @@ export function MediaFileInput({
         </div>
       ) : null}
 
-      {orderedMedia.length > 0 ? (
+      {visualMedia.length > 0 ? (
         <div className="space-y-2">
           <p className="text-xs font-semibold tracking-wide text-muted uppercase">
-            Attachment order
+            Photo and video order
           </p>
           <ul className="space-y-2">
-            {orderedMedia.map((item, index) => {
+            {visualMedia.map((item, index) => {
               const mediaType =
                 item.kind === "existing"
                   ? item.media.media_type
@@ -390,10 +424,8 @@ export function MediaFileInput({
                       />
                     ) : mediaType === "photo" ? (
                       <ImageIcon className="h-5 w-5" aria-hidden />
-                    ) : mediaType === "video" ? (
-                      <Video className="h-5 w-5" aria-hidden />
                     ) : (
-                      <FileAudio className="h-5 w-5" aria-hidden />
+                      <Video className="h-5 w-5" aria-hidden />
                     )}
                   </span>
 
@@ -417,7 +449,7 @@ export function MediaFileInput({
                       title="Move earlier"
                       disabled={index === 0}
                       className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted transition hover:bg-accent-subtle hover:text-accent disabled:opacity-30"
-                      onClick={() => moveMedia(item.key, -1)}
+                      onClick={() => moveVisualMedia(item.key, -1)}
                     >
                       <ArrowUp className="h-4 w-4" aria-hidden />
                     </button>
@@ -425,9 +457,9 @@ export function MediaFileInput({
                       type="button"
                       aria-label={`Move ${filename} later`}
                       title="Move later"
-                      disabled={index === orderedMedia.length - 1}
+                      disabled={index === visualMedia.length - 1}
                       className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted transition hover:bg-accent-subtle hover:text-accent disabled:opacity-30"
-                      onClick={() => moveMedia(item.key, 1)}
+                      onClick={() => moveVisualMedia(item.key, 1)}
                     >
                       <ArrowDown className="h-4 w-4" aria-hidden />
                     </button>
@@ -448,27 +480,85 @@ export function MediaFileInput({
                       <X className="h-4 w-4" aria-hidden />
                     </button>
                   </div>
-
-                  <input
-                    type="hidden"
-                    name="media_order"
-                    value={
-                      item.kind === "existing"
-                        ? `existing:${item.media.id}`
-                        : `new:${
-                            orderedMedia
-                              .slice(0, index + 1)
-                              .filter((ordered) => ordered.kind === "prepared")
-                              .length - 1
-                          }`
-                    }
-                  />
                 </li>
               );
             })}
           </ul>
         </div>
       ) : null}
+
+      {audioMedia.length > 0 ? (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold tracking-wide text-muted uppercase">
+            Voice attachments
+          </p>
+          <ul className="space-y-2">
+            {audioMedia.map((item) => {
+              const filename =
+                item.kind === "existing"
+                  ? (item.media.original_filename ?? "Voice memo")
+                  : item.media.file.name;
+
+              return (
+                <li
+                  key={item.key}
+                  className="flex items-center gap-3 rounded-xl border border-border bg-surface p-2"
+                >
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-accent-subtle text-accent">
+                    <FileAudio className="h-5 w-5" aria-hidden />
+                  </span>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-ink">
+                      {filename}
+                    </p>
+                    <p className="text-xs text-muted">
+                      Voice memo
+                      {item.kind === "prepared"
+                        ? ` · ${formatFileSize(item.media.file.size)}`
+                        : ""}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    aria-label={`Remove ${filename}`}
+                    title="Remove"
+                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-danger transition hover:bg-danger-subtle"
+                    onClick={() => {
+                      if (item.kind === "existing") {
+                        setRemovedIds(new Set(removedIds).add(item.media.id));
+                        setError(null);
+                      } else {
+                        removePrepared(item.media.id);
+                      }
+                    }}
+                  >
+                    <X className="h-4 w-4" aria-hidden />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ) : null}
+
+      {orderedMedia.map((item, index) => (
+        <input
+          key={`order:${item.key}`}
+          type="hidden"
+          name="media_order"
+          value={
+            item.kind === "existing"
+              ? `existing:${item.media.id}`
+              : `new:${
+                  orderedMedia
+                    .slice(0, index + 1)
+                    .filter((ordered) => ordered.kind === "prepared").length - 1
+                }`
+          }
+        />
+      ))}
 
       {removedIds.size > 0 ? (
         <div className="space-y-2">

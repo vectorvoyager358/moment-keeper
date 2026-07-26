@@ -118,7 +118,11 @@ function NavLink({
     <Link
       href={item.href}
       prefetch={
-        item.id === "capture" || item.id === "settings" ? true : undefined
+        item.id === "timeline" ||
+        item.id === "capture" ||
+        item.id === "settings"
+          ? true
+          : undefined
       }
       aria-label={mobile ? item.label : undefined}
       aria-current={active ? "page" : undefined}

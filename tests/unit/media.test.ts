@@ -8,6 +8,7 @@ import {
   getNormalizedMediaMimeType,
   MAX_MEDIA_ATTACHMENTS,
   MEDIA_SIZE_LIMITS,
+  parseMediaThumbnailsFromFormData,
   validateMediaFile,
   validateMediaFiles,
 } from "@/lib/moments/media";
@@ -101,6 +102,32 @@ describe("multiple media validation", () => {
     expect(validateMediaFiles([file], MAX_MEDIA_ATTACHMENTS)).toBe(
       "Keep up to 5 media attachments per moment.",
     );
+  });
+
+  it("maps generated video thumbnails back to their media index", () => {
+    const formData = new FormData();
+    const thumbnail = makeFile("video-poster.jpg", "image/jpeg", 20);
+    formData.append("media_thumbnail_index", "1");
+    formData.append("media_thumbnail", thumbnail);
+
+    expect(parseMediaThumbnailsFromFormData(formData, 2)).toEqual({
+      thumbnails: [null, thumbnail],
+      error: null,
+    });
+  });
+
+  it("rejects a thumbnail index outside the submitted media", () => {
+    const formData = new FormData();
+    formData.append("media_thumbnail_index", "2");
+    formData.append(
+      "media_thumbnail",
+      makeFile("video-poster.jpg", "image/jpeg", 20),
+    );
+
+    expect(parseMediaThumbnailsFromFormData(formData, 1)).toEqual({
+      thumbnails: [],
+      error: "Invalid video thumbnail data.",
+    });
   });
 
   it("rejects uploads over 50 MB combined", () => {

@@ -1,4 +1,5 @@
 export const TIMELINE_PAGE_SIZE = 20;
+export const TIMELINE_INITIAL_PAGE_SIZE = 8;
 
 export type TimelineCursor = {
   occurredAt: string;

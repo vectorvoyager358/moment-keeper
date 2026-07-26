@@ -56,4 +56,23 @@ describe("TimelineCollapsiblePanel", () => {
 
     expect(screen.getByText("Revisit panel")).toBeVisible();
   });
+
+  it("uses one continuous border around combined open content", () => {
+    render(
+      <TimelineCollapsiblePanel panelId="find" title="Find" combinedWhenOpen>
+        <p>Search panel</p>
+      </TimelineCollapsiblePanel>,
+    );
+
+    const toggle = screen.getByRole("button", { name: "Find" });
+    fireEvent.click(toggle);
+
+    expect(toggle.closest("section")).toHaveClass(
+      "overflow-hidden",
+      "border",
+      "rounded-2xl",
+    );
+    expect(toggle).toHaveClass("border-b", "rounded-none");
+    expect(screen.getByText("Search panel").parentElement).toHaveClass("p-4");
+  });
 });

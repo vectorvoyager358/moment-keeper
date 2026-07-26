@@ -96,6 +96,7 @@ export async function uploadMediaForMoment(
   momentId: string,
   file: File,
   displayOrder = 0,
+  preparedThumbnail: File | null = null,
 ): Promise<UploadedAttachment> {
   const validationError = validateMediaFile(file);
 
@@ -130,9 +131,16 @@ export async function uploadMediaForMoment(
 
   if (shouldGenerateThumbnail(mediaType, normalizedMimeType)) {
     thumbnailPath = await uploadPhotoThumbnail(supabase, file, storagePath);
-    if (thumbnailPath) {
-      uploadedPaths.push(thumbnailPath);
-    }
+  } else if (mediaType === "video" && preparedThumbnail) {
+    thumbnailPath = await uploadPhotoThumbnail(
+      supabase,
+      preparedThumbnail,
+      storagePath,
+    );
+  }
+
+  if (thumbnailPath) {
+    uploadedPaths.push(thumbnailPath);
   }
 
   const { error: insertError } = await supabase
@@ -165,6 +173,7 @@ export async function uploadMediaFilesForMoment(
   files: File[],
   startOrder = 0,
   displayOrders?: number[],
+  preparedThumbnails?: (File | null)[],
 ): Promise<string[]> {
   const uploaded: UploadedAttachment[] = [];
 
@@ -177,6 +186,7 @@ export async function uploadMediaFilesForMoment(
           momentId,
           file,
           displayOrders?.[index] ?? startOrder + index,
+          preparedThumbnails?.[index] ?? null,
         ),
       );
     }

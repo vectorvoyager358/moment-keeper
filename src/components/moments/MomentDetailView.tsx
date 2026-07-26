@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 
 import { DeleteMomentButton } from "@/components/moments/DeleteMomentButton";
 import { FavoriteMomentButton } from "@/components/moments/FavoriteMomentButton";
+import { MomentAudioAttachments } from "@/components/moments/MomentAudioAttachments";
 import { MomentDate } from "@/components/moments/MomentDate";
 import { MomentDetailNav } from "@/components/moments/MomentDetailNav";
 import { MomentLink } from "@/components/moments/MomentLink";
@@ -203,11 +204,7 @@ export function MomentDetailView({
         ) : null}
 
         {audioMedia.length > 0 ? (
-          <div className="mt-7 space-y-3">
-            {audioMedia.map((media) => (
-              <MomentMediaDisplay key={media.id} media={media} />
-            ))}
-          </div>
+          <MomentAudioAttachments media={audioMedia} className="mt-7" />
         ) : null}
 
         {moment.themes.length > 0 || moment.tags.length > 0 ? (

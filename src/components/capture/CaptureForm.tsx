@@ -77,6 +77,9 @@ export function CaptureForm({ userId }: CaptureFormProps) {
   const [themes, setThemes] = useState<MemoryTheme[]>([]);
   const [isFavorite, setIsFavorite] = useState(false);
   const [preparedMediaFiles, setPreparedMediaFiles] = useState<File[]>([]);
+  const [preparedMediaThumbnails, setPreparedMediaThumbnails] = useState<
+    (File | null)[]
+  >([]);
   const [addMoreOpen, setAddMoreOpen] = useState(false);
   const [mediaToolsLoaded, setMediaToolsLoaded] = useState(false);
   const [draftLoaded, setDraftLoaded] = useState(false);
@@ -188,7 +191,15 @@ export function CaptureForm({ userId }: CaptureFormProps) {
     }
 
     formData.delete("media");
+    formData.delete("media_thumbnail");
+    formData.delete("media_thumbnail_index");
     preparedMediaFiles.forEach((file) => formData.append("media", file));
+    preparedMediaThumbnails.forEach((thumbnail, index) => {
+      if (thumbnail) {
+        formData.append("media_thumbnail_index", String(index));
+        formData.append("media_thumbnail", thumbnail);
+      }
+    });
 
     setError(null);
     setPending(true);
@@ -416,6 +427,7 @@ export function CaptureForm({ userId }: CaptureFormProps) {
             <LazyMediaFileInput
               onValidityChange={setMediaValid}
               onPreparedFilesChange={handlePreparedFilesChange}
+              onPreparedThumbnailsChange={setPreparedMediaThumbnails}
             />
           ) : null}
         </div>

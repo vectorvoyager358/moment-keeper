@@ -39,6 +39,10 @@ describe("MediaFileInput", () => {
       expect(onPreparedFilesChange).toHaveBeenCalledWith([file]),
     );
     expect(screen.getByText("memory.webm")).toBeVisible();
+    expect(screen.getByText("Voice attachments")).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: "Move memory.webm earlier" }),
+    ).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Remove memory.webm" }));
 
@@ -174,5 +178,47 @@ describe("MediaFileInput", () => {
         ),
       ).map((input) => input.value),
     ).toEqual(["new:0", "existing:media-1"]);
+  });
+
+  it("keeps voice memos fixed while reordering visual attachments", async () => {
+    const onPreparedFilesChange = vi.fn();
+    const { container } = render(
+      <MediaFileInput onPreparedFilesChange={onPreparedFilesChange} />,
+    );
+    const files = [
+      new File(["photo"], "one.jpg", { type: "image/jpeg" }),
+      new File(["voice"], "voice.webm", { type: "audio/webm" }),
+      new File(["video"], "two.mp4", { type: "video/mp4" }),
+    ];
+
+    fireEvent.change(screen.getByLabelText(/Add from your device/), {
+      target: { files },
+    });
+
+    await waitFor(() => {
+      expect(onPreparedFilesChange).toHaveBeenCalledWith(files);
+    });
+    expect(screen.getByText("Photo and video order")).toBeVisible();
+    expect(screen.getByText("Voice attachments")).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: "Move voice.webm earlier" }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Move two.mp4 earlier" }),
+    );
+
+    expect(onPreparedFilesChange).toHaveBeenLastCalledWith([
+      files[2],
+      files[1],
+      files[0],
+    ]);
+    expect(
+      Array.from(
+        container.querySelectorAll<HTMLInputElement>(
+          'input[name="media_order"]',
+        ),
+      ).map((input) => input.value),
+    ).toEqual(["new:0", "new:1", "new:2"]);
   });
 });

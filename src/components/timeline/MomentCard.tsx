@@ -22,6 +22,8 @@ type MomentCardProps = {
   compact?: boolean;
   /** Reserve a media-sized header so text-only cards align in grids/carousels. */
   balanceLayout?: boolean;
+  /** Give the first visible cover an eager, high-priority request. */
+  priorityMedia?: boolean;
 };
 
 function MediaBadge({
@@ -134,6 +136,7 @@ export function MomentCard({
   preferOriginalPhoto = false,
   compact = false,
   balanceLayout = false,
+  priorityMedia = false,
 }: MomentCardProps) {
   const bodySegments = getHighlightedSegments(
     truncateBody(previewBody(moment.body), 120),
@@ -180,7 +183,8 @@ export function MomentCard({
               <img
                 src={moment.photoUrl}
                 alt=""
-                loading="lazy"
+                loading={priorityMedia ? "eager" : "lazy"}
+                fetchPriority={priorityMedia ? "high" : "auto"}
                 decoding="async"
                 draggable={false}
                 className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.025]"
@@ -189,6 +193,7 @@ export function MomentCard({
               <TimelineMediaImage
                 src={imageSrc}
                 fallbackSrc={imageFallbackSrc}
+                priority={priorityMedia}
                 className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.025]"
               />
             )}

@@ -101,7 +101,11 @@ export function TimelineFeed({
               animationDelay: `${Math.min(index, MAX_STAGGER_INDEX) * STAGGER_MS}ms`,
             }}
           >
-            <MomentCard moment={moment} highlightQuery={filters.keyword} />
+            <MomentCard
+              moment={moment}
+              highlightQuery={filters.keyword}
+              priorityMedia={index === 0}
+            />
           </li>
         ))}
       </ul>

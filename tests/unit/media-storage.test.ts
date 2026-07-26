@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("@/lib/moments/thumbnail-image", () => ({
+  createPhotoThumbnailBuffer: vi
+    .fn()
+    .mockResolvedValue(Buffer.from("thumbnail")),
+}));
+
 import {
   reorderMediaAttachments,
   uploadMediaFilesForMoment,
@@ -30,6 +36,50 @@ describe("uploadMediaFilesForMoment", () => {
       expect.objectContaining({
         media_type: "video",
         mime_type: "video/quicktime",
+      }),
+    );
+  });
+
+  it("stores a generated poster with a new video attachment", async () => {
+    const upload = vi.fn().mockResolvedValue({ error: null });
+    const insert = vi.fn().mockResolvedValue({ error: null });
+    const supabase = {
+      storage: {
+        from: vi.fn(() => ({ upload })),
+      },
+      from: vi.fn(() => ({ insert })),
+    };
+    const video = new File(["video"], "clip.mp4", { type: "video/mp4" });
+    const poster = {
+      name: "clip-poster.jpg",
+      type: "image/jpeg",
+      size: 6,
+      arrayBuffer: vi
+        .fn()
+        .mockResolvedValue(new TextEncoder().encode("poster").buffer),
+    } as unknown as File;
+
+    await uploadMediaFilesForMoment(
+      supabase as never,
+      "user-1",
+      "moment-1",
+      [video],
+      0,
+      undefined,
+      [poster],
+    );
+
+    expect(upload).toHaveBeenCalledTimes(2);
+    expect(upload).toHaveBeenNthCalledWith(
+      2,
+      expect.stringMatching(/\.thumb\.jpg$/),
+      expect.any(Buffer),
+      expect.objectContaining({ contentType: "image/jpeg" }),
+    );
+    expect(insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        media_type: "video",
+        thumbnail_path: expect.stringMatching(/\.thumb\.jpg$/),
       }),
     );
   });

@@ -149,6 +149,46 @@ export function getMediaFilesFromFormData(formData: FormData): File[] {
     .filter((entry): entry is File => entry instanceof File && entry.size > 0);
 }
 
+export function parseMediaThumbnailsFromFormData(
+  formData: FormData,
+  mediaCount: number,
+):
+  | { thumbnails: (File | null)[]; error: null }
+  | { thumbnails: []; error: string } {
+  const indexes = formData.getAll("media_thumbnail_index");
+  const files = formData
+    .getAll("media_thumbnail")
+    .filter((entry): entry is File => entry instanceof File && entry.size > 0);
+
+  if (indexes.length !== files.length) {
+    return { thumbnails: [], error: "Invalid video thumbnail data." };
+  }
+
+  const thumbnails: (File | null)[] = Array(mediaCount).fill(null);
+  const seen = new Set<number>();
+
+  for (const [position, rawIndex] of indexes.entries()) {
+    const index = Number(rawIndex);
+    const file = files[position];
+
+    if (
+      !Number.isInteger(index) ||
+      index < 0 ||
+      index >= mediaCount ||
+      seen.has(index) ||
+      file.type !== "image/jpeg" ||
+      file.size > 2 * 1024 * 1024
+    ) {
+      return { thumbnails: [], error: "Invalid video thumbnail data." };
+    }
+
+    seen.add(index);
+    thumbnails[index] = file;
+  }
+
+  return { thumbnails, error: null };
+}
+
 export function validateMediaFile(file: File): string | null {
   const mediaType = getMediaTypeFromFile(file);
 
