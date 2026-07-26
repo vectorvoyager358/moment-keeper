@@ -38,6 +38,9 @@ export function EditMomentForm({
   const [isFavorite, setIsFavorite] = useState(moment.is_favorite);
   const [linkUrl, setLinkUrl] = useState(moment.link_url ?? "");
   const [preparedMediaFiles, setPreparedMediaFiles] = useState<File[]>([]);
+  const [preparedMediaThumbnails, setPreparedMediaThumbnails] = useState<
+    (File | null)[]
+  >([]);
   const [mediaValid, setMediaValid] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -69,7 +72,15 @@ export function EditMomentForm({
     }
 
     formData.delete("media");
+    formData.delete("media_thumbnail");
+    formData.delete("media_thumbnail_index");
     preparedMediaFiles.forEach((file) => formData.append("media", file));
+    preparedMediaThumbnails.forEach((thumbnail, index) => {
+      if (thumbnail) {
+        formData.append("media_thumbnail_index", String(index));
+        formData.append("media_thumbnail", thumbnail);
+      }
+    });
 
     setError(null);
     setPending(true);
@@ -218,6 +229,7 @@ export function EditMomentForm({
         existingMedia={moment.media}
         onValidityChange={setMediaValid}
         onPreparedFilesChange={setPreparedMediaFiles}
+        onPreparedThumbnailsChange={setPreparedMediaThumbnails}
       />
 
       {error ? <Alert variant="error">{error}</Alert> : null}

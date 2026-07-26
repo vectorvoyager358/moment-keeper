@@ -51,6 +51,7 @@ type TimelineCollapsiblePanelProps = {
   description?: string;
   initialOpen?: boolean;
   className?: string;
+  combinedWhenOpen?: boolean;
   children: ReactNode;
 };
 
@@ -60,6 +61,7 @@ export function TimelineCollapsiblePanel({
   description,
   initialOpen = false,
   className,
+  combinedWhenOpen = false,
   children,
 }: TimelineCollapsiblePanelProps) {
   const storageKey = `${STORAGE_PREFIX}${panelId}`;
@@ -84,7 +86,13 @@ export function TimelineCollapsiblePanel({
 
   return (
     <section
-      className={cn("mb-8", className)}
+      className={cn(
+        "mb-8",
+        combinedWhenOpen &&
+          isOpen &&
+          "overflow-hidden rounded-2xl border border-border-strong bg-surface shadow-card",
+        className,
+      )}
       aria-labelledby={`${panelId}-heading`}
     >
       <button
@@ -92,7 +100,12 @@ export function TimelineCollapsiblePanel({
         id={`${panelId}-heading`}
         aria-expanded={isOpen}
         onClick={toggle}
-        className="flex w-full items-center justify-between rounded-2xl border border-border-strong bg-surface px-4 py-3 text-left transition hover:border-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+        className={cn(
+          "flex w-full items-center justify-between px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40",
+          combinedWhenOpen && isOpen
+            ? "rounded-none border-0 border-b border-border bg-transparent hover:bg-accent-subtle/30"
+            : "rounded-2xl border border-border-strong bg-surface hover:border-accent/50",
+        )}
       >
         <span>
           <span className="block font-display text-base font-semibold text-ink">
@@ -113,7 +126,13 @@ export function TimelineCollapsiblePanel({
         />
       </button>
 
-      {isOpen ? <div className="mt-4 space-y-8">{children}</div> : null}
+      {isOpen ? (
+        <div
+          className={cn("space-y-8", combinedWhenOpen ? "p-4 sm:p-5" : "mt-4")}
+        >
+          {children}
+        </div>
+      ) : null}
     </section>
   );
 }

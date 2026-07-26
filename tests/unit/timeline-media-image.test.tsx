@@ -6,6 +6,25 @@ import { TimelineMediaImage } from "@/components/timeline/TimelineMediaImage";
 afterEach(cleanup);
 
 describe("TimelineMediaImage", () => {
+  it("eagerly prioritizes the first visible cover", () => {
+    render(
+      <TimelineMediaImage
+        src="https://example.com/thumb.jpg"
+        alt="First memory"
+        priority
+      />,
+    );
+
+    expect(screen.getByRole("img", { name: "First memory" })).toHaveAttribute(
+      "loading",
+      "eager",
+    );
+    expect(screen.getByRole("img", { name: "First memory" })).toHaveAttribute(
+      "fetchpriority",
+      "high",
+    );
+  });
+
   it("falls back to the full photo when the thumbnail fails to load", async () => {
     render(
       <TimelineMediaImage

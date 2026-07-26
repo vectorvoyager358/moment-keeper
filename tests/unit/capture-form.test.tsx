@@ -26,19 +26,38 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/components/capture/MediaFileInput", () => ({
   MediaFileInput: ({
     onPreparedFilesChange,
+    onPreparedThumbnailsChange,
   }: {
     onPreparedFilesChange: (files: File[]) => void;
+    onPreparedThumbnailsChange?: (thumbnails: (File | null)[]) => void;
   }) => (
-    <button
-      type="button"
-      onClick={() =>
-        onPreparedFilesChange([
-          new File(["photo"], "camera.jpg", { type: "image/jpeg" }),
-        ])
-      }
-    >
-      Attach generated photo
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={() =>
+          onPreparedFilesChange([
+            new File(["photo"], "camera.jpg", { type: "image/jpeg" }),
+          ])
+        }
+      >
+        Attach generated photo
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          onPreparedFilesChange([
+            new File(["video"], "camera.mp4", { type: "video/mp4" }),
+          ]);
+          onPreparedThumbnailsChange?.([
+            new File(["poster"], "camera-poster.jpg", {
+              type: "image/jpeg",
+            }),
+          ]);
+        }}
+      >
+        Attach generated video
+      </button>
+    </>
   ),
 }));
 
@@ -145,6 +164,34 @@ describe("CaptureForm drafts", () => {
     const formData = postFormDataWithProgress.mock.calls[0][1] as FormData;
     expect(formData.get("media")).toEqual(
       expect.objectContaining({ name: "camera.jpg", type: "image/jpeg" }),
+    );
+  });
+
+  it("submits a generated poster alongside a new video", async () => {
+    postFormDataWithProgress.mockResolvedValue({ redirectTo: "/timeline" });
+    render(<CaptureForm userId="user-1" />);
+
+    fireEvent.change(screen.getByLabelText("What happened?"), {
+      target: { value: "A video memory" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Add more" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Attach generated video" }),
+    );
+    fireEvent.submit(
+      screen.getByRole("button", { name: "Capture this moment" }),
+    );
+
+    await waitFor(() => {
+      expect(postFormDataWithProgress).toHaveBeenCalled();
+    });
+    const formData = postFormDataWithProgress.mock.calls[0][1] as FormData;
+    expect(formData.get("media_thumbnail_index")).toBe("0");
+    expect(formData.get("media_thumbnail")).toEqual(
+      expect.objectContaining({
+        name: "camera-poster.jpg",
+        type: "image/jpeg",
+      }),
     );
   });
 

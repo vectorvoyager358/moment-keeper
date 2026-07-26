@@ -8,6 +8,7 @@ type TimelineMediaImageProps = {
   alt?: string;
   className?: string;
   onUnavailable?: () => void;
+  priority?: boolean;
 };
 
 export function TimelineMediaImage({
@@ -16,6 +17,7 @@ export function TimelineMediaImage({
   alt = "",
   className,
   onUnavailable,
+  priority = false,
 }: TimelineMediaImageProps) {
   const [failedSources, setFailedSources] = useState<string[]>([]);
   const currentSrc = !failedSources.includes(src)
@@ -35,7 +37,8 @@ export function TimelineMediaImage({
       key={currentSrc}
       src={currentSrc}
       alt={alt}
-      loading="lazy"
+      loading={priority ? "eager" : "lazy"}
+      fetchPriority={priority ? "high" : "auto"}
       decoding="async"
       draggable={false}
       className={className}

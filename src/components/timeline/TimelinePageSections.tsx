@@ -1,41 +1,28 @@
 import { TimelineEmptyState } from "@/components/timeline/MomentCard";
 import { TimelineFeed } from "@/components/timeline/TimelineFeed";
-import {
-  TimelineSearchEmptyState,
-  TimelineSearchForm,
-} from "@/components/timeline/TimelineSearchForm";
+import { TimelineSearchEmptyState } from "@/components/timeline/TimelineSearchForm";
 import { toUserErrorMessage } from "@/lib/errors";
-import { getTimelineMoments, getUserTags } from "@/lib/moments/queries";
+import {
+  getTimelineMoments,
+  type TimelineMoment,
+  type TimelinePageResult,
+} from "@/lib/moments/queries";
 import {
   hasActiveSearchFilters,
   type TimelineSearchFilters,
 } from "@/lib/moments/search";
 
-export async function TimelineSearchSection({
-  filters,
-}: {
-  filters: TimelineSearchFilters;
-}) {
-  let tags;
-
-  try {
-    tags = await getUserTags();
-  } catch (error) {
-    throw new Error(toUserErrorMessage(error, "Could not load your tags."));
-  }
-
-  return <TimelineSearchForm filters={filters} tags={tags} />;
-}
-
 export async function TimelineResults({
   filters,
+  timelinePromise,
 }: {
   filters: TimelineSearchFilters;
+  timelinePromise?: Promise<TimelinePageResult<TimelineMoment>>;
 }) {
   let timelinePage;
 
   try {
-    timelinePage = await getTimelineMoments(filters);
+    timelinePage = await (timelinePromise ?? getTimelineMoments(filters));
   } catch (error) {
     throw new Error(toUserErrorMessage(error, "Could not load your timeline."));
   }
