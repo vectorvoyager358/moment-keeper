@@ -192,7 +192,6 @@ export function EditMomentForm({
           onChange={(event) => setLinkUrl(event.target.value)}
           placeholder="example.com or https://example.com"
         />
-        <FieldHint>Replace the link, or leave it blank to remove it.</FieldHint>
       </div>
 
       <div className="space-y-2">

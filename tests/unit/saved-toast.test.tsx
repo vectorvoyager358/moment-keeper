@@ -67,4 +67,19 @@ describe("SavedToast", () => {
 
     expect(screen.getByText("Saved — your changes are kept.")).toBeVisible();
   });
+
+  it("shows deletion confirmation and clears its query param", () => {
+    window.history.replaceState({}, "", "/timeline?deleted=1");
+
+    render(
+      <SavedToast
+        initialVisible
+        queryParam="deleted"
+        message="Moment deleted."
+      />,
+    );
+
+    expect(screen.getByRole("status")).toHaveTextContent("Moment deleted.");
+    expect(replace).toHaveBeenCalledWith("/timeline", { scroll: false });
+  });
 });
