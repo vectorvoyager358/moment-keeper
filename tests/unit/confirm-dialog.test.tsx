@@ -25,7 +25,31 @@ describe("ConfirmDialog", () => {
 
     expect(container).not.toContainElement(dialog);
     expect(document.body).toContainElement(dialog);
-    expect(overlay).toHaveClass("fixed", "inset-0", "z-[100]");
+    expect(overlay).toHaveClass("fixed", "inset-0", "z-[100]", "items-center");
+    expect(overlay).not.toHaveClass("items-end");
+  });
+
+  it("keeps both actions on the same row", () => {
+    render(
+      <ConfirmDialog
+        open
+        title="Remove this moment?"
+        description="This cannot be undone."
+        confirmLabel="Delete moment"
+        cancelLabel="Keep it"
+        onConfirm={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    );
+
+    const keepButton = screen.getByRole("button", { name: "Keep it" });
+    const deleteButton = screen.getByRole("button", {
+      name: "Delete moment",
+    });
+    const actions = keepButton.parentElement;
+
+    expect(actions).toBe(deleteButton.parentElement);
+    expect(actions).toHaveClass("grid", "grid-cols-2");
   });
 
   it("closes from the backdrop or Escape key", () => {

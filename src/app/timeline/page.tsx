@@ -36,6 +36,7 @@ type TimelinePageProps = {
     tag?: string | string[];
     favorite?: string | string[];
     saved?: string | string[];
+    deleted?: string | string[];
     theme?: string | string[];
     media?: string | string[];
     surprise?: string | string[];
@@ -49,6 +50,7 @@ export default async function TimelinePage({
   const filters = parseSearchParams(rawParams);
   const resurfacingFilters = parseResurfacingParams(rawParams);
   const showSavedToast = rawParams.saved === "1";
+  const showDeletedToast = rawParams.deleted === "1";
   const timelinePromise = getTimelineMoments(filters, {
     limit: TIMELINE_INITIAL_PAGE_SIZE,
   });
@@ -65,6 +67,12 @@ export default async function TimelinePage({
           title="Your journal"
           description="A quiet place for the moments you want to keep."
           action={<KeepMomentLink />}
+        />
+
+        <SavedToast
+          initialVisible={showDeletedToast}
+          queryParam="deleted"
+          message="Moment deleted."
         />
 
         <Suspense

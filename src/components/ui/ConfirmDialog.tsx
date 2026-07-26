@@ -50,7 +50,7 @@ export function ConfirmDialog({
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-end justify-center p-4 sm:items-center">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
       <button
         type="button"
         className="absolute inset-0 bg-ink/40"
@@ -79,13 +79,19 @@ export function ConfirmDialog({
         >
           {description}
         </div>
-        <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-          <Button type="button" variant="secondary" onClick={onCancel}>
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          <Button
+            type="button"
+            variant="secondary"
+            className="w-full"
+            onClick={onCancel}
+          >
             {cancelLabel}
           </Button>
           <Button
             type="button"
             variant={confirmVariant === "danger" ? "danger" : "primary"}
+            className="w-full"
             onClick={onConfirm}
           >
             {confirmLabel}

@@ -62,5 +62,5 @@ export async function deleteMoment(momentId: string): Promise<void> {
   }
 
   revalidatePath("/timeline");
-  redirect("/timeline");
+  redirect("/timeline?deleted=1");
 }
