@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
+import { TimelineMediaImage } from "@/components/timeline/TimelineMediaImage";
 import { MomentCard } from "@/components/timeline/MomentCard";
 import { VideoThumbnail } from "@/components/moments/VideoThumbnail";
 import { buttonClassName } from "@/components/ui/Button";
@@ -219,20 +220,32 @@ export async function CalendarView({
           {calendarDays.map((day) => {
             const dayMoments = momentsByDay.get(day.dateKey) ?? [];
             const visualMoment = dayMoments.find(
-              (moment) => moment.thumbnailUrl || moment.videoUrl,
+              (moment) =>
+                moment.thumbnailUrl || moment.photoUrl || moment.videoUrl,
             );
-            const thumbnail = visualMoment?.thumbnailUrl;
-            const videoUrl = thumbnail ? null : visualMoment?.videoUrl;
-            const hasVisual = Boolean(thumbnail || videoUrl);
+            const imageUrl =
+              visualMoment?.thumbnailUrl ?? visualMoment?.photoUrl;
+            const imageFallbackUrl =
+              visualMoment?.thumbnailUrl &&
+              visualMoment.photoUrl &&
+              visualMoment.thumbnailUrl !== visualMoment.photoUrl
+                ? visualMoment.photoUrl
+                : null;
+            const videoUrl = imageUrl ? null : visualMoment?.videoUrl;
+            const hasVisual = Boolean(imageUrl || videoUrl);
             const selected = selectedDay === day.dateKey;
             const populated = day.inMonth && dayMoments.length > 0;
             const content = (
               <>
-                {thumbnail ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URL
-                  <img
-                    src={thumbnail}
-                    alt=""
+                {imageUrl ? (
+                  <TimelineMediaImage
+                    src={imageUrl}
+                    fallbackSrc={imageFallbackUrl}
+                    fallbackRequestUrl={
+                      visualMoment?.mediaType === "photo"
+                        ? `/api/moments/${visualMoment.id}/media-fallback`
+                        : null
+                    }
                     className="absolute inset-0 h-full w-full object-cover"
                   />
                 ) : null}

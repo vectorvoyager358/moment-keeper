@@ -28,7 +28,10 @@ export function TimelineMediaImage({
     string | null
   >(null);
   const fallbackRequestedRef = useRef(false);
-  const resolvedFallbackSrc = fallbackSrc ?? requestedFallbackSrc;
+  const resolvedFallbackSrc =
+    fallbackSrc && !failedSources.includes(fallbackSrc)
+      ? fallbackSrc
+      : requestedFallbackSrc;
   const currentSrc = !failedSources.includes(src)
     ? src
     : resolvedFallbackSrc && !failedSources.includes(resolvedFallbackSrc)
@@ -73,11 +76,7 @@ export function TimelineMediaImage({
           return;
         }
 
-        if (
-          currentSrc === src &&
-          fallbackRequestUrl &&
-          !fallbackRequestedRef.current
-        ) {
+        if (fallbackRequestUrl && !fallbackRequestedRef.current) {
           fallbackRequestedRef.current = true;
 
           try {
