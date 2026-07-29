@@ -104,4 +104,35 @@ describe("TimelineMediaImage", () => {
       },
     );
   });
+
+  it("refreshes the original after both cached signed URLs expire", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ url: "https://example.com/refreshed-full.jpg" }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <TimelineMediaImage
+        src="https://example.com/expired-thumb.jpg"
+        fallbackSrc="https://example.com/expired-full.jpg"
+        fallbackRequestUrl="/api/moments/moment-1/media-fallback"
+        alt="Resumed PWA photo"
+      />,
+    );
+
+    fireEvent.error(screen.getByRole("img", { name: "Resumed PWA photo" }));
+    expect(
+      screen.getByRole("img", { name: "Resumed PWA photo" }),
+    ).toHaveAttribute("src", "https://example.com/expired-full.jpg");
+
+    fireEvent.error(screen.getByRole("img", { name: "Resumed PWA photo" }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("img", { name: "Resumed PWA photo" }),
+      ).toHaveAttribute("src", "https://example.com/refreshed-full.jpg");
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
 });
