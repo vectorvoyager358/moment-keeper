@@ -193,6 +193,13 @@ export function MomentCard({
               <TimelineMediaImage
                 src={imageSrc}
                 fallbackSrc={imageFallbackSrc}
+                fallbackRequestUrl={
+                  !preferOriginalPhoto &&
+                  moment.mediaType === "photo" &&
+                  moment.thumbnailUrl
+                    ? `/api/moments/${moment.id}/media-fallback`
+                    : null
+                }
                 priority={priorityMedia}
                 className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.025]"
               />

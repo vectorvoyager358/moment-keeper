@@ -32,6 +32,7 @@ import {
 import { MEDIA_BUCKET } from "@/lib/moments/media";
 import { compareTagsForPicker } from "@/lib/moments/tag-filter";
 import { RESURFACED_MOMENT_LIMIT } from "@/lib/moments/themes";
+import { measureServerOperation } from "@/lib/performance/server-timing";
 import { createClient } from "@/lib/supabase/server";
 
 export type {
@@ -134,6 +135,10 @@ export type MediaGalleryItem = {
 
 type ServerSupabase = Awaited<ReturnType<typeof createClient>>;
 
+type SignedThumbnailOptions = {
+  includeOriginalPhoto?: boolean;
+};
+
 async function createSignedMediaUrlMap(
   supabase: ServerSupabase,
   paths: string[],
@@ -190,33 +195,44 @@ async function createSignedMediaUrlMap(
 async function withSignedThumbnails(
   rows: TimelineQueryRow[],
   supabase: ServerSupabase,
+  { includeOriginalPhoto = false }: SignedThumbnailOptions = {},
 ): Promise<TimelineMoment[]> {
   const paths = [
     ...new Set(
       rows.flatMap((row) => {
         const mapped = mapTimelineRow(row);
+        const previewPath =
+          mapped.thumbnailPath ??
+          mapped.photoStoragePath ??
+          mapped.videoStoragePath;
+
         return [
-          mapped.thumbnailPath,
-          mapped.photoStoragePath,
-          mapped.videoStoragePath,
+          previewPath,
+          includeOriginalPhoto ? mapped.photoStoragePath : null,
         ].filter((path): path is string => Boolean(path));
       }),
     ),
   ];
 
-  const urlByPath = await createSignedMediaUrlMap(supabase, paths);
+  const urlByPath = await measureServerOperation(
+    "timeline.sign_previews",
+    { previewCount: paths.length },
+    () => createSignedMediaUrlMap(supabase, paths),
+  );
 
   return rows.map((row) => {
     const mapped = mapTimelineRow(row);
     const thumbnailUrl = mapped.thumbnailPath
       ? (urlByPath.get(mapped.thumbnailPath) ?? null)
       : null;
-    const photoUrl = mapped.photoStoragePath
-      ? (urlByPath.get(mapped.photoStoragePath) ?? null)
-      : null;
-    const videoUrl = mapped.videoStoragePath
-      ? (urlByPath.get(mapped.videoStoragePath) ?? null)
-      : null;
+    const photoUrl =
+      mapped.photoStoragePath && (includeOriginalPhoto || !mapped.thumbnailPath)
+        ? (urlByPath.get(mapped.photoStoragePath) ?? null)
+        : null;
+    const videoUrl =
+      mapped.videoStoragePath && !mapped.thumbnailPath
+        ? (urlByPath.get(mapped.videoStoragePath) ?? null)
+        : null;
 
     return {
       ...mapped,
@@ -298,7 +314,9 @@ export async function getCalendarMoments(
     throw error;
   }
 
-  return withSignedThumbnails((data ?? []) as TimelineQueryRow[], supabase);
+  return withSignedThumbnails((data ?? []) as TimelineQueryRow[], supabase, {
+    includeOriginalPhoto: true,
+  });
 }
 
 export async function getMediaGalleryMoments(
@@ -509,7 +527,11 @@ async function fetchAllTimelineMoments(
     query = query.or(buildTimelineCursorFilter(cursor));
   }
 
-  const { data, error } = await query.limit(fetchSize);
+  const { data, error } = await measureServerOperation(
+    "timeline.fetch_page",
+    { requestedCount: fetchSize },
+    async () => await query.limit(fetchSize),
+  );
 
   if (error) {
     throw error;
