@@ -1,9 +1,18 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { TimelineMediaImage } from "@/components/timeline/TimelineMediaImage";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 describe("TimelineMediaImage", () => {
   it("eagerly prioritizes the first visible cover", () => {
@@ -59,5 +68,40 @@ describe("TimelineMediaImage", () => {
     expect(
       screen.queryByRole("img", { name: "Memory photo" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("requests the original photo only after its thumbnail fails", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ url: "https://example.com/on-demand-full.jpg" }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <TimelineMediaImage
+        src="https://example.com/thumb.jpg"
+        fallbackRequestUrl="/api/moments/moment-1/media-fallback"
+        alt="On-demand memory photo"
+      />,
+    );
+
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    fireEvent.error(
+      screen.getByRole("img", { name: "On-demand memory photo" }),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("img", { name: "On-demand memory photo" }),
+      ).toHaveAttribute("src", "https://example.com/on-demand-full.jpg");
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/moments/moment-1/media-fallback",
+      {
+        credentials: "same-origin",
+        cache: "no-store",
+      },
+    );
   });
 });

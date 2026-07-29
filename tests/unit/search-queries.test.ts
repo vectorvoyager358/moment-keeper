@@ -109,7 +109,11 @@ describe("getTimelineMoments cursor pagination", () => {
       })),
       error: null,
     }));
-    const makeMoment = (id: string, day: number) => ({
+    const makeMoment = (
+      id: string,
+      day: number,
+      hasThumbnail: boolean = true,
+    ) => ({
       id,
       body: id,
       occurred_at: `2026-07-${day.toString().padStart(2, "0")}T12:00:00.000Z`,
@@ -121,7 +125,7 @@ describe("getTimelineMoments cursor pagination", () => {
           id: `${id}-media`,
           media_type: "photo",
           storage_path: `${id}.jpg`,
-          thumbnail_path: `${id}.thumb.jpg`,
+          thumbnail_path: hasThumbnail ? `${id}.thumb.jpg` : null,
           display_order: 0,
         },
       ],
@@ -130,7 +134,7 @@ describe("getTimelineMoments cursor pagination", () => {
       limit: vi.fn().mockResolvedValue({
         data: [
           makeMoment("moment-3", 3),
-          makeMoment("moment-2", 2),
+          makeMoment("moment-2", 2, false),
           makeMoment("moment-1", 1),
         ],
         error: null,
@@ -160,14 +164,11 @@ describe("getTimelineMoments cursor pagination", () => {
     expect(result.hasMore).toBe(true);
     expect(createSignedUrls).toHaveBeenCalledTimes(1);
     expect(createSignedUrls).toHaveBeenCalledWith(
-      [
-        "moment-3.thumb.jpg",
-        "moment-3.jpg",
-        "moment-2.thumb.jpg",
-        "moment-2.jpg",
-      ],
+      ["moment-3.thumb.jpg", "moment-2.jpg"],
       3600,
     );
+    expect(result.items[0].photoUrl).toBeNull();
+    expect(result.items[1].photoUrl).toBe("https://media.example/moment-2.jpg");
   });
 });
 
