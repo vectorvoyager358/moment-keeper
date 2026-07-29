@@ -189,8 +189,8 @@ async function createSignedMediaUrlMap(
 
 async function withSignedThumbnails(
   rows: TimelineQueryRow[],
+  supabase: ServerSupabase,
 ): Promise<TimelineMoment[]> {
-  const supabase = await createClient();
   const paths = [
     ...new Set(
       rows.flatMap((row) => {
@@ -298,7 +298,7 @@ export async function getCalendarMoments(
     throw error;
   }
 
-  return withSignedThumbnails((data ?? []) as TimelineQueryRow[]);
+  return withSignedThumbnails((data ?? []) as TimelineQueryRow[], supabase);
 }
 
 export async function getMediaGalleryMoments(
@@ -424,7 +424,7 @@ export async function getOnThisDayMoments(
   }
 
   return orderByIds(
-    await withSignedThumbnails((data ?? []) as TimelineQueryRow[]),
+    await withSignedThumbnails((data ?? []) as TimelineQueryRow[], supabase),
     orderedIds,
   );
 }
@@ -469,7 +469,7 @@ export async function getResurfacedMoments(
   }
 
   return orderByIds(
-    await withSignedThumbnails((data ?? []) as TimelineQueryRow[]),
+    await withSignedThumbnails((data ?? []) as TimelineQueryRow[], supabase),
     orderedIds,
   );
 }
@@ -515,15 +515,15 @@ async function fetchAllTimelineMoments(
     throw error;
   }
 
-  const rows = await withSignedThumbnails((data ?? []) as TimelineQueryRow[]);
-
-  const page = paginateItems(rows, limit);
-  const lastMoment = page.items.at(-1);
+  const rawPage = paginateItems((data ?? []) as TimelineQueryRow[], limit);
+  const items = await withSignedThumbnails(rawPage.items, supabase);
+  const lastMoment = items.at(-1);
 
   return {
-    ...page,
+    items,
+    hasMore: rawPage.hasMore,
     nextCursor:
-      page.hasMore && lastMoment
+      rawPage.hasMore && lastMoment
         ? { occurredAt: lastMoment.occurred_at, id: lastMoment.id }
         : null,
   };
@@ -552,29 +552,30 @@ async function searchTimelineMoments(
     throw searchError;
   }
 
-  const orderedIds = (ranked ?? []).map(
-    (row: { id: string; rank: number }) => row.id,
-  );
+  const orderedIds = (
+    (ranked ?? []) as Array<{ id: string; rank: number }>
+  ).map((row) => row.id);
 
   if (orderedIds.length === 0) {
     return { items: [], hasMore: false };
   }
 
+  const idPage = paginateItems(orderedIds, limit);
   const { data, error } = await supabase
     .from("moments")
     .select(TIMELINE_SELECT)
-    .in("id", orderedIds);
+    .in("id", idPage.items);
 
   if (error) {
     throw error;
   }
 
-  const rows = orderByIds(
-    await withSignedThumbnails((data ?? []) as TimelineQueryRow[]),
-    orderedIds,
+  const items = orderByIds(
+    await withSignedThumbnails((data ?? []) as TimelineQueryRow[], supabase),
+    idPage.items,
   );
 
-  return paginateItems(rows, limit);
+  return { items, hasMore: idPage.hasMore };
 }
 
 export async function getMomentById(id: string): Promise<MomentDetail | null> {

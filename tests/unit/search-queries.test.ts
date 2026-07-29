@@ -100,6 +100,75 @@ describe("getTimelineMoments cursor pagination", () => {
       id: "00000000-0000-4000-8000-000000000002",
     });
   });
+
+  it("signs media only for moments included in the requested page", async () => {
+    const createSignedUrls = vi.fn().mockImplementation(async (paths) => ({
+      data: paths.map((path: string) => ({
+        path,
+        signedUrl: `https://media.example/${path}`,
+      })),
+      error: null,
+    }));
+    const makeMoment = (id: string, day: number) => ({
+      id,
+      body: id,
+      occurred_at: `2026-07-${day.toString().padStart(2, "0")}T12:00:00.000Z`,
+      location: null,
+      is_favorite: false,
+      moment_tags: [],
+      media_attachments: [
+        {
+          id: `${id}-media`,
+          media_type: "photo",
+          storage_path: `${id}.jpg`,
+          thumbnail_path: `${id}.thumb.jpg`,
+          display_order: 0,
+        },
+      ],
+    });
+    const query = {
+      limit: vi.fn().mockResolvedValue({
+        data: [
+          makeMoment("moment-3", 3),
+          makeMoment("moment-2", 2),
+          makeMoment("moment-1", 1),
+        ],
+        error: null,
+      }),
+      order: vi.fn(),
+    };
+    query.order.mockReturnValue(query);
+
+    createClientMock.mockResolvedValue({
+      from: vi.fn(() => ({ select: () => query })),
+      storage: {
+        from: () => ({
+          createSignedUrls,
+        }),
+      },
+    });
+
+    const result = await getTimelineMoments(
+      { keyword: "", tagIds: [], favoriteOnly: false },
+      { limit: 2 },
+    );
+
+    expect(result.items.map((moment) => moment.id)).toEqual([
+      "moment-3",
+      "moment-2",
+    ]);
+    expect(result.hasMore).toBe(true);
+    expect(createSignedUrls).toHaveBeenCalledTimes(1);
+    expect(createSignedUrls).toHaveBeenCalledWith(
+      [
+        "moment-3.thumb.jpg",
+        "moment-3.jpg",
+        "moment-2.thumb.jpg",
+        "moment-2.jpg",
+      ],
+      3600,
+    );
+  });
 });
 
 describe("getTimelineMoments keyword search", () => {

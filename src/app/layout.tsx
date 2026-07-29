@@ -50,6 +50,8 @@ const forceLightThemeCss = `
   }
 `;
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
 export const metadata: Metadata = {
   applicationName: "Moment Keeper",
   title: {
@@ -91,6 +93,9 @@ export default function RootLayout({
     >
       <head>
         <meta name="color-scheme" content="light" />
+        {supabaseUrl ? (
+          <link rel="preconnect" href={supabaseUrl} crossOrigin="anonymous" />
+        ) : null}
         <style dangerouslySetInnerHTML={{ __html: forceLightThemeCss }} />
       </head>
       <body className="flex min-h-full flex-col bg-paper pb-[env(safe-area-inset-bottom)] text-ink">
