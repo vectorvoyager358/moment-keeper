@@ -8,7 +8,10 @@ vi.mock("@/lib/supabase/server", () => ({
   createClient: createClientMock,
 }));
 
-import { getMomentPhotoFallbackUrl } from "@/lib/moments/media-fallback";
+import {
+  getMomentAttachmentFallbackUrl,
+  getMomentPhotoFallbackUrl,
+} from "@/lib/moments/media-fallback";
 
 describe("getMomentPhotoFallbackUrl", () => {
   beforeEach(() => {
@@ -78,5 +81,40 @@ describe("getMomentPhotoFallbackUrl", () => {
 
     await expect(getMomentPhotoFallbackUrl("missing")).resolves.toBeNull();
     expect(createSignedUrl).not.toHaveBeenCalled();
+  });
+
+  it("refreshes the exact reordered attachment instead of the cover", async () => {
+    const query = {
+      select: vi.fn(),
+      eq: vi.fn(),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: { storage_path: "user/moment/second.jpg" },
+        error: null,
+      }),
+    };
+    query.select.mockReturnValue(query);
+    query.eq.mockReturnValue(query);
+
+    const createSignedUrl = vi.fn().mockResolvedValue({
+      data: { signedUrl: "https://media.example/second.jpg" },
+      error: null,
+    });
+
+    createClientMock.mockResolvedValue({
+      from: vi.fn(() => query),
+      storage: {
+        from: vi.fn(() => ({ createSignedUrl })),
+      },
+    });
+
+    await expect(
+      getMomentAttachmentFallbackUrl("moment-1", "media-2"),
+    ).resolves.toBe("https://media.example/second.jpg");
+    expect(query.eq).toHaveBeenNthCalledWith(1, "moment_id", "moment-1");
+    expect(query.eq).toHaveBeenNthCalledWith(2, "id", "media-2");
+    expect(createSignedUrl).toHaveBeenCalledWith(
+      "user/moment/second.jpg",
+      3600,
+    );
   });
 });

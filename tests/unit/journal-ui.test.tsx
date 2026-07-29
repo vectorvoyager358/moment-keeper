@@ -1,4 +1,10 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { MomentDetailView } from "@/components/moments/MomentDetailView";
@@ -213,5 +219,63 @@ describe("MomentDetailView", () => {
           screen.getByRole("img", { name: "old-cover.jpg" }),
         ) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+  });
+
+  it("opens the selected attachment and swipes through the preview", () => {
+    render(
+      <MomentDetailView
+        moment={{
+          id: "moment-1",
+          body: "Two photo memory",
+          occurred_at: "2026-07-09T12:00:00.000Z",
+          location: null,
+          link_url: null,
+          is_favorite: false,
+          themes: [],
+          tags: [],
+          media: [
+            {
+              id: "media-1",
+              media_type: "photo",
+              mime_type: "image/jpeg",
+              original_filename: "first.jpg",
+              signedUrl: "https://example.com/first.jpg",
+              display_order: 0,
+            },
+            {
+              id: "media-2",
+              media_type: "photo",
+              mime_type: "image/jpeg",
+              original_filename: "second.jpg",
+              signedUrl: "https://example.com/second.jpg",
+              display_order: 1,
+            },
+          ],
+        }}
+        onEdit={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getAllByRole("button", { name: "View photo full screen" })[0],
+    );
+
+    expect(screen.getByText("1 / 2")).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Download first.jpg" }),
+    ).toBeVisible();
+
+    const previewCarousel = screen.getByTestId("media-preview-carousel");
+    Object.defineProperty(previewCarousel, "clientWidth", {
+      configurable: true,
+      value: 320,
+    });
+    previewCarousel.scrollLeft = 320;
+    fireEvent.scroll(previewCarousel);
+
+    expect(screen.getByText("2 / 2")).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Download second.jpg" }),
+    ).toBeVisible();
   });
 });

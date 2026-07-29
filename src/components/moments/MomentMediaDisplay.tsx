@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { MediaPreviewOverlay } from "@/components/moments/MediaPreviewOverlay";
 import { MediaDownloadButton } from "@/components/moments/MediaDownloadButton";
+import { TimelineMediaImage } from "@/components/timeline/TimelineMediaImage";
 import { cn } from "@/lib/cn";
 import type { MomentMedia } from "@/lib/moments/detail";
 
@@ -12,16 +13,23 @@ type MomentMediaDisplayProps = {
   media: MomentMedia;
   mode?: "inline" | "viewer";
   className?: string;
+  fallbackRequestUrl?: string;
+  onOpenPreview?: () => void;
+  priority?: boolean;
 };
 
 export function MomentMediaDisplay({
   media,
   mode = "inline",
   className,
+  fallbackRequestUrl,
+  onOpenPreview,
+  priority = false,
 }: MomentMediaDisplayProps) {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [audioOpen, setAudioOpen] = useState(false);
   const viewer = mode === "viewer";
+  const openPreview = onOpenPreview ?? (() => setPreviewOpen(true));
 
   if (media.media_type === "photo") {
     const alt = media.original_filename ?? "Moment attachment";
@@ -32,11 +40,11 @@ export function MomentMediaDisplay({
           <div
             role="button"
             tabIndex={0}
-            onClick={() => setPreviewOpen(true)}
+            onClick={openPreview}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();
-                setPreviewOpen(true);
+                openPreview();
               }
             }}
             className={cn(
@@ -45,12 +53,11 @@ export function MomentMediaDisplay({
             )}
             aria-label="View photo full screen"
           >
-            {/* Signed Supabase URLs are short-lived; next/image is not used here. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <TimelineMediaImage
               src={media.signedUrl}
+              fallbackRequestUrl={fallbackRequestUrl}
               alt={alt}
-              draggable={false}
+              priority={priority}
               className={cn(
                 "pointer-events-none w-full select-none",
                 viewer
@@ -60,13 +67,16 @@ export function MomentMediaDisplay({
             />
           </div>
         </div>
-        <MediaPreviewOverlay
-          src={media.signedUrl}
-          alt={alt}
-          filename={media.original_filename ?? "moment-photo"}
-          open={previewOpen}
-          onClose={() => setPreviewOpen(false)}
-        />
+        {!onOpenPreview ? (
+          <MediaPreviewOverlay
+            src={media.signedUrl}
+            alt={alt}
+            filename={media.original_filename ?? "moment-photo"}
+            fallbackRequestUrl={fallbackRequestUrl}
+            open={previewOpen}
+            onClose={() => setPreviewOpen(false)}
+          />
+        ) : null}
       </>
     );
   }
@@ -100,20 +110,22 @@ export function MomentMediaDisplay({
             type="button"
             aria-label="View video full screen"
             title="Open video preview"
-            onClick={() => setPreviewOpen(true)}
+            onClick={openPreview}
             className="absolute right-3 bottom-12 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white shadow-lg backdrop-blur-md transition hover:bg-black/65 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
           >
             <Maximize2 className="h-4 w-4" aria-hidden />
           </button>
         </div>
-        <MediaPreviewOverlay
-          src={media.signedUrl}
-          alt={videoName}
-          filename={videoName}
-          mediaType="video"
-          open={previewOpen}
-          onClose={() => setPreviewOpen(false)}
-        />
+        {!onOpenPreview ? (
+          <MediaPreviewOverlay
+            src={media.signedUrl}
+            alt={videoName}
+            filename={videoName}
+            mediaType="video"
+            open={previewOpen}
+            onClose={() => setPreviewOpen(false)}
+          />
+        ) : null}
       </>
     );
   }
