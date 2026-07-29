@@ -1,8 +1,13 @@
 import type { MemoryTheme } from "@/lib/database.types";
+import {
+  normalizeRichTextDocument,
+  type RichTextDocument,
+} from "@/lib/moments/rich-text";
 import { isMemoryTheme, MAX_MEMORY_THEMES } from "@/lib/moments/themes";
 
 export type CaptureDraft = {
   body: string;
+  bodyContent: RichTextDocument | null;
   occurredAt: string;
   tags: string;
   location: string;
@@ -50,6 +55,11 @@ export function readCaptureDraft(userId: string): CaptureDraft | null {
         ? draft.linkUrl
         : "";
 
+    const bodyContent =
+      "bodyContent" in draft
+        ? normalizeRichTextDocument(draft.bodyContent)
+        : null;
+
     const themes =
       "themes" in draft && Array.isArray(draft.themes)
         ? [
@@ -69,6 +79,7 @@ export function readCaptureDraft(userId: string): CaptureDraft | null {
 
     return {
       body: draft.body,
+      bodyContent,
       occurredAt: draft.occurredAt,
       tags: draft.tags,
       location,

@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { Heart } from "lucide-react";
 import { useState, type FormEvent } from "react";
@@ -8,14 +9,19 @@ import { MediaFileInput } from "@/components/capture/MediaFileInput";
 import { MemoryThemePicker } from "@/components/capture/MemoryThemePicker";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
-import { FieldHint, Input, Label, Textarea } from "@/components/ui/Input";
+import { FieldHint, Input, Label } from "@/components/ui/Input";
 import { SaveProgress } from "@/components/ui/SaveProgress";
 import { toUserErrorMessage } from "@/lib/errors";
 import type { MemoryTheme } from "@/lib/database.types";
 import { toDatetimeLocalValueFromIso } from "@/lib/moments/dates";
 import { parseMomentLinkUrl } from "@/lib/moments/link";
+import {
+  plainTextToRichTextDocument,
+  type RichTextDocument,
+} from "@/lib/moments/rich-text";
 import type { MomentDetail } from "@/lib/moments/queries";
 import { formatTagInput } from "@/lib/moments/tags";
+import { validateMomentBody } from "@/lib/moments/validation";
 import { cn } from "@/lib/cn";
 import {
   postFormDataWithProgress,
@@ -28,12 +34,33 @@ type EditMomentFormProps = {
   onSaved: () => void;
 };
 
+const LazyRichTextEditor = dynamic(
+  () =>
+    import("@/components/editor/RichTextEditor").then(
+      (module) => module.RichTextEditor,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        className="h-56 animate-pulse rounded-xl border border-border-strong bg-surface-elevated"
+        role="status"
+        aria-label="Loading text editor"
+      />
+    ),
+  },
+);
+
 export function EditMomentForm({
   moment,
   onCancel,
   onSaved,
 }: EditMomentFormProps) {
   const router = useRouter();
+  const [body, setBody] = useState(moment.body);
+  const [bodyContent, setBodyContent] = useState<RichTextDocument | null>(
+    moment.body_content ?? null,
+  );
   const [themes, setThemes] = useState<MemoryTheme[]>(moment.themes);
   const [isFavorite, setIsFavorite] = useState(moment.is_favorite);
   const [linkUrl, setLinkUrl] = useState(moment.link_url ?? "");
@@ -60,6 +87,12 @@ export function EditMomentForm({
     const form = event.currentTarget;
     const formData = new FormData(form);
     const linkInput = parseMomentLinkUrl(linkUrl);
+    const bodyError = validateMomentBody(body);
+
+    if (bodyError) {
+      setError(bodyError);
+      return;
+    }
 
     if (linkInput.error) {
       setError(linkInput.error);
@@ -122,14 +155,22 @@ export function EditMomentForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <input type="hidden" name="occurred_at_offset" value={timezoneOffset} />
+      <input type="hidden" name="body" value={body} />
+      <input
+        type="hidden"
+        name="body_content"
+        value={JSON.stringify(bodyContent ?? plainTextToRichTextDocument(body))}
+      />
       <div className="space-y-2">
-        <Label htmlFor="body">What happened?</Label>
-        <Textarea
-          id="body"
-          name="body"
-          required
-          rows={6}
-          defaultValue={moment.body}
+        <Label htmlFor="edit-body-editor">What happened?</Label>
+        <LazyRichTextEditor
+          id="edit-body-editor"
+          value={{ text: body, content: bodyContent }}
+          disabled={pending}
+          onChange={(nextValue) => {
+            setBody(nextValue.text);
+            setBodyContent(nextValue.content);
+          }}
         />
       </div>
 

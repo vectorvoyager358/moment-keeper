@@ -9,6 +9,15 @@ import {
 
 const draft: CaptureDraft = {
   body: "A good day",
+  bodyContent: {
+    type: "doc",
+    content: [
+      {
+        type: "paragraph",
+        content: [{ type: "text", text: "A good day" }],
+      },
+    ],
+  },
   occurredAt: "2026-07-09T14:30",
   tags: "personal",
   location: "Back porch",
@@ -35,6 +44,7 @@ describe("capture drafts", () => {
     expect(
       writeCaptureDraft("user-1", {
         body: " ",
+        bodyContent: null,
         occurredAt: draft.occurredAt,
         tags: "",
         location: "",
@@ -71,6 +81,7 @@ describe("capture drafts", () => {
 
     expect(readCaptureDraft("user-1")).toEqual({
       ...legacyDraft,
+      bodyContent: null,
       linkUrl: "",
     });
   });

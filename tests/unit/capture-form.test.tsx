@@ -61,6 +61,48 @@ vi.mock("@/components/capture/MediaFileInput", () => ({
   ),
 }));
 
+vi.mock("@/components/editor/RichTextEditor", () => ({
+  RichTextEditor: ({
+    id,
+    value,
+    onChange,
+  }: {
+    id: string;
+    value: { text: string };
+    onChange: (value: {
+      text: string;
+      content: {
+        type: "doc";
+        content: Array<{
+          type: "paragraph";
+          content?: Array<{ type: "text"; text: string }>;
+        }>;
+      };
+    }) => void;
+  }) => (
+    <textarea
+      id={id}
+      aria-label="What happened?"
+      value={value.text}
+      onChange={(event) => {
+        const text = event.currentTarget.value;
+        onChange({
+          text,
+          content: {
+            type: "doc",
+            content: [
+              {
+                type: "paragraph",
+                ...(text ? { content: [{ type: "text" as const, text }] } : {}),
+              },
+            ],
+          },
+        });
+      }}
+    />
+  ),
+}));
+
 vi.mock("@/lib/moments/upload-progress", async (importOriginal) => {
   const original =
     await importOriginal<typeof import("@/lib/moments/upload-progress")>();
@@ -83,6 +125,7 @@ describe("CaptureForm drafts", () => {
   it("restores a saved draft for the current user", async () => {
     writeCaptureDraft("user-1", {
       body: "Restored memory",
+      bodyContent: null,
       occurredAt: "2026-07-08T09:15",
       tags: "family",
       location: "Grandma's house",
@@ -93,7 +136,9 @@ describe("CaptureForm drafts", () => {
 
     render(<CaptureForm userId="user-1" />);
 
-    expect(await screen.findByDisplayValue("Restored memory")).toBeVisible();
+    expect(await screen.findByLabelText("What happened?")).toHaveValue(
+      "Restored memory",
+    );
     expect(screen.getByDisplayValue("2026-07-08T09:15")).toBeVisible();
     expect(screen.getByDisplayValue("family")).toBeVisible();
     expect(screen.getByDisplayValue("Grandma's house")).toBeVisible();

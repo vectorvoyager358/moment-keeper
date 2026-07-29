@@ -8,7 +8,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { MemoryThemePicker } from "@/components/capture/MemoryThemePicker";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
-import { FieldHint, Input, Label, Textarea } from "@/components/ui/Input";
+import { FieldHint, Input, Label } from "@/components/ui/Input";
 import { SaveProgress } from "@/components/ui/SaveProgress";
 import { toUserErrorMessage } from "@/lib/errors";
 import type { MemoryTheme } from "@/lib/database.types";
@@ -19,6 +19,13 @@ import {
 } from "@/lib/moments/capture-draft";
 import { toDatetimeLocalValue } from "@/lib/moments/dates";
 import { parseMomentLinkUrl } from "@/lib/moments/link";
+import {
+  appendParagraphToRichText,
+  plainTextToRichTextDocument,
+  richTextToPlainText,
+  type RichTextDocument,
+} from "@/lib/moments/rich-text";
+import { validateMomentBody } from "@/lib/moments/validation";
 import { cn } from "@/lib/cn";
 import {
   postFormDataWithProgress,
@@ -40,6 +47,22 @@ const LazyMediaFileInput = dynamic(loadMediaFileInput, {
     <p role="status" className="py-3 text-sm text-muted">
       Getting media tools ready…
     </p>
+  ),
+});
+
+const loadRichTextEditor = () =>
+  import("@/components/editor/RichTextEditor").then(
+    (module) => module.RichTextEditor,
+  );
+
+const LazyRichTextEditor = dynamic(loadRichTextEditor, {
+  ssr: false,
+  loading: () => (
+    <div
+      className="h-56 animate-pulse rounded-xl border border-border-strong bg-surface-elevated"
+      role="status"
+      aria-label="Loading text editor"
+    />
   ),
 });
 
@@ -68,6 +91,7 @@ function draftUsesAddMore(draft: {
 export function CaptureForm({ userId }: CaptureFormProps) {
   const router = useRouter();
   const [body, setBody] = useState("");
+  const [bodyContent, setBodyContent] = useState<RichTextDocument | null>(null);
   const [occurredAt, setOccurredAt] = useState(() =>
     toDatetimeLocalValue(new Date()),
   );
@@ -103,6 +127,7 @@ export function CaptureForm({ userId }: CaptureFormProps) {
 
       if (draft) {
         setBody(draft.body);
+        setBodyContent(draft.bodyContent);
         setOccurredAt(draft.occurredAt);
         setTags(draft.tags);
         setLocation(draft.location ?? "");
@@ -131,6 +156,7 @@ export function CaptureForm({ userId }: CaptureFormProps) {
     const timeout = window.setTimeout(() => {
       writeCaptureDraft(userId, {
         body,
+        bodyContent,
         occurredAt,
         tags,
         location,
@@ -143,6 +169,7 @@ export function CaptureForm({ userId }: CaptureFormProps) {
     return () => window.clearTimeout(timeout);
   }, [
     body,
+    bodyContent,
     draftLoaded,
     isFavorite,
     location,
@@ -179,6 +206,12 @@ export function CaptureForm({ userId }: CaptureFormProps) {
     const form = event.currentTarget;
     const formData = new FormData(form);
     const linkInput = parseMomentLinkUrl(linkUrl);
+    const bodyError = validateMomentBody(body);
+
+    if (bodyError) {
+      setError(bodyError);
+      return;
+    }
 
     if (linkInput.error) {
       setError(linkInput.error);
@@ -234,8 +267,14 @@ export function CaptureForm({ userId }: CaptureFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <input type="hidden" name="occurred_at_offset" value={timezoneOffset} />
+      <input type="hidden" name="body" value={body} />
+      <input
+        type="hidden"
+        name="body_content"
+        value={JSON.stringify(bodyContent ?? plainTextToRichTextDocument(body))}
+      />
       <div className="mb-8 space-y-3">
-        <Label htmlFor="body">What happened?</Label>
+        <Label htmlFor="body-editor">What happened?</Label>
         <div className="rounded-2xl bg-accent-subtle/60 p-3.5">
           <p className="flex items-center gap-2 text-xs font-semibold tracking-wide text-accent uppercase">
             <Sparkles className="h-3.5 w-3.5" aria-hidden />
@@ -248,11 +287,12 @@ export function CaptureForm({ userId }: CaptureFormProps) {
                 type="button"
                 className="shrink-0 rounded-full border border-border-strong bg-surface px-3 py-1.5 text-sm text-ink transition hover:border-accent/50 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 onClick={() => {
-                  setBody((current) =>
-                    current.trim()
-                      ? `${current.trimEnd()}\n\n${prompt}\n\n`
-                      : `${prompt}\n\n`,
+                  const nextContent = appendParagraphToRichText(
+                    bodyContent ?? plainTextToRichTextDocument(body),
+                    prompt,
                   );
+                  setBodyContent(nextContent);
+                  setBody(richTextToPlainText(nextContent));
                 }}
               >
                 {prompt}
@@ -260,15 +300,14 @@ export function CaptureForm({ userId }: CaptureFormProps) {
             ))}
           </div>
         </div>
-        <Textarea
-          id="body"
-          name="body"
-          required
-          rows={7}
+        <LazyRichTextEditor
+          id="body-editor"
+          value={{ text: body, content: bodyContent }}
           placeholder="Write a few words about this moment…"
-          value={body}
-          onChange={(event) => {
-            setBody(event.target.value);
+          disabled={pending}
+          onChange={(nextValue) => {
+            setBody(nextValue.text);
+            setBodyContent(nextValue.content);
           }}
         />
       </div>

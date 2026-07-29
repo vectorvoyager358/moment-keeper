@@ -79,6 +79,21 @@ describe("MomentDetailView", () => {
         moment={{
           id: "moment-1",
           body: "A photo memory",
+          body_content: {
+            type: "doc",
+            content: [
+              {
+                type: "paragraph",
+                content: [
+                  {
+                    type: "text",
+                    text: "A photo memory",
+                    marks: [{ type: "bold" }],
+                  },
+                ],
+              },
+            ],
+          },
           occurred_at: "2026-07-09T12:00:00.000Z",
           location: "Houston",
           link_url: "https://www.example.com/family-story",
@@ -102,6 +117,7 @@ describe("MomentDetailView", () => {
 
     const image = screen.getByRole("img", { name: "memory.jpg" });
     const body = screen.getByText("A photo memory");
+    expect(body.tagName).toBe("STRONG");
 
     expect(
       image.compareDocumentPosition(body) & Node.DOCUMENT_POSITION_FOLLOWING,

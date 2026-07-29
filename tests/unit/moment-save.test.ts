@@ -80,6 +80,51 @@ describe("moment theme saving", () => {
     );
   });
 
+  it("stores structured formatting alongside searchable plain text", async () => {
+    const insert = vi.fn(() => ({
+      select: () => ({
+        single: vi.fn().mockResolvedValue({
+          data: { id: "moment-1" },
+          error: null,
+        }),
+      }),
+    }));
+    createClientMock.mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: "u1" } } }),
+      },
+      from: vi.fn(() => ({ insert })),
+    });
+    const formData = validFormData();
+    const bodyContent = {
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          content: [
+            {
+              type: "text",
+              text: "A formatted memory",
+              marks: [{ type: "bold" }],
+            },
+          ],
+        },
+      ],
+    };
+    formData.set("body_content", JSON.stringify(bodyContent));
+
+    expect(await saveNewMoment(formData)).toEqual({
+      ok: true,
+      redirectTo: "/timeline?saved=1",
+    });
+    expect(insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: "A formatted memory",
+        body_content: bodyContent,
+      }),
+    );
+  });
+
   it("stores occurred_at using the submitted timezone offset", async () => {
     const insert = vi.fn(() => ({
       select: () => ({

@@ -51,6 +51,7 @@ export type UserTag = {
 const MOMENT_SELECT = `
   id,
   body,
+  body_content,
   occurred_at,
   location,
   link_url,

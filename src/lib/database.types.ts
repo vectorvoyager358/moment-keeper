@@ -1,4 +1,11 @@
 export type MediaType = "photo" | "video" | "audio";
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
 export type MemoryTheme =
   | "joy"
   | "achievement"
@@ -20,6 +27,7 @@ export interface Moment {
   id: string;
   user_id: string;
   body: string;
+  body_content: Json | null;
   location: string | null;
   link_url: string | null;
   themes: MemoryTheme[];
@@ -81,6 +89,7 @@ export type Database = {
           id?: string;
           user_id: string;
           body: string;
+          body_content?: Json | null;
           location?: string | null;
           link_url?: string | null;
           themes?: MemoryTheme[];
@@ -91,6 +100,7 @@ export type Database = {
         };
         Update: {
           body?: string;
+          body_content?: Json | null;
           location?: string | null;
           link_url?: string | null;
           themes?: MemoryTheme[];
