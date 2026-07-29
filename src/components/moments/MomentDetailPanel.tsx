@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { MomentDetail } from "@/lib/moments/queries";
 
@@ -19,6 +19,15 @@ export function MomentDetailPanel({
   laterId,
 }: MomentDetailPanelProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [waitingForSavedMoment, setWaitingForSavedMoment] = useState(false);
+  const editingMomentRef = useRef(moment);
+
+  useEffect(() => {
+    if (waitingForSavedMoment && moment !== editingMomentRef.current) {
+      setWaitingForSavedMoment(false);
+      setIsEditing(false);
+    }
+  }, [moment, waitingForSavedMoment]);
 
   if (isEditing) {
     return (
@@ -26,7 +35,7 @@ export function MomentDetailPanel({
         <EditMomentForm
           moment={moment}
           onCancel={() => setIsEditing(false)}
-          onSaved={() => setIsEditing(false)}
+          onSaved={() => setWaitingForSavedMoment(true)}
         />
       </div>
     );
@@ -37,7 +46,10 @@ export function MomentDetailPanel({
       moment={moment}
       earlierId={earlierId}
       laterId={laterId}
-      onEdit={() => setIsEditing(true)}
+      onEdit={() => {
+        editingMomentRef.current = moment;
+        setIsEditing(true);
+      }}
     />
   );
 }

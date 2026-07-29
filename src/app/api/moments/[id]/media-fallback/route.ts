@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { toUserErrorMessage } from "@/lib/errors";
-import { getMomentPhotoFallbackUrl } from "@/lib/moments/media-fallback";
+import {
+  getMomentAttachmentFallbackUrl,
+  getMomentPhotoFallbackUrl,
+} from "@/lib/moments/media-fallback";
 
 export const runtime = "nodejs";
 
@@ -9,10 +12,13 @@ type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-export async function GET(_request: Request, context: RouteContext) {
+export async function GET(request: Request, context: RouteContext) {
   try {
     const { id } = await context.params;
-    const url = await getMomentPhotoFallbackUrl(id);
+    const mediaId = new URL(request.url).searchParams.get("mediaId");
+    const url = mediaId
+      ? await getMomentAttachmentFallbackUrl(id, mediaId)
+      : await getMomentPhotoFallbackUrl(id);
 
     if (!url) {
       return NextResponse.json(

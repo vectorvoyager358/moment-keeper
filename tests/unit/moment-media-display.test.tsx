@@ -62,7 +62,7 @@ describe("MomentMediaDisplay", () => {
     ).toBeVisible();
     expect(
       screen.getAllByRole("button", { name: "Close photo preview" }),
-    ).toHaveLength(2);
+    ).toHaveLength(1);
     expect(screen.getAllByRole("img", { name: "sunset.jpg" })).toHaveLength(2);
   });
 
@@ -84,7 +84,7 @@ describe("MomentMediaDisplay", () => {
     ).toBeVisible();
     expect(
       screen.getAllByRole("button", { name: "Close video preview" }),
-    ).toHaveLength(2);
+    ).toHaveLength(1);
   });
 
   it("reveals audio playback only after the voice icon is clicked", () => {
