@@ -1,5 +1,9 @@
 import type { MediaType, MemoryTheme } from "@/lib/database.types";
 import { normalizeRelationItems } from "@/lib/moments/relations";
+import {
+  normalizeRichTextDocument,
+  type RichTextDocument,
+} from "@/lib/moments/rich-text";
 
 export type MomentMedia = {
   id: string;
@@ -13,6 +17,7 @@ export type MomentMedia = {
 export type MomentDetail = {
   id: string;
   body: string;
+  body_content?: RichTextDocument | null;
   occurred_at: string;
   location: string | null;
   link_url: string | null;
@@ -25,6 +30,7 @@ export type MomentDetail = {
 type MomentDetailQueryRow = {
   id: string;
   body: string;
+  body_content?: unknown;
   occurred_at: string;
   location: string | null;
   link_url: string | null;
@@ -81,6 +87,7 @@ export function mapMomentDetailRow(
   return {
     id: moment.id,
     body: moment.body,
+    body_content: normalizeRichTextDocument(moment.body_content),
     occurred_at: moment.occurred_at,
     location: moment.location,
     link_url: moment.link_url,

@@ -11,6 +11,7 @@ import { MomentDate } from "@/components/moments/MomentDate";
 import { MomentDetailNav } from "@/components/moments/MomentDetailNav";
 import { MomentLink } from "@/components/moments/MomentLink";
 import { MomentMediaDisplay } from "@/components/moments/MomentMediaDisplay";
+import { RichTextContent } from "@/components/moments/RichTextContent";
 import { Button, buttonClassName } from "@/components/ui/Button";
 import { Tag } from "@/components/ui/Tag";
 import type { MomentDetail } from "@/lib/moments/queries";
@@ -193,9 +194,7 @@ export function MomentDetailView({
           </div>
         ) : null}
 
-        <p className="max-w-[42rem] whitespace-pre-wrap text-[1.0625rem] leading-7 tracking-[-0.01em] text-ink/90 sm:text-lg sm:leading-8">
-          {moment.body}
-        </p>
+        <RichTextContent body={moment.body} content={moment.body_content} />
 
         {moment.link_url ? (
           <div className="mt-7">

@@ -30,8 +30,10 @@ import {
   validateMomentLocation,
 } from "@/lib/moments/location";
 import { parseMomentLinkFormData } from "@/lib/moments/link";
+import { parseRichTextFormData } from "@/lib/moments/rich-text";
 import { validateMomentBody } from "@/lib/moments/validation";
 import { createClient } from "@/lib/supabase/server";
+import type { Json } from "@/lib/database.types";
 
 export type SaveMomentResult =
   | { ok: true; redirectTo: string }
@@ -81,7 +83,8 @@ function resolveMediaOrder(
 export async function saveNewMoment(
   formData: FormData,
 ): Promise<SaveMomentResult> {
-  const body = String(formData.get("body") ?? "");
+  const richTextInput = parseRichTextFormData(formData);
+  const body = richTextInput.body;
   const occurredAtRaw = String(formData.get("occurred_at") ?? "");
   const tagsRaw = String(formData.get("tags") ?? "");
   const themeInput = parseMemoryThemeFormData(formData);
@@ -91,6 +94,10 @@ export async function saveNewMoment(
     mediaFiles.length,
   );
   const linkInput = parseMomentLinkFormData(formData);
+
+  if (richTextInput.error) {
+    return { ok: false, error: richTextInput.error, status: 400 };
+  }
 
   if (themeInput.error) {
     return { ok: false, error: themeInput.error, status: 400 };
@@ -145,7 +152,8 @@ export async function saveNewMoment(
     .from("moments")
     .insert({
       user_id: user.id,
-      body: body.trim(),
+      body,
+      body_content: richTextInput.content as unknown as Json,
       themes: themeInput.themes,
       occurred_at: occurredAt,
       is_favorite: parseFavoriteFormData(formData),
@@ -206,7 +214,8 @@ export async function saveUpdatedMoment(
   momentId: string,
   formData: FormData,
 ): Promise<SaveMomentResult> {
-  const body = String(formData.get("body") ?? "");
+  const richTextInput = parseRichTextFormData(formData);
+  const body = richTextInput.body;
   const occurredAtRaw = String(formData.get("occurred_at") ?? "");
   const tagsRaw = String(formData.get("tags") ?? "");
   const themeInput = parseMemoryThemeFormData(formData);
@@ -218,6 +227,10 @@ export async function saveUpdatedMoment(
   const removedMediaIds = getRemovedMediaIds(formData);
   const requestedMediaOrder = getRequestedMediaOrder(formData);
   const linkInput = parseMomentLinkFormData(formData);
+  if (richTextInput.error) {
+    return { ok: false, error: richTextInput.error, status: 400 };
+  }
+
   if (themeInput.error) {
     return { ok: false, error: themeInput.error, status: 400 };
   }
@@ -295,7 +308,8 @@ export async function saveUpdatedMoment(
   const { error: updateError } = await supabase
     .from("moments")
     .update({
-      body: body.trim(),
+      body,
+      body_content: richTextInput.content as unknown as Json,
       themes: themeInput.themes,
       occurred_at: occurredAt,
       is_favorite: parseFavoriteFormData(formData),
