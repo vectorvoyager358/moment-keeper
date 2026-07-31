@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  BookOpen,
   Camera,
   CircleUserRound,
   House,
@@ -159,31 +158,6 @@ function NavLink({
   );
 }
 
-function BrandMark() {
-  return (
-    <Link
-      href="/timeline"
-      className="group inline-flex items-center gap-2 text-ink transition hover:text-accent"
-    >
-      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-subtle text-accent transition group-hover:bg-accent group-hover:text-white md:h-9 md:w-9 md:rounded-xl">
-        <BookOpen
-          className="h-3.5 w-3.5 md:h-4 md:w-4"
-          strokeWidth={2.25}
-          aria-hidden
-        />
-      </span>
-      <span className="flex items-baseline gap-1.5 leading-none">
-        <span className="font-display text-[0.9375rem] font-semibold tracking-tight md:text-lg">
-          Moment
-        </span>
-        <span className="font-display text-[0.9375rem] font-semibold tracking-tight text-accent md:text-lg">
-          Keeper
-        </span>
-      </span>
-    </Link>
-  );
-}
-
 export function AppNav({ current }: AppNavProps) {
   const router = useRouter();
   const [mobileNavCompact, setMobileNavCompact] = useState(false);
@@ -334,29 +308,23 @@ export function AppNav({ current }: AppNavProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-20 bg-paper/85 backdrop-blur-xl">
-        <div className="mx-auto flex h-12 max-w-4xl items-center justify-between border-b border-border/80 px-4 md:h-auto md:px-6 md:py-3.5">
-          <BrandMark />
-
-          <nav
-            className="hidden items-center gap-1.5 rounded-xl border border-border bg-surface p-1 md:flex"
-            aria-label="Main"
-          >
-            {navItems.map((item) => (
-              <NavLink
-                key={item.id}
-                item={item}
-                active={item.id === current}
-                mobile={false}
-              />
-            ))}
-          </nav>
-        </div>
-      </header>
+      <nav
+        className="fixed top-[max(0.75rem,env(safe-area-inset-top))] left-1/2 z-30 hidden -translate-x-1/2 items-center gap-1.5 rounded-2xl bg-surface p-1.5 shadow-card ring-1 ring-border/65 md:flex"
+        aria-label="Main"
+      >
+        {navItems.map((item) => (
+          <NavLink
+            key={item.id}
+            item={item}
+            active={item.id === current}
+            mobile={false}
+          />
+        ))}
+      </nav>
 
       <nav
         className={cn(
-          "fixed inset-x-4 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 mx-auto grid touch-pan-y grid-cols-4 overflow-hidden border border-border/65 bg-surface/40 p-1 shadow-[0_10px_32px_rgba(42,33,24,0.14)] transition-[height,max-width,border-radius,background-color] duration-300 ease-out select-none motion-reduce:transition-none md:hidden",
+          "fixed inset-x-4 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 mx-auto grid touch-pan-y grid-cols-4 overflow-hidden bg-surface/40 p-1 shadow-[0_10px_32px_rgba(42,33,24,0.14)] ring-1 ring-border/55 transition-[height,max-width,border-radius,background-color] duration-300 ease-out select-none motion-reduce:transition-none md:hidden",
           mobileNavCompact
             ? "h-14 max-w-xs rounded-[1.75rem]"
             : "h-16 max-w-sm rounded-[2rem]",
@@ -373,7 +341,7 @@ export function AppNav({ current }: AppNavProps) {
           aria-hidden
           data-testid="mobile-nav-lens"
           className={cn(
-            "pointer-events-none absolute inset-y-1 left-1 w-[calc((100%_-_0.5rem)/4)] rounded-[1.5rem] border border-surface-elevated/80 bg-surface/25 shadow-[inset_0_1px_1px_rgba(255,255,255,0.85),inset_0_-1px_1px_rgba(184,121,46,0.12),0_3px_12px_rgba(42,33,24,0.1)] motion-reduce:transition-none",
+            "pointer-events-none absolute inset-y-1 left-1 w-[calc((100%_-_0.5rem)/4)] rounded-[1.5rem] bg-surface/25 shadow-[inset_0_1px_1px_rgba(255,255,255,0.85),inset_0_-1px_1px_rgba(184,121,46,0.12),0_3px_12px_rgba(42,33,24,0.1)] ring-1 ring-surface-elevated/80 motion-reduce:transition-none",
             dragging
               ? "scale-[1.04] transition-transform duration-75"
               : "transition-transform duration-300 ease-out",

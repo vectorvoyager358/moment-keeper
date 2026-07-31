@@ -9,15 +9,15 @@ type CardProps = HTMLAttributes<HTMLDivElement> & {
 const paddingClasses = {
   none: "",
   sm: "p-4",
-  md: "p-5",
-  lg: "p-6",
+  md: "p-5 sm:p-6",
+  lg: "p-5 sm:p-7",
 };
 
 export function Card({ padding = "md", className, ...props }: CardProps) {
   return (
     <div
       className={cn(
-        "rounded-2xl border border-border bg-surface shadow-card",
+        "rounded-3xl bg-surface shadow-card ring-1 ring-border/60",
         paddingClasses[padding],
         className,
       )}

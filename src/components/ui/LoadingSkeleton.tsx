@@ -20,7 +20,7 @@ export function LoadingSkeleton({ lines = 3 }: LoadingSkeletonProps) {
 export function TimelineSearchSkeleton() {
   return (
     <div
-      className="animate-pulse space-y-4 rounded-2xl border border-border bg-surface p-4"
+      className="animate-pulse space-y-4 rounded-3xl bg-surface p-4 shadow-card ring-1 ring-border/55"
       aria-hidden="true"
     >
       <div className="h-4 w-16 rounded bg-border" />
@@ -37,11 +37,14 @@ export function TimelineSearchSkeleton() {
 
 export function TimelineFeedSkeleton({ cards = 3 }: { cards?: number }) {
   return (
-    <ul className="animate-pulse space-y-4" aria-hidden="true">
+    <ul
+      className="grid animate-pulse grid-cols-1 gap-5 sm:gap-6 lg:grid-cols-2"
+      aria-hidden="true"
+    >
       {Array.from({ length: cards }).map((_, index) => (
         <li
           key={index}
-          className="overflow-hidden rounded-2xl border border-border bg-surface"
+          className="overflow-hidden rounded-3xl bg-surface shadow-card ring-1 ring-border/50"
         >
           {index % 2 === 0 ? (
             <div className="aspect-[16/9] w-full bg-border" />
@@ -69,23 +72,24 @@ export function TimelineFeedSkeleton({ cards = 3 }: { cards?: number }) {
 
 export function PageLoading({ label = "Loading..." }: { label?: string }) {
   return (
-    <div className="min-h-full bg-paper">
-      <div className="border-b border-border bg-surface px-4 py-4">
-        <div className="mx-auto h-6 max-w-3xl animate-pulse rounded bg-border" />
-      </div>
-      <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+    <div className="min-h-full bg-paper pt-[env(safe-area-inset-top)] pb-[calc(6.75rem+env(safe-area-inset-bottom))] md:pt-[4.75rem] md:pb-0">
+      <main className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
         <p className="sr-only">{label}</p>
-        <div className="mb-8 flex items-center justify-between gap-4">
+        <div className="mb-8 flex items-start justify-between gap-4">
           <div className="animate-pulse space-y-2">
-            <div className="h-7 w-32 rounded bg-border" />
-            <div className="h-4 w-48 rounded bg-border" />
+            <div className="h-9 w-44 rounded-xl bg-border" />
+            <div className="h-4 w-64 max-w-full rounded bg-border" />
           </div>
-          <div className="h-9 w-24 animate-pulse rounded-lg bg-border" />
+          <div className="h-11 w-11 animate-pulse rounded-full bg-border" />
         </div>
-        <div className="mb-8">
-          <TimelineSearchSkeleton />
+        <div className="animate-pulse rounded-3xl bg-surface p-5 shadow-card ring-1 ring-border/55 sm:p-7">
+          <div className="mb-6 h-48 rounded-2xl bg-border/75 sm:h-56" />
+          <div className="space-y-3">
+            <div className="h-4 w-full rounded bg-border" />
+            <div className="h-4 w-5/6 rounded bg-border" />
+            <div className="h-4 w-2/3 rounded bg-border" />
+          </div>
         </div>
-        <TimelineFeedSkeleton />
       </main>
     </div>
   );

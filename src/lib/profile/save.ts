@@ -42,5 +42,13 @@ export async function saveProfileDisplayName(
     return { error: metadataError };
   }
 
+  // Auth metadata is embedded in the access token. Refresh it now so the
+  // claims-based profile fast path sees the new name on the next render.
+  const { error: refreshError } = await supabase.auth.refreshSession();
+
+  if (refreshError) {
+    return { error: refreshError };
+  }
+
   return { error: null };
 }

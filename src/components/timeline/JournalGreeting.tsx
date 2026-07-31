@@ -6,7 +6,8 @@ type JournalGreetingProps = {
   name: string;
 };
 
-const greetingClassName = "mb-6 font-display text-xl text-accent sm:text-2xl";
+const greetingClassName =
+  "mb-2 text-sm font-semibold tracking-[0.04em] text-accent sm:mb-2.5 sm:text-base";
 
 function subscribeToReducedMotion(onStoreChange: () => void) {
   if (typeof window.matchMedia !== "function") {

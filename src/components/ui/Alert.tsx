@@ -9,16 +9,16 @@ type AlertProps = HTMLAttributes<HTMLParagraphElement> & {
 };
 
 const variantClasses: Record<AlertVariant, string> = {
-  error: "bg-danger-subtle text-danger",
-  success: "bg-success-subtle text-success",
-  info: "bg-accent-subtle text-ink",
+  error: "bg-danger-subtle text-danger ring-danger/20",
+  success: "bg-success-subtle text-success ring-success/20",
+  info: "bg-accent-subtle text-ink ring-accent/15",
 };
 
 export function Alert({ variant = "info", className, ...props }: AlertProps) {
   return (
     <p
       className={cn(
-        "rounded-lg px-3 py-2 text-sm",
+        "rounded-2xl px-4 py-3 text-sm leading-relaxed ring-1",
         variantClasses[variant],
         className,
       )}

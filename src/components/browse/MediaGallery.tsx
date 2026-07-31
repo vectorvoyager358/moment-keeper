@@ -33,15 +33,16 @@ export async function MediaGallery({ mediaType }: MediaGalleryProps) {
     );
   }
 
+  const returnTo = mediaType
+    ? `/browse?view=media&media=${mediaType}`
+    : "/browse?view=media";
+
   return (
     <div>
-      <div className="mb-5 flex items-center gap-3">
-        <p className="shrink-0 text-sm whitespace-nowrap text-muted">
-          {moments.length} {moments.length === 1 ? "attachment" : "attachments"}
-        </p>
-        <div className="min-w-0 flex-1 overflow-x-auto">
+      <div className="sticky top-[max(0.5rem,env(safe-area-inset-top))] z-20 -mx-1 mb-4 flex items-center gap-3 rounded-2xl bg-paper/95 px-1 py-2 md:top-20">
+        <div className="min-w-0 flex-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div
-            className="flex w-max gap-1 rounded-xl border border-border bg-surface p-1"
+            className="flex w-max gap-1 rounded-xl bg-surface p-1 ring-1 ring-border/60"
             aria-label="Filter media"
           >
             {FILTERS.map((filter) => {
@@ -68,10 +69,13 @@ export async function MediaGallery({ mediaType }: MediaGalleryProps) {
             })}
           </div>
         </div>
+        <p className="shrink-0 text-xs font-medium whitespace-nowrap text-muted sm:text-sm">
+          {moments.length} {moments.length === 1 ? "item" : "items"}
+        </p>
       </div>
 
       {moments.length > 0 ? (
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+        <ul className="grid grid-cols-3 gap-1.5 sm:grid-cols-4 sm:gap-2 lg:grid-cols-5">
           {moments.map((moment) => {
             const Icon =
               moment.mediaType === "video"
@@ -89,8 +93,9 @@ export async function MediaGallery({ mediaType }: MediaGalleryProps) {
             return (
               <li key={moment.id}>
                 <Link
-                  href={`/moments/${moment.momentId}`}
-                  className="group relative flex aspect-square overflow-hidden rounded-2xl border border-border bg-accent-subtle shadow-card transition hover:-translate-y-0.5 hover:border-border-strong hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  href={`/moments/${moment.momentId}?from=${encodeURIComponent(returnTo)}`}
+                  aria-label={`${mediaLabel}: ${truncateBody(moment.body, 80)}`}
+                  className="group relative flex aspect-square overflow-hidden rounded-xl bg-accent-subtle shadow-sm ring-1 ring-border/40 transition hover:z-10 hover:scale-[1.025] hover:shadow-card-hover hover:ring-border-strong focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 sm:rounded-2xl"
                 >
                   {moment.thumbnailUrl || moment.photoUrl ? (
                     <TimelineMediaImage
@@ -112,30 +117,24 @@ export async function MediaGallery({ mediaType }: MediaGalleryProps) {
                     />
                   ) : (
                     <span className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-accent-subtle to-tag text-accent">
-                      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-surface/75 shadow-sm">
-                        <Icon className="h-6 w-6" aria-hidden />
+                      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-surface/80 shadow-sm sm:h-14 sm:w-14">
+                        <Icon className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden />
                       </span>
                     </span>
                   )}
 
-                  <span className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/5 to-transparent" />
-                  <span className="relative z-10 mt-auto w-full min-w-0 p-3 text-white sm:p-4">
-                    <p className="flex min-h-4 items-center gap-1.5 text-[0.65rem] font-semibold tracking-wide uppercase opacity-85 sm:text-xs">
-                      <Icon className="h-3 w-3 shrink-0" aria-hidden />
-                      <span className="min-w-0 truncate">{mediaLabel}</span>
-                    </p>
-                    <p className="mt-1 min-h-5 truncate font-display text-sm sm:text-base">
-                      {truncateBody(moment.body, 48)}
-                    </p>
-                    {moment.location ? (
-                      <p className="mt-1 min-h-4 truncate text-[0.65rem] opacity-85 sm:text-xs">
-                        {moment.location}
-                      </p>
-                    ) : null}
+                  <span className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/10" />
+                  <span className="absolute top-2 right-2 z-10 inline-flex h-7 w-7 items-center justify-center rounded-full bg-black/35 text-white shadow-sm">
+                    <Icon className="h-3.5 w-3.5" aria-hidden />
+                  </span>
+                  <span className="relative z-10 mt-auto w-full min-w-0 p-2.5 text-white sm:p-3">
+                    <span className="sr-only">
+                      {truncateBody(moment.body, 80)}
+                    </span>
                     <MomentDate
                       iso={moment.occurred_at}
                       compact
-                      className="mt-1 block min-h-4 truncate text-[0.65rem] opacity-75 sm:text-xs"
+                      className="block truncate text-[0.625rem] font-semibold tracking-wide text-white/90 uppercase sm:text-xs"
                     />
                   </span>
                 </Link>
@@ -149,10 +148,11 @@ export async function MediaGallery({ mediaType }: MediaGalleryProps) {
           className="border-dashed border-border-strong text-center"
         >
           <p className="font-display text-lg font-semibold text-ink">
-            No photos or voice memos yet
+            No media here yet
           </p>
           <p className="mx-auto mt-2 max-w-sm text-sm text-muted">
-            Next time you keep a moment, add something you can see or hear.
+            Try another filter, or add something you can see or hear to your
+            next moment.
           </p>
           <Link
             href="/capture"

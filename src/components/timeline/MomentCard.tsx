@@ -24,20 +24,30 @@ type MomentCardProps = {
   balanceLayout?: boolean;
   /** Give the first visible cover an eager, high-priority request. */
   priorityMedia?: boolean;
+  /** Return to an exact browsing context after opening this moment. */
+  returnTo?: string;
 };
 
 function MediaBadge({
   mediaType,
   attachmentCount,
+  overlay = false,
 }: {
   mediaType: TimelineMoment["mediaType"];
   attachmentCount: number;
+  overlay?: boolean;
 }) {
   const extra = attachmentCount > 1 ? ` +${attachmentCount - 1}` : "";
+  const badgeClassName = cn(
+    "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+    overlay
+      ? "border border-white/20 bg-black/35 text-white shadow-sm backdrop-blur-sm"
+      : "bg-accent-subtle text-accent",
+  );
 
   if (mediaType === "photo") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-accent-subtle px-2 py-0.5 text-xs font-medium text-accent">
+      <span className={badgeClassName}>
         <ImageIcon className="h-3 w-3" aria-hidden />
         Photo{extra}
       </span>
@@ -46,7 +56,7 @@ function MediaBadge({
 
   if (mediaType === "video") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-accent-subtle px-2 py-0.5 text-xs font-medium text-accent">
+      <span className={badgeClassName}>
         <Video className="h-3 w-3" aria-hidden />
         Video{extra}
       </span>
@@ -55,7 +65,7 @@ function MediaBadge({
 
   if (mediaType === "audio") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-accent-subtle px-2 py-0.5 text-xs font-medium text-accent">
+      <span className={badgeClassName}>
         <Mic className="h-3 w-3" aria-hidden />
         Voice{extra}
       </span>
@@ -66,7 +76,7 @@ function MediaBadge({
 }
 
 const timelineMediaFrame =
-  "relative h-52 overflow-hidden bg-gradient-to-br from-accent-subtle to-tag sm:h-auto sm:aspect-[3/2]";
+  "relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-accent-subtle to-tag sm:aspect-[16/10]";
 
 function MediaTile({
   mediaType,
@@ -137,6 +147,7 @@ export function MomentCard({
   compact = false,
   balanceLayout = false,
   priorityMedia = false,
+  returnTo,
 }: MomentCardProps) {
   const bodySegments = getHighlightedSegments(
     truncateBody(previewBody(moment.body), 120),
@@ -155,16 +166,48 @@ export function MomentCard({
       : null;
   const visibleTags = compact ? moment.tags.slice(0, 3) : moment.tags;
   const hiddenTagCount = moment.tags.length - visibleTags.length;
+  const hasVisualCover = Boolean(imageSrc || moment.videoUrl);
+  const mediaOverlay = hasVisualCover ? (
+    <>
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/5 to-black/10" />
+      {moment.hasMedia ? (
+        <span className="absolute top-3 right-3">
+          <MediaBadge
+            mediaType={moment.mediaType}
+            attachmentCount={moment.attachmentCount}
+            overlay
+          />
+        </span>
+      ) : null}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 p-4 text-white sm:p-5">
+        <MomentDate
+          iso={moment.occurred_at}
+          className="text-xs font-semibold tracking-[0.12em] text-white/85 uppercase"
+        />
+        {moment.location ? (
+          <MomentLocation
+            location={moment.location}
+            compact
+            className="mt-1 !text-white"
+          />
+        ) : null}
+      </div>
+    </>
+  ) : null;
 
   return (
     <article
       className={cn(
-        "group w-full min-w-0 max-w-full overflow-hidden rounded-[1.5rem] border border-border/80 bg-surface shadow-card transition duration-[var(--duration-normal)] hover:-translate-y-1 hover:border-border-strong hover:shadow-card-hover",
+        "group w-full min-w-0 max-w-full overflow-hidden rounded-3xl bg-surface shadow-card ring-1 ring-border/50 transition duration-[var(--duration-normal)] hover:-translate-y-1 hover:shadow-card-hover hover:ring-border-strong/70",
         balanceLayout && "h-full",
       )}
     >
       <Link
-        href={`/moments/${moment.id}`}
+        href={
+          returnTo
+            ? `/moments/${moment.id}?from=${encodeURIComponent(returnTo)}`
+            : `/moments/${moment.id}`
+        }
         className={cn(
           "block w-full min-w-0 max-w-full overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40",
           balanceLayout && "flex h-full flex-col",
@@ -204,17 +247,19 @@ export function MomentCard({
                 className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.025]"
               />
             )}
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/20 to-transparent" />
+            {mediaOverlay}
           </div>
         ) : moment.videoUrl ? (
-          <VideoThumbnail
-            src={moment.videoUrl}
+          <div
             className={cn(
               timelineMediaFrame,
               "w-full min-w-0 max-w-full",
               compact && "h-[clamp(7rem,22svh,10rem)] sm:h-auto",
             )}
-          />
+          >
+            <VideoThumbnail src={moment.videoUrl} fill />
+            {mediaOverlay}
+          </div>
         ) : balanceLayout ? (
           <BalancedMediaPlaceholder
             mediaType={moment.hasMedia ? moment.mediaType : null}
@@ -236,10 +281,23 @@ export function MomentCard({
             </p>
           ) : null}
           <div className="flex min-w-0 items-start justify-between gap-4">
-            <MomentDate
-              iso={moment.occurred_at}
-              className="text-xs font-semibold tracking-[0.12em] text-muted uppercase"
-            />
+            {!hasVisualCover ? (
+              <div className="min-w-0">
+                <MomentDate
+                  iso={moment.occurred_at}
+                  className="text-xs font-semibold tracking-[0.12em] text-muted uppercase"
+                />
+                {moment.location ? (
+                  <MomentLocation
+                    location={moment.location}
+                    compact
+                    className="mt-1"
+                  />
+                ) : null}
+              </div>
+            ) : (
+              <span />
+            )}
             <span className="flex items-center gap-2">
               {moment.isFavorite ? (
                 <span
@@ -250,7 +308,7 @@ export function MomentCard({
                   <span className="sr-only">Favorite</span>
                 </span>
               ) : null}
-              {moment.hasMedia ? (
+              {moment.hasMedia && !hasVisualCover ? (
                 <MediaBadge
                   mediaType={moment.mediaType}
                   attachmentCount={moment.attachmentCount}
@@ -267,18 +325,11 @@ export function MomentCard({
               ) : null}
             </span>
           </div>
-          {moment.location ? (
-            <MomentLocation
-              location={moment.location}
-              compact
-              className="mt-1"
-            />
-          ) : null}
 
           <p
             className={cn(
-              "max-w-full min-w-0 overflow-hidden truncate font-display text-[1.05rem] leading-7 text-ink",
-              compact ? "mt-2" : "mt-3",
+              "max-w-full min-w-0 overflow-hidden font-display text-[1.05rem] leading-7 text-ink",
+              compact ? "mt-2 line-clamp-2" : "mt-3 line-clamp-3",
             )}
           >
             {bodySegments.map((segment, index) =>
@@ -338,7 +389,7 @@ export function TimelineEmptyState({ className }: TimelineEmptyStateProps) {
   return (
     <div
       className={cn(
-        "rounded-2xl border border-dashed border-border-strong bg-surface p-10 text-center",
+        "rounded-3xl border border-dashed border-border-strong bg-surface p-10 text-center",
         className,
       )}
     >

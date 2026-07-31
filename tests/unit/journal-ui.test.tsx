@@ -13,6 +13,37 @@ import { MomentCard } from "@/components/timeline/MomentCard";
 afterEach(cleanup);
 
 describe("MomentCard", () => {
+  it("preserves an exact return path when opened from Look Back", () => {
+    const { container } = render(
+      <MomentCard
+        returnTo="/browse?view=media&media=photo"
+        moment={{
+          id: "moment-return",
+          body: "A photo from Look Back",
+          occurred_at: "2026-07-09T12:00:00.000Z",
+          location: null,
+          linkUrl: null,
+          isFavorite: false,
+          tags: [],
+          hasMedia: false,
+          attachmentCount: 0,
+          mediaType: null,
+          thumbnailPath: null,
+          thumbnailUrl: null,
+          photoStoragePath: null,
+          photoUrl: null,
+          videoStoragePath: null,
+          videoUrl: null,
+        }}
+      />,
+    );
+
+    expect(container.querySelector("article > a")).toHaveAttribute(
+      "href",
+      "/moments/moment-return?from=%2Fbrowse%3Fview%3Dmedia%26media%3Dphoto",
+    );
+  });
+
   it("shows a video frame instead of a generic media tile", async () => {
     const { container } = render(
       <MomentCard

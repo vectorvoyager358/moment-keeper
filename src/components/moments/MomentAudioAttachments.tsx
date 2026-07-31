@@ -49,7 +49,7 @@ export function MomentAudioAttachments({
   return (
     <section
       className={cn(
-        "w-full rounded-2xl border border-border bg-accent-subtle/25 p-3 sm:p-4",
+        "w-full rounded-2xl bg-accent-subtle/25 p-3 ring-1 ring-border/55 sm:p-4",
         className,
       )}
       aria-label={`${media.length} ${label}`}
@@ -83,7 +83,7 @@ export function MomentAudioAttachments({
           return (
             <div
               key={attachment.id}
-              className="rounded-xl border border-border/80 bg-surface/70 p-2"
+              className="rounded-xl bg-surface/70 p-2 ring-1 ring-border/55"
             >
               {media.length > 1 || attachment.original_filename ? (
                 <p className="mb-2 truncate px-1 text-xs font-medium text-muted">

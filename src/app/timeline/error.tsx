@@ -6,7 +6,7 @@ import { useEffect } from "react";
 
 import { Button, buttonClassName } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { PageShell } from "@/components/ui/PageShell";
+import { PageContainer, PageShell } from "@/components/ui/PageShell";
 
 type TimelineErrorProps = {
   error: Error & { digest?: string };
@@ -21,10 +21,10 @@ export default function TimelineError({ error, reset }: TimelineErrorProps) {
 
   return (
     <PageShell>
-      <main className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+      <PageContainer className="py-16">
         <Card
           padding="lg"
-          className="border-danger/30 bg-danger-subtle text-center"
+          className="bg-danger-subtle text-center ring-danger/25"
         >
           <h1 className="font-display text-lg font-semibold text-danger">
             Could not load your timeline
@@ -45,7 +45,7 @@ export default function TimelineError({ error, reset }: TimelineErrorProps) {
             </Link>
           </div>
         </Card>
-      </main>
+      </PageContainer>
     </PageShell>
   );
 }

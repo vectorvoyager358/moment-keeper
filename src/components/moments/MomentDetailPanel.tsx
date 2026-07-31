@@ -11,12 +11,16 @@ type MomentDetailPanelProps = {
   moment: MomentDetail;
   earlierId: string | null;
   laterId: string | null;
+  backHref?: string;
+  backLabel?: string;
 };
 
 export function MomentDetailPanel({
   moment,
   earlierId,
   laterId,
+  backHref,
+  backLabel,
 }: MomentDetailPanelProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [waitingForSavedMoment, setWaitingForSavedMoment] = useState(false);
@@ -31,9 +35,10 @@ export function MomentDetailPanel({
 
   if (isEditing) {
     return (
-      <div className="mx-auto max-w-3xl rounded-[1.75rem] border border-border bg-surface p-5 shadow-card sm:p-8">
+      <div className="mx-auto max-w-3xl rounded-3xl bg-surface p-5 shadow-card ring-1 ring-border/60 sm:p-8">
         <EditMomentForm
           moment={moment}
+          returnTo={backHref}
           onCancel={() => setIsEditing(false)}
           onSaved={() => setWaitingForSavedMoment(true)}
         />
@@ -46,6 +51,8 @@ export function MomentDetailPanel({
       moment={moment}
       earlierId={earlierId}
       laterId={laterId}
+      backHref={backHref}
+      backLabel={backLabel}
       onEdit={() => {
         editingMomentRef.current = moment;
         setIsEditing(true);

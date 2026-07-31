@@ -15,7 +15,7 @@ export function MomentLink({ url }: MomentLinkProps) {
       target="_blank"
       rel="noopener noreferrer"
       aria-label={`Open link to ${hostname} in a new tab`}
-      className="group/link flex min-w-0 items-center gap-3 rounded-2xl border border-border bg-accent-subtle/45 p-3.5 transition hover:border-accent/40 hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+      className="group/link flex min-w-0 items-center gap-3 rounded-2xl bg-accent-subtle/45 p-3.5 ring-1 ring-border/55 transition hover:bg-accent-subtle hover:ring-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
     >
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface text-accent shadow-sm">
         <Link2 className="h-4.5 w-4.5" aria-hidden />
