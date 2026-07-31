@@ -4,7 +4,11 @@ import { redirect } from "next/navigation";
 import { CaptureForm } from "@/components/capture/CaptureForm";
 import { WelcomeBanner } from "@/components/capture/WelcomeBanner";
 import { Card } from "@/components/ui/Card";
-import { PageHeader, PageShell } from "@/components/ui/PageShell";
+import {
+  PageContainer,
+  PageHeader,
+  PageShell,
+} from "@/components/ui/PageShell";
 import { createClient } from "@/lib/supabase/server";
 
 type CapturePageProps = {
@@ -26,7 +30,7 @@ export default async function CapturePage({ searchParams }: CapturePageProps) {
 
   return (
     <PageShell>
-      <main className="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-12">
+      <PageContainer size="sm">
         <WelcomeBanner initialVisible={showWelcomeBanner} />
 
         <PageHeader
@@ -34,7 +38,7 @@ export default async function CapturePage({ searchParams }: CapturePageProps) {
           description="No pressure to write perfectly. A few honest words are enough."
         />
 
-        <Card padding="lg" className="rounded-[1.5rem]">
+        <Card padding="lg">
           <CaptureForm userId={userId} />
         </Card>
 
@@ -46,7 +50,7 @@ export default async function CapturePage({ searchParams }: CapturePageProps) {
             Back to your journal
           </Link>
         </p>
-      </main>
+      </PageContainer>
     </PageShell>
   );
 }

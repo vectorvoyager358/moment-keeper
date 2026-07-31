@@ -6,12 +6,12 @@ import {
   DeferredTimelineRevisit,
   DeferredTimelineSearch,
 } from "@/components/timeline/DeferredTimelinePanels";
-import { TimelineCollapsiblePanel } from "@/components/timeline/TimelineCollapsiblePanel";
 import { TimelineResults } from "@/components/timeline/TimelinePageSections";
 import { TimelineSurpriseLink } from "@/components/timeline/TimelineSurpriseLink";
+import { TimelineTools } from "@/components/timeline/TimelineTools";
 import { Alert } from "@/components/ui/Alert";
 import { TimelineFeedSkeleton } from "@/components/ui/LoadingSkeleton";
-import { PageHeader, PageShell } from "@/components/ui/PageShell";
+import { PageContainer, PageShell } from "@/components/ui/PageShell";
 import { SavedToast } from "@/components/ui/SavedToast";
 import { ScrollToTopButton } from "@/components/ui/ScrollToTopButton";
 import {
@@ -58,16 +58,22 @@ export default async function TimelinePage({
 
   return (
     <PageShell>
-      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
+      <PageContainer size="xl" className="pt-6 pb-8 sm:pt-9 sm:pb-12">
         <Suspense fallback={<div className="h-8" aria-hidden="true" />}>
           <TimelineGreeting profilePromise={profilePromise} />
         </Suspense>
 
-        <PageHeader
-          title="Your journal"
-          description="A quiet place for the moments you want to keep."
-          action={<KeepMomentLink />}
-        />
+        <header className="mb-6 flex items-start justify-between gap-5 sm:mb-8 sm:items-center">
+          <div>
+            <h1 className="font-display text-[2rem] font-semibold leading-[1.05] tracking-[-0.035em] text-ink sm:text-[2.5rem]">
+              Your journal
+            </h1>
+            <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted sm:text-base">
+              A quiet place for the moments you want to keep.
+            </p>
+          </div>
+          <KeepMomentLink className="mt-0.5 sm:mt-0" />
+        </header>
 
         <SavedToast
           initialVisible={showDeletedToast}
@@ -92,7 +98,7 @@ export default async function TimelinePage({
             showEmptySurprise={rawParams.surprise === "empty"}
           />
         </Suspense>
-      </main>
+      </PageContainer>
       <ScrollToTopButton />
     </PageShell>
   );
@@ -150,31 +156,20 @@ async function TimelineHomeContent({
       ) : null}
 
       {canUseJournalTools ? (
-        <TimelineCollapsiblePanel
-          panelId="find"
-          title="Find"
-          description="Search your journal by words, tags, or favorites."
-          initialOpen={hasSearchFilters}
-          className="mt-6"
-          combinedWhenOpen
-        >
-          <DeferredTimelineSearch filters={filters} />
-        </TimelineCollapsiblePanel>
-      ) : null}
-
-      {canUseJournalTools ? (
-        <TimelineCollapsiblePanel
-          panelId="revisit"
-          title="Revisit"
-          description="On this day, themes, and a surprise draw from your journal."
-        >
-          <DeferredTimelineRevisit
-            searchFilters={filters}
-            resurfacingFilters={resurfacingFilters}
-          />
-
-          <TimelineSurpriseLink />
-        </TimelineCollapsiblePanel>
+        <TimelineTools
+          key={hasSearchFilters ? "searching" : "browsing"}
+          initialTool={hasSearchFilters ? "find" : null}
+          findContent={<DeferredTimelineSearch filters={filters} />}
+          revisitContent={
+            <>
+              <DeferredTimelineRevisit
+                searchFilters={filters}
+                resurfacingFilters={resurfacingFilters}
+              />
+              <TimelineSurpriseLink />
+            </>
+          }
+        />
       ) : null}
 
       <TimelineResults

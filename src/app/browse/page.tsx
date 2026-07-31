@@ -4,7 +4,11 @@ import { BrowseTabs } from "@/components/browse/BrowseTabs";
 import { CalendarView } from "@/components/browse/CalendarView";
 import { MediaGallery } from "@/components/browse/MediaGallery";
 import { KeepMomentLink } from "@/components/KeepMomentLink";
-import { PageHeader, PageShell } from "@/components/ui/PageShell";
+import {
+  PageContainer,
+  PageHeader,
+  PageShell,
+} from "@/components/ui/PageShell";
 import { ScrollToTopButton } from "@/components/ui/ScrollToTopButton";
 import type { MediaType } from "@/lib/database.types";
 import { parseCalendarParams } from "@/lib/moments/calendar";
@@ -36,7 +40,7 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
 
   return (
     <PageShell>
-      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
+      <PageContainer size="xl">
         <PageHeader
           title="Look back"
           description="Wander by date, or revisit the moments you've captured."
@@ -54,23 +58,25 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
             }
             fallback={
               <div
-                className="h-[32rem] animate-pulse rounded-[1.5rem] border border-border bg-surface"
+                className="h-[32rem] animate-pulse rounded-3xl bg-surface shadow-card ring-1 ring-border/60"
                 aria-hidden
               />
             }
           >
             {view === "calendar" ? (
-              <CalendarView
-                year={calendar.year}
-                month={calendar.month}
-                selectedDay={calendar.day}
-              />
+              <div className="mx-auto max-w-4xl">
+                <CalendarView
+                  year={calendar.year}
+                  month={calendar.month}
+                  selectedDay={calendar.day}
+                />
+              </div>
             ) : (
               <MediaGallery mediaType={mediaType} />
             )}
           </Suspense>
         </div>
-      </main>
+      </PageContainer>
       <ScrollToTopButton />
     </PageShell>
   );

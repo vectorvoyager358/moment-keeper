@@ -7,7 +7,7 @@ import { useEffect } from "react";
 import { toUserErrorMessage } from "@/lib/errors";
 import { Button, buttonClassName } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { PageShell } from "@/components/ui/PageShell";
+import { PageContainer, PageShell } from "@/components/ui/PageShell";
 
 type CaptureErrorProps = {
   error: Error & { digest?: string };
@@ -22,10 +22,10 @@ export default function CaptureError({ error, reset }: CaptureErrorProps) {
 
   return (
     <PageShell>
-      <main className="mx-auto max-w-2xl px-6 py-16">
+      <PageContainer size="sm" className="py-16">
         <Card
           padding="lg"
-          className="border-danger/30 bg-danger-subtle text-center"
+          className="bg-danger-subtle text-center ring-danger/25"
         >
           <h1 className="font-display text-lg font-semibold text-danger">
             Could not save your moment
@@ -48,7 +48,7 @@ export default function CaptureError({ error, reset }: CaptureErrorProps) {
             </Link>
           </div>
         </Card>
-      </main>
+      </PageContainer>
     </PageShell>
   );
 }

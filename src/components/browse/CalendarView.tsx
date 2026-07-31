@@ -1,4 +1,9 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  CalendarSearch,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import Link from "next/link";
 
 import { TimelineMediaImage } from "@/components/timeline/TimelineMediaImage";
@@ -82,18 +87,21 @@ export async function CalendarView({
   const selectedMoments = selectedDay
     ? (momentsByDay.get(selectedDay) ?? [])
     : [];
+  const selectedDayReturnTo = selectedDay
+    ? `${monthUrl(calendarMonth, selectedDay)}#selected-day`
+    : null;
   const todayKey = localDateKey();
 
   return (
     <div className="min-w-0 max-w-full space-y-8">
-      <Card padding="md" className="rounded-[1.5rem]">
-        <div className="mb-5 flex items-center justify-between gap-3">
+      <Card padding="md">
+        <div className="mb-5 flex items-center justify-between gap-3 sm:mb-6">
           <Link
             href={monthUrl(previousMonth)}
             className={buttonClassName({
               variant: "ghost",
               size: "sm",
-              className: "px-2.5",
+              className: "h-11 w-11 rounded-full px-0",
             })}
             aria-label="Previous month"
           >
@@ -113,7 +121,7 @@ export async function CalendarView({
             className={buttonClassName({
               variant: "ghost",
               size: "sm",
-              className: "px-2.5",
+              className: "h-11 w-11 rounded-full px-0",
             })}
             aria-label="Next month"
           >
@@ -121,21 +129,41 @@ export async function CalendarView({
           </Link>
         </div>
 
-        <div className="mb-5 rounded-2xl bg-accent-subtle/45 p-3">
-          <div className="grid gap-4 md:grid-cols-2 md:items-stretch">
+        <details className="group mb-5 overflow-hidden rounded-2xl bg-accent-subtle/45 ring-1 ring-accent/10 sm:mb-6">
+          <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 px-4 py-2.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40 [&::-webkit-details-marker]:hidden">
+            <span className="flex min-w-0 items-center gap-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface text-accent shadow-sm">
+                <CalendarSearch className="h-4 w-4" aria-hidden />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-ink">
+                  Jump through time
+                </span>
+                <span className="block truncate text-xs text-muted">
+                  Open another month or choose an exact date
+                </span>
+              </span>
+            </span>
+            <ChevronDown
+              className="h-4 w-4 shrink-0 text-muted transition group-open:rotate-180"
+              aria-hidden
+            />
+          </summary>
+
+          <div className="grid gap-4 border-t border-accent/10 p-4 md:grid-cols-2 md:items-stretch">
             <form
               action="/browse"
               method="get"
               className="flex min-w-0 flex-col gap-3"
             >
               <input type="hidden" name="view" value="calendar" />
-              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_5.5rem] sm:items-end sm:gap-2">
-                <Label className="block min-w-0 text-xs font-semibold text-muted">
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_6rem] sm:items-end sm:gap-2">
+                <Label className="block min-w-0 text-xs">
                   Month
                   <Select
                     name="month"
                     defaultValue={month}
-                    className="mt-1 h-10"
+                    className="mt-1 h-11"
                   >
                     {MONTHS.map((label, index) => (
                       <option key={label} value={index + 1}>
@@ -144,7 +172,7 @@ export async function CalendarView({
                     ))}
                   </Select>
                 </Label>
-                <Label className="block min-w-0 text-xs font-semibold text-muted">
+                <Label className="block min-w-0 text-xs">
                   Year
                   <Input
                     type="number"
@@ -154,21 +182,19 @@ export async function CalendarView({
                     defaultValue={year}
                     required
                     inputMode="numeric"
-                    className="mt-1 h-10"
+                    className="mt-1 h-11"
                   />
                 </Label>
               </div>
-              <div className="mt-auto">
-                <button
-                  type="submit"
-                  className={buttonClassName({
-                    size: "sm",
-                    className: "h-10 w-full",
-                  })}
-                >
-                  Open month
-                </button>
-              </div>
+              <button
+                type="submit"
+                className={buttonClassName({
+                  size: "sm",
+                  className: "mt-auto h-11 w-full",
+                })}
+              >
+                Open month
+              </button>
             </form>
 
             <form
@@ -177,9 +203,9 @@ export async function CalendarView({
               className="flex min-w-0 flex-col gap-3"
             >
               <input type="hidden" name="view" value="calendar" />
-              <Label className="block w-full min-w-0 max-w-full text-xs font-semibold text-muted">
-                Choose a date
-                <span className="relative mt-1 block h-10 w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-border-strong bg-surface-elevated transition focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20">
+              <Label className="block w-full min-w-0 max-w-full text-xs">
+                Exact date
+                <span className="relative mt-1 block h-11 w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-border bg-surface-elevated transition focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20">
                   <Input
                     type="date"
                     name="date"
@@ -191,21 +217,19 @@ export async function CalendarView({
                   />
                 </span>
               </Label>
-              <div className="mt-auto">
-                <button
-                  type="submit"
-                  className={buttonClassName({
-                    variant: "secondary",
-                    size: "sm",
-                    className: "h-10 w-full",
-                  })}
-                >
-                  Relive
-                </button>
-              </div>
+              <button
+                type="submit"
+                className={buttonClassName({
+                  variant: "secondary",
+                  size: "sm",
+                  className: "mt-auto h-11 w-full",
+                })}
+              >
+                Relive this date
+              </button>
             </form>
           </div>
-        </div>
+        </details>
 
         <div className="grid grid-cols-7 gap-1 sm:gap-2">
           {WEEKDAYS.map((weekday) => (
@@ -276,8 +300,10 @@ export async function CalendarView({
                 {dayMoments.length > 0 ? (
                   <span
                     className={cn(
-                      "relative z-10 mt-auto text-[0.6rem] font-semibold sm:text-xs",
-                      hasVisual ? "text-white" : "text-accent",
+                      "relative z-10 mt-auto inline-flex min-h-4 min-w-4 items-center justify-center self-end rounded-full px-1 text-[0.6rem] font-bold sm:min-h-5 sm:min-w-5 sm:text-[0.65rem]",
+                      hasVisual
+                        ? "bg-black/35 text-white"
+                        : "bg-accent-subtle text-accent",
                     )}
                   >
                     {dayMoments.length}
@@ -292,10 +318,10 @@ export async function CalendarView({
                 href={`${monthUrl(calendarMonth, day.dateKey)}#selected-day`}
                 aria-label={`${day.dateKey}: ${dayMoments.length} moments`}
                 className={cn(
-                  "relative flex aspect-square min-w-0 flex-col overflow-hidden rounded-lg border p-1 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 sm:rounded-xl sm:p-1.5",
+                  "relative flex aspect-square min-w-0 flex-col overflow-hidden rounded-xl p-1 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 sm:p-1.5",
                   selected
-                    ? "border-accent shadow-sm"
-                    : "border-border bg-accent-subtle/30 hover:border-accent/50",
+                    ? "shadow-sm ring-2 ring-accent ring-offset-2 ring-offset-surface"
+                    : "bg-accent-subtle/30 ring-1 ring-border/45 hover:ring-accent/40",
                 )}
               >
                 {content}
@@ -304,7 +330,7 @@ export async function CalendarView({
               <div
                 key={day.dateKey}
                 className={cn(
-                  "relative flex aspect-square min-w-0 flex-col rounded-lg p-1 sm:rounded-xl sm:p-1.5",
+                  "relative flex aspect-square min-w-0 flex-col rounded-xl p-1 sm:p-1.5",
                   day.inMonth ? "bg-surface" : "opacity-25",
                 )}
                 aria-hidden={!day.inMonth}
@@ -322,7 +348,7 @@ export async function CalendarView({
           aria-labelledby="selected-day-heading"
           className="min-w-0 max-w-full scroll-mt-24 overflow-x-hidden"
         >
-          <div className="mb-4 flex min-w-0 items-center justify-between gap-4">
+          <div className="mb-4 flex min-w-0 items-center justify-between gap-4 rounded-2xl bg-surface p-4 shadow-card ring-1 ring-border/55">
             <div className="min-w-0 flex-1">
               <h2
                 id="selected-day-heading"
@@ -340,7 +366,11 @@ export async function CalendarView({
             </div>
             <Link
               href={monthUrl(calendarMonth)}
-              className="shrink-0 text-sm font-medium text-accent hover:underline"
+              className={buttonClassName({
+                variant: "ghost",
+                size: "sm",
+                className: "shrink-0",
+              })}
             >
               Back to month
             </Link>
@@ -348,7 +378,12 @@ export async function CalendarView({
           <ul className="grid min-w-0 max-w-full grid-cols-1 gap-4 sm:grid-cols-2">
             {selectedMoments.map((moment) => (
               <li key={moment.id} className="min-w-0 max-w-full">
-                <MomentCard moment={moment} preferOriginalPhoto compact />
+                <MomentCard
+                  moment={moment}
+                  preferOriginalPhoto
+                  compact
+                  returnTo={selectedDayReturnTo ?? undefined}
+                />
               </li>
             ))}
           </ul>

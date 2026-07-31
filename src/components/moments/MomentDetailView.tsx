@@ -23,6 +23,8 @@ type MomentDetailViewProps = {
   moment: MomentDetail;
   earlierId?: string | null;
   laterId?: string | null;
+  backHref?: string;
+  backLabel?: string;
   onEdit: () => void;
 };
 
@@ -30,6 +32,8 @@ export function MomentDetailView({
   moment,
   earlierId = null,
   laterId = null,
+  backHref = "/timeline",
+  backLabel = "Back to your journal",
   onEdit,
 }: MomentDetailViewProps) {
   const visualMedia = moment.media.filter(
@@ -92,7 +96,7 @@ export function MomentDetailView({
       <article
         className={
           hasVisualMedia
-            ? "overflow-hidden bg-surface sm:rounded-[2rem] sm:border sm:border-border sm:shadow-card lg:grid lg:grid-cols-[minmax(0,1.45fr)_minmax(22rem,0.75fr)] lg:overflow-visible lg:border-0 lg:bg-transparent lg:shadow-none"
+            ? "relative bg-transparent lg:grid lg:grid-cols-[minmax(0,1.3fr)_minmax(24rem,0.7fr)] lg:items-start"
             : "mx-auto max-w-3xl overflow-hidden bg-surface sm:rounded-[2rem] sm:border sm:border-border sm:shadow-card"
         }
       >
@@ -103,9 +107,9 @@ export function MomentDetailView({
           >
             <div className="absolute inset-x-0 top-0 z-20 flex items-start justify-between bg-gradient-to-b from-black/50 via-black/15 to-transparent p-4 pb-14 sm:p-5 sm:pb-16">
               <Link
-                href="/timeline"
-                aria-label="Back to your journal"
-                title="Back to your journal"
+                href={backHref}
+                aria-label={backLabel}
+                title={backLabel}
                 className={buttonClassName({
                   variant: "secondary",
                   className:
@@ -142,7 +146,7 @@ export function MomentDetailView({
               ))}
             </div>
 
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex items-end justify-between gap-3 bg-gradient-to-t from-black/65 via-black/20 to-transparent p-5 pt-24 text-white sm:p-6 sm:pt-28">
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex items-end justify-between gap-3 bg-gradient-to-t from-black/65 via-black/20 to-transparent px-5 pt-24 pb-12 text-white sm:px-6 sm:pt-28 sm:pb-14 lg:pb-6">
               <div className="min-w-0">
                 {moment.location ? (
                   <p className="flex items-center gap-1.5 truncate text-sm font-semibold drop-shadow-sm sm:text-base">
@@ -169,16 +173,23 @@ export function MomentDetailView({
         <section
           className={
             hasVisualMedia
-              ? "min-w-0 p-5 sm:p-8 lg:flex lg:min-h-[calc(100svh-8rem)] lg:flex-col lg:px-9 lg:py-10"
+              ? "relative z-20 mx-3 -mt-8 min-w-0 rounded-[1.75rem] border border-border/70 bg-surface p-5 shadow-[0_18px_55px_rgba(42,33,24,0.14)] sm:mx-7 sm:-mt-10 sm:rounded-[2rem] sm:p-8 lg:mx-0 lg:my-8 lg:-ml-8 lg:border-border lg:px-9 lg:py-10 lg:shadow-[0_22px_70px_rgba(42,33,24,0.16)]"
               : "min-w-0 p-5 sm:p-8 lg:px-9 lg:py-10"
           }
         >
+          {hasVisualMedia ? (
+            <span
+              aria-hidden
+              className="mx-auto mb-5 block h-1 w-10 rounded-full bg-border-strong/70 lg:hidden"
+            />
+          ) : null}
+
           {!hasVisualMedia ? (
             <header className="mb-8 flex items-start justify-between gap-4">
               <Link
-                href="/timeline"
-                aria-label="Back to your journal"
-                title="Back to your journal"
+                href={backHref}
+                aria-label={backLabel}
+                title={backLabel}
                 className={buttonClassName({
                   variant: "secondary",
                   className: "h-11 w-11 rounded-full px-0",
@@ -260,8 +271,12 @@ export function MomentDetailView({
             </div>
           ) : null}
 
-          <div className={hasVisualMedia ? "mt-auto pt-8" : "pt-8"}>
-            <MomentDetailNav earlierId={earlierId} laterId={laterId} />
+          <div className="pt-8">
+            <MomentDetailNav
+              earlierId={earlierId}
+              laterId={laterId}
+              returnTo={backHref === "/timeline" ? null : backHref}
+            />
           </div>
         </section>
       </article>

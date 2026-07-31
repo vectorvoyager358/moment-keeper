@@ -54,6 +54,7 @@ export async function updateProfileName(
   revalidatePath("/timeline");
   revalidatePath("/capture");
   revalidatePath("/browse");
+  revalidatePath("/", "layout");
 
   const isSetup = formData.get("setup") === "1";
   redirect(isSetup ? "/timeline" : "/settings?profileSaved=1");

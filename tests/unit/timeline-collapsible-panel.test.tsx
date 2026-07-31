@@ -57,7 +57,7 @@ describe("TimelineCollapsiblePanel", () => {
     expect(screen.getByText("Revisit panel")).toBeVisible();
   });
 
-  it("uses one continuous border around combined open content", () => {
+  it("uses one continuous surface around combined open content", () => {
     render(
       <TimelineCollapsiblePanel panelId="find" title="Find" combinedWhenOpen>
         <p>Search panel</p>
@@ -69,8 +69,8 @@ describe("TimelineCollapsiblePanel", () => {
 
     expect(toggle.closest("section")).toHaveClass(
       "overflow-hidden",
-      "border",
-      "rounded-2xl",
+      "ring-1",
+      "rounded-3xl",
     );
     expect(toggle).toHaveClass("border-b", "rounded-none");
     expect(screen.getByText("Search panel").parentElement).toHaveClass("p-4");

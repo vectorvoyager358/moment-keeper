@@ -37,33 +37,38 @@ export function ProfileNameForm({
     <form action={formAction} className="space-y-4">
       {setup ? <input type="hidden" name="setup" value="1" /> : null}
 
-      <div className="space-y-2">
-        <Label htmlFor="displayName" className="sr-only">
-          Profile name
-        </Label>
-        <Input
-          id="displayName"
-          name="displayName"
-          type="text"
-          required
-          maxLength={MAX_PROFILE_NAME_LENGTH}
-          value={value}
-          onChange={(event) => setValue(event.target.value)}
-          autoComplete="name"
-          placeholder="What should we call you?"
-          aria-describedby="displayName-hint"
-        />
-        <FieldHint id="displayName-hint">
-          Required. Up to {MAX_PROFILE_NAME_LENGTH} characters. Shown on your
-          journal home.
-        </FieldHint>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+        <div className="min-w-0 flex-1 space-y-2">
+          <Label htmlFor="displayName" className="sr-only">
+            Profile name
+          </Label>
+          <Input
+            id="displayName"
+            name="displayName"
+            type="text"
+            required
+            maxLength={MAX_PROFILE_NAME_LENGTH}
+            value={value}
+            onChange={(event) => setValue(event.target.value)}
+            autoComplete="name"
+            placeholder="What should we call you?"
+            aria-describedby="displayName-hint"
+          />
+          <FieldHint id="displayName-hint">
+            Up to {MAX_PROFILE_NAME_LENGTH} characters.
+          </FieldHint>
+        </div>
+
+        <Button
+          type="submit"
+          disabled={pending || !canSave}
+          className="sm:min-w-28"
+        >
+          {pending ? "Saving…" : setup ? "Continue" : "Save name"}
+        </Button>
       </div>
 
       {state.error ? <Alert variant="error">{state.error}</Alert> : null}
-
-      <Button type="submit" disabled={pending || !canSave}>
-        {pending ? "Saving…" : setup ? "Continue" : "Save name"}
-      </Button>
     </form>
   );
 }

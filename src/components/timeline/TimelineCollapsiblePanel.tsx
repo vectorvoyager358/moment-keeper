@@ -87,10 +87,10 @@ export function TimelineCollapsiblePanel({
   return (
     <section
       className={cn(
-        "mb-8",
+        "mb-5 sm:mb-6",
         combinedWhenOpen &&
           isOpen &&
-          "overflow-hidden rounded-2xl border border-border-strong bg-surface shadow-card",
+          "overflow-hidden rounded-3xl bg-surface shadow-card ring-1 ring-border/60",
         className,
       )}
       aria-labelledby={`${panelId}-heading`}
@@ -104,7 +104,7 @@ export function TimelineCollapsiblePanel({
           "flex w-full items-center justify-between px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40",
           combinedWhenOpen && isOpen
             ? "rounded-none border-0 border-b border-border bg-transparent hover:bg-accent-subtle/30"
-            : "rounded-2xl border border-border-strong bg-surface hover:border-accent/50",
+            : "rounded-3xl bg-surface shadow-card ring-1 ring-border/60 hover:ring-accent/30",
         )}
       >
         <span>
@@ -112,7 +112,7 @@ export function TimelineCollapsiblePanel({
             {title}
           </span>
           {description ? (
-            <span className="mt-0.5 block text-sm text-muted">
+            <span className="mt-0.5 hidden text-sm text-muted sm:block">
               {description}
             </span>
           ) : null}

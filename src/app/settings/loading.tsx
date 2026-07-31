@@ -1,10 +1,10 @@
 import { Card } from "@/components/ui/Card";
-import { PageShell } from "@/components/ui/PageShell";
+import { PageContainer, PageShell } from "@/components/ui/PageShell";
 
 export default function SettingsLoading() {
   return (
     <PageShell>
-      <main className="mx-auto max-w-3xl px-6 py-10">
+      <PageContainer>
         <p className="sr-only">Opening your account</p>
 
         <div className="mb-8 animate-pulse space-y-2" aria-hidden="true">
@@ -30,7 +30,7 @@ export default function SettingsLoading() {
           <div className="h-4 w-64 max-w-full rounded bg-border" />
           <div className="h-11 w-full rounded-lg bg-border" />
         </Card>
-      </main>
+      </PageContainer>
     </PageShell>
   );
 }

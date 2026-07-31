@@ -1,15 +1,17 @@
 import { notFound } from "next/navigation";
 
 import { MomentDetailPanel } from "@/components/moments/MomentDetailPanel";
-import { PageShell } from "@/components/ui/PageShell";
+import { PageContainer, PageShell } from "@/components/ui/PageShell";
 import { SavedToast } from "@/components/ui/SavedToast";
 import { toUserErrorMessage } from "@/lib/errors";
+import { getMomentBackContext } from "@/lib/moments/navigation";
 import { getAdjacentMomentIds, getMomentById } from "@/lib/moments/queries";
 
 type MomentDetailPageProps = {
   params: Promise<{ id: string }>;
   searchParams: Promise<{
     updated?: string | string[];
+    from?: string | string[];
   }>;
 };
 
@@ -20,6 +22,7 @@ export default async function MomentDetailPage({
   const { id } = await params;
   const rawParams = await searchParams;
   const showUpdatedToast = rawParams.updated === "1";
+  const backContext = getMomentBackContext(rawParams.from);
 
   let moment;
 
@@ -37,7 +40,7 @@ export default async function MomentDetailPage({
 
   return (
     <PageShell>
-      <main className="mx-auto max-w-[90rem] sm:px-5 sm:py-6 lg:px-8 lg:py-8">
+      <PageContainer size="wide" className="px-0 py-0 sm:px-5 sm:py-6">
         <SavedToast
           initialVisible={showUpdatedToast}
           queryParam="updated"
@@ -48,8 +51,10 @@ export default async function MomentDetailPage({
           moment={moment}
           earlierId={adjacent.earlierId}
           laterId={adjacent.laterId}
+          backHref={backContext.href}
+          backLabel={backContext.label}
         />
-      </main>
+      </PageContainer>
     </PageShell>
   );
 }

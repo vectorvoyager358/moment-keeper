@@ -60,6 +60,10 @@ describe("journal-focused navigation copy", () => {
 
     const mobileNavs = screen.getAllByRole("navigation", { name: "Main" });
     expect(mobileNavs).toHaveLength(2);
+    expect(mobileNavs[0]).toHaveClass("fixed", "md:flex");
+    expect(
+      screen.queryByRole("link", { name: "Moment Keeper" }),
+    ).not.toBeInTheDocument();
     expect(mobileNavs[1]).toHaveClass("md:hidden");
     expect(mobileNavs[1]).toHaveClass("rounded-[2rem]");
     expect(mobileNavs[1]).toHaveClass("max-w-sm");

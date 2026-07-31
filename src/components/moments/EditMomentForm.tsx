@@ -32,6 +32,7 @@ type EditMomentFormProps = {
   moment: MomentDetail;
   onCancel: () => void;
   onSaved: () => void;
+  returnTo?: string;
 };
 
 const LazyRichTextEditor = dynamic(
@@ -55,6 +56,7 @@ export function EditMomentForm({
   moment,
   onCancel,
   onSaved,
+  returnTo,
 }: EditMomentFormProps) {
   const router = useRouter();
   const [body, setBody] = useState(moment.body);
@@ -138,7 +140,12 @@ export function EditMomentForm({
       setProcessing(false);
       setPercent(null);
       onSaved();
-      router.push(result.redirectTo ?? `/moments/${moment.id}?updated=1`);
+      const redirectTo = result.redirectTo ?? `/moments/${moment.id}?updated=1`;
+      router.push(
+        returnTo
+          ? `${redirectTo}${redirectTo.includes("?") ? "&" : "?"}from=${encodeURIComponent(returnTo)}`
+          : redirectTo,
+      );
       router.refresh();
     } catch (submitError) {
       setPending(false);

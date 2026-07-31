@@ -92,7 +92,7 @@ export function TimelineFeed({
 
   return (
     <>
-      <ul className="space-y-4">
+      <ul className="grid items-start gap-4 sm:gap-5 lg:grid-cols-2">
         {moments.map((moment, index) => (
           <li
             key={moment.id}

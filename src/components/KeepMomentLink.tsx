@@ -16,7 +16,7 @@ export function KeepMomentLink({ className }: KeepMomentLinkProps) {
       className={buttonClassName({
         size: "sm",
         className: cn(
-          "h-10 w-10 shrink-0 rounded-full p-0 sm:h-auto sm:w-auto sm:rounded-xl sm:px-3.5",
+          "h-11 w-11 shrink-0 rounded-full p-0 sm:h-auto sm:w-auto sm:rounded-xl sm:px-3.5",
           className,
         ),
       })}

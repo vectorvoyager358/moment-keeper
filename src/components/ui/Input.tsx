@@ -9,14 +9,14 @@ import type {
 import { cn } from "@/lib/cn";
 
 export const fieldClassName =
-  "w-full rounded-xl border border-border-strong bg-surface-elevated px-3.5 py-2.5 text-base text-ink outline-none transition placeholder:text-muted/70 focus:border-accent focus:ring-2 focus:ring-accent/20 sm:text-sm";
+  "min-h-11 w-full rounded-xl border border-border bg-surface-elevated px-3.5 py-2.5 text-base text-ink outline-none transition placeholder:text-muted/70 focus:border-accent focus:ring-2 focus:ring-accent/20 sm:text-sm";
 
 type LabelProps = LabelHTMLAttributes<HTMLLabelElement>;
 
 export function Label({ className, ...props }: LabelProps) {
   return (
     <label
-      className={cn("text-sm font-medium text-ink", className)}
+      className={cn("text-sm font-semibold text-muted", className)}
       {...props}
     />
   );

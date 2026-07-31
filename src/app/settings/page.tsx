@@ -1,18 +1,17 @@
-import { logout } from "@/app/auth/actions";
 import { ChangePasswordForm } from "@/components/settings/ChangePasswordForm";
+import { LogoutButton } from "@/components/settings/LogoutButton";
 import { ProfileNameForm } from "@/components/settings/ProfileNameForm";
 import { Alert } from "@/components/ui/Alert";
-import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/Card";
-import { PageHeader, PageShell } from "@/components/ui/PageShell";
+  PageContainer,
+  PageHeader,
+  PageShell,
+} from "@/components/ui/PageShell";
 import { SavedToast } from "@/components/ui/SavedToast";
 import { toUserErrorMessage } from "@/lib/errors";
 import { getUserProfile } from "@/lib/profile/queries";
+import { ChevronDown, CircleUserRound, LockKeyhole, Mail } from "lucide-react";
 
 type SettingsPageProps = {
   searchParams: Promise<{
@@ -20,6 +19,16 @@ type SettingsPageProps = {
     setup?: string | string[];
   }>;
 };
+
+function getProfileInitials(displayName: string, email: string) {
+  const source = displayName.trim() || email.split("@")[0] || "M";
+  const words = source.split(/\s+/).filter(Boolean);
+
+  return words
+    .slice(0, 2)
+    .map((word) => word.charAt(0).toUpperCase())
+    .join("");
+}
 
 export default async function SettingsPage({
   searchParams,
@@ -39,16 +48,20 @@ export default async function SettingsPage({
   }
 
   const needsProfileName = !profile.hasDisplayName;
+  const profileInitials = getProfileInitials(
+    profile.displayName,
+    profile.email,
+  );
 
   return (
     <PageShell>
-      <main className="mx-auto max-w-3xl px-6 py-10">
+      <PageContainer size="lg">
         <PageHeader
           title={needsProfileName ? "Welcome" : "Your account"}
           description={
             needsProfileName
               ? "Choose a name before you start journaling."
-              : "Sign-in details for your private journal. Your moments are private to you."
+              : undefined
           }
         />
 
@@ -65,51 +78,85 @@ export default async function SettingsPage({
           </Alert>
         ) : null}
 
-        <Card padding="lg" className="space-y-4">
-          <CardHeader>
-            <CardTitle>Profile name</CardTitle>
-          </CardHeader>
-
-          <ProfileNameForm
-            key={profile.displayName}
-            initialDisplayName={profile.displayName}
-            setup={needsProfileName}
-          />
-        </Card>
-
-        <Card padding="lg" className="mt-6 space-y-4">
-          <div>
-            <p className="text-sm font-medium text-muted">
-              You&apos;re signed in as
-            </p>
-            <p className="mt-1 font-display text-lg text-ink">
-              {profile.displayName || profile.email}
-            </p>
-            {profile.displayName ? (
-              <p className="mt-1 text-sm text-muted">{profile.email}</p>
-            ) : null}
+        <Card padding="none" className="overflow-hidden">
+          <div className="flex items-center gap-4 bg-accent-subtle/45 p-5 sm:gap-5 sm:p-7">
+            <div
+              className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-accent font-display text-xl font-semibold text-white shadow-sm sm:size-16 sm:text-2xl"
+              aria-hidden
+            >
+              {profileInitials}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-display text-xl font-semibold text-ink sm:text-2xl">
+                {profile.displayName || "Set up your profile"}
+              </p>
+              <div className="mt-1 flex min-w-0 items-center gap-2">
+                <p className="flex min-w-0 flex-1 items-center gap-1.5 truncate text-sm text-muted">
+                  <Mail className="size-3.5 shrink-0" aria-hidden />
+                  <span className="truncate">{profile.email}</span>
+                </p>
+                <LogoutButton />
+              </div>
+            </div>
           </div>
 
-          <form action={logout}>
-            <Button type="submit" variant="secondary">
-              Log out
-            </Button>
-          </form>
+          <div className="divide-y divide-border/60">
+            <section
+              aria-labelledby="profile-name-heading"
+              className="p-5 sm:p-7"
+            >
+              <div className="mb-5 flex items-start gap-3">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-subtle text-accent">
+                  <CircleUserRound className="size-5" aria-hidden />
+                </span>
+                <div>
+                  <h2
+                    id="profile-name-heading"
+                    className="font-display text-lg font-semibold text-ink"
+                  >
+                    Profile
+                  </h2>
+                  <p className="mt-0.5 text-sm leading-relaxed text-muted">
+                    The name shown on your journal home.
+                  </p>
+                </div>
+              </div>
+
+              <ProfileNameForm
+                key={profile.displayName}
+                initialDisplayName={profile.displayName}
+                setup={needsProfileName}
+              />
+            </section>
+
+            {needsProfileName ? null : (
+              <details className="group">
+                <summary className="flex min-h-20 cursor-pointer list-none items-center gap-3 p-5 outline-none transition hover:bg-accent-subtle/35 focus-visible:bg-accent-subtle/35 sm:p-7 [&::-webkit-details-marker]:hidden">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-subtle text-accent">
+                    <LockKeyhole className="size-5" aria-hidden />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-display text-lg font-semibold text-ink">
+                      Password
+                    </span>
+                    <span className="mt-0.5 block text-sm leading-relaxed text-muted">
+                      Update your sign-in password.
+                    </span>
+                  </span>
+                  <ChevronDown
+                    className="size-5 shrink-0 text-muted transition group-open:rotate-180"
+                    aria-hidden
+                  />
+                </summary>
+
+                <div className="border-t border-border/60 bg-paper/35 px-5 py-6 sm:px-7">
+                  <ChangePasswordForm />
+                </div>
+              </details>
+            )}
+          </div>
         </Card>
-
-        {needsProfileName ? null : (
-          <Card padding="lg" className="mt-6 space-y-4">
-            <CardHeader>
-              <CardTitle>Change password</CardTitle>
-              <CardDescription>
-                Choose a new password for signing in.
-              </CardDescription>
-            </CardHeader>
-
-            <ChangePasswordForm />
-          </Card>
-        )}
-      </main>
+      </PageContainer>
     </PageShell>
   );
 }

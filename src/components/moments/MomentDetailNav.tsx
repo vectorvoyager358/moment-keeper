@@ -6,9 +6,20 @@ import { buttonClassName } from "@/components/ui/Button";
 type MomentDetailNavProps = {
   earlierId: string | null;
   laterId: string | null;
+  returnTo?: string | null;
 };
 
-export function MomentDetailNav({ earlierId, laterId }: MomentDetailNavProps) {
+function momentHref(id: string, returnTo?: string | null) {
+  return returnTo
+    ? `/moments/${id}?from=${encodeURIComponent(returnTo)}`
+    : `/moments/${id}`;
+}
+
+export function MomentDetailNav({
+  earlierId,
+  laterId,
+  returnTo,
+}: MomentDetailNavProps) {
   if (!earlierId && !laterId) {
     return null;
   }
@@ -20,7 +31,7 @@ export function MomentDetailNav({ earlierId, laterId }: MomentDetailNavProps) {
     >
       {earlierId ? (
         <Link
-          href={`/moments/${earlierId}`}
+          href={momentHref(earlierId, returnTo)}
           className={buttonClassName({
             variant: "ghost",
             size: "sm",
@@ -35,7 +46,7 @@ export function MomentDetailNav({ earlierId, laterId }: MomentDetailNavProps) {
       )}
       {laterId ? (
         <Link
-          href={`/moments/${laterId}`}
+          href={momentHref(laterId, returnTo)}
           className={buttonClassName({
             variant: "ghost",
             size: "sm",
