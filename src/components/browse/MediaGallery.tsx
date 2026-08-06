@@ -97,7 +97,15 @@ export async function MediaGallery({ mediaType }: MediaGalleryProps) {
                   aria-label={`${mediaLabel}: ${truncateBody(moment.body, 80)}`}
                   className="group relative flex aspect-square overflow-hidden rounded-xl bg-accent-subtle shadow-sm ring-1 ring-border/40 transition hover:z-10 hover:scale-[1.025] hover:shadow-card-hover hover:ring-border-strong focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 sm:rounded-2xl"
                 >
-                  {moment.thumbnailUrl || moment.photoUrl ? (
+                  {moment.mediaType === "video" &&
+                  (moment.thumbnailUrl || moment.videoUrl) ? (
+                    <VideoThumbnail
+                      src={moment.videoUrl}
+                      posterSrc={moment.thumbnailUrl}
+                      fill
+                      className="transition duration-500 group-hover:scale-[1.03]"
+                    />
+                  ) : moment.thumbnailUrl || moment.photoUrl ? (
                     <TimelineMediaImage
                       src={moment.thumbnailUrl ?? moment.photoUrl ?? ""}
                       fallbackSrc={
@@ -108,12 +116,6 @@ export async function MediaGallery({ mediaType }: MediaGalleryProps) {
                           : null
                       }
                       className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
-                    />
-                  ) : moment.videoUrl ? (
-                    <VideoThumbnail
-                      src={moment.videoUrl}
-                      fill
-                      className="transition duration-500 group-hover:scale-[1.03]"
                     />
                   ) : (
                     <span className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-accent-subtle to-tag text-accent">

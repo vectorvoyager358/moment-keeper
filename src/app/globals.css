@@ -50,6 +50,7 @@
   --color-success-subtle: var(--success-subtle);
   --font-sans: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-lora), ui-serif, Georgia, serif;
+  --font-script: var(--font-dancing-script), cursive;
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
   --radius-lg: var(--radius-lg);
@@ -80,6 +81,10 @@ body {
   background-attachment: fixed;
   color: var(--ink);
   font-family: var(--font-sans);
+}
+
+.font-script {
+  font-family: var(--font-dancing-script), cursive;
 }
 
 ::selection {

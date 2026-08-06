@@ -59,20 +59,20 @@ export default async function TimelinePage({
   return (
     <PageShell>
       <PageContainer size="xl" className="pt-6 pb-8 sm:pt-9 sm:pb-12">
-        <Suspense fallback={<div className="h-8" aria-hidden="true" />}>
-          <TimelineGreeting profilePromise={profilePromise} />
-        </Suspense>
+        <header className="mb-6 sm:mb-8">
+          <div className="flex items-end justify-between gap-4">
+            <div className="min-w-0">
+              <Suspense fallback={<div className="h-6" aria-hidden="true" />}>
+                <TimelineGreeting profilePromise={profilePromise} />
+              </Suspense>
 
-        <header className="mb-6 flex items-start justify-between gap-5 sm:mb-8 sm:items-center">
-          <div>
-            <h1 className="font-display text-[2rem] font-semibold leading-[1.05] tracking-[-0.035em] text-ink sm:text-[2.5rem]">
-              Your journal
-            </h1>
-            <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted sm:text-base">
-              A quiet place for the moments you want to keep.
-            </p>
+              <h1 className="font-display text-[2rem] font-semibold leading-none tracking-[-0.035em] text-ink sm:text-[2.5rem]">
+                Your journal
+              </h1>
+            </div>
+
+            <KeepMomentLink className="mb-0.5 sm:mb-0" />
           </div>
-          <KeepMomentLink className="mt-0.5 sm:mt-0" />
         </header>
 
         <SavedToast

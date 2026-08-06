@@ -208,6 +208,7 @@ async function withSignedThumbnails(
 
         return [
           previewPath,
+          mapped.videoStoragePath,
           includeOriginalPhoto ? mapped.photoStoragePath : null,
         ].filter((path): path is string => Boolean(path));
       }),
@@ -229,10 +230,9 @@ async function withSignedThumbnails(
       mapped.photoStoragePath && (includeOriginalPhoto || !mapped.thumbnailPath)
         ? (urlByPath.get(mapped.photoStoragePath) ?? null)
         : null;
-    const videoUrl =
-      mapped.videoStoragePath && !mapped.thumbnailPath
-        ? (urlByPath.get(mapped.videoStoragePath) ?? null)
-        : null;
+    const videoUrl = mapped.videoStoragePath
+      ? (urlByPath.get(mapped.videoStoragePath) ?? null)
+      : null;
 
     return {
       ...mapped,
