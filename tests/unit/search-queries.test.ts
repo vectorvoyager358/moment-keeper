@@ -170,6 +170,63 @@ describe("getTimelineMoments cursor pagination", () => {
     expect(result.items[0].photoUrl).toBeNull();
     expect(result.items[1].photoUrl).toBe("https://media.example/moment-2.jpg");
   });
+
+  it("signs both a video poster and its original fallback", async () => {
+    const createSignedUrls = vi.fn().mockImplementation(async (paths) => ({
+      data: paths.map((path: string) => ({
+        path,
+        signedUrl: `https://media.example/${path}`,
+      })),
+      error: null,
+    }));
+    const query = {
+      limit: vi.fn().mockResolvedValue({
+        data: [
+          {
+            id: "moment-video",
+            body: "A saved video",
+            occurred_at: "2026-07-03T12:00:00.000Z",
+            location: null,
+            is_favorite: false,
+            moment_tags: [],
+            media_attachments: [
+              {
+                id: "video-attachment",
+                media_type: "video",
+                storage_path: "moment-video.mov",
+                thumbnail_path: "moment-video.thumb.jpg",
+                display_order: 0,
+              },
+            ],
+          },
+        ],
+        error: null,
+      }),
+      order: vi.fn(),
+    };
+    query.order.mockReturnValue(query);
+
+    createClientMock.mockResolvedValue({
+      from: vi.fn(() => ({ select: () => query })),
+      storage: { from: () => ({ createSignedUrls }) },
+    });
+
+    const result = await getTimelineMoments(
+      { keyword: "", tagIds: [], favoriteOnly: false },
+      { limit: 1 },
+    );
+
+    expect(createSignedUrls).toHaveBeenCalledWith(
+      ["moment-video.thumb.jpg", "moment-video.mov"],
+      3600,
+    );
+    expect(result.items[0]).toEqual(
+      expect.objectContaining({
+        thumbnailUrl: "https://media.example/moment-video.thumb.jpg",
+        videoUrl: "https://media.example/moment-video.mov",
+      }),
+    );
+  });
 });
 
 describe("getTimelineMoments keyword search", () => {

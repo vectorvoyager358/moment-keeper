@@ -6,19 +6,24 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 
 type VideoThumbnailProps = {
-  src: string;
+  src?: string | null;
+  posterSrc?: string | null;
   className?: string;
   fill?: boolean;
 };
 
 export function VideoThumbnail({
   src,
+  posterSrc,
   className,
   fill = false,
 }: VideoThumbnailProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [shouldLoad, setShouldLoad] = useState(false);
-  const [frameReady, setFrameReady] = useState(false);
+  const [failedPosterSrc, setFailedPosterSrc] = useState<string | null>(null);
+  const posterFailed = Boolean(
+    posterSrc && failedPosterSrc && posterSrc === failedPosterSrc,
+  );
 
   useEffect(() => {
     const container = containerRef.current;
@@ -71,26 +76,39 @@ export function VideoThumbnail({
         className,
       )}
     >
-      {shouldLoad ? (
+      {posterSrc && !posterFailed ? (
+        // eslint-disable-next-line @next/next/no-img-element -- signed media URL
+        <img
+          src={posterSrc}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          className="absolute inset-0 h-full w-full object-cover"
+          onError={() => setFailedPosterSrc(posterSrc)}
+        />
+      ) : null}
+
+      {shouldLoad && src && (!posterSrc || posterFailed) ? (
         <video
-          src={`${src}#t=0.1`}
+          src={src}
           muted
           playsInline
-          preload="metadata"
+          preload="auto"
           aria-hidden
           tabIndex={-1}
-          className={cn(
-            "absolute inset-0 h-full w-full object-cover transition-opacity duration-300",
-            frameReady ? "opacity-100" : "opacity-0",
-          )}
+          className="absolute inset-0 h-full w-full object-cover"
           onLoadedMetadata={(event) => {
             const video = event.currentTarget;
-            if (video.duration > 0.1) {
-              video.currentTime = 0.1;
+
+            if (Number.isFinite(video.duration) && video.duration > 0) {
+              try {
+                video.currentTime = Math.min(0.1, video.duration / 2);
+              } catch {
+                // Some mobile browsers expose a frame before allowing a seek.
+              }
             }
           }}
-          onLoadedData={() => setFrameReady(true)}
-          onSeeked={() => setFrameReady(true)}
         />
       ) : null}
 

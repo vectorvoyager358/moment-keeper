@@ -72,12 +72,51 @@ describe("MomentCard", () => {
     await waitFor(() => {
       expect(container.querySelector("video")).toHaveAttribute(
         "src",
-        "https://example.com/video.mp4#t=0.1",
+        "https://example.com/video.mp4",
       );
     });
     expect(
       screen.getByRole("link", { name: "See moments tagged travel" }),
     ).toHaveAttribute("href", "/timeline?tag=tag-1");
+  });
+
+  it("falls back from a broken video poster to the original video", async () => {
+    const { container } = render(
+      <MomentCard
+        moment={{
+          id: "moment-video-poster",
+          body: "A video with a poster",
+          occurred_at: "2026-07-09T12:00:00.000Z",
+          location: null,
+          linkUrl: null,
+          isFavorite: false,
+          tags: [],
+          hasMedia: true,
+          attachmentCount: 1,
+          mediaType: "video",
+          thumbnailPath: "user/m/video.thumb.jpg",
+          thumbnailUrl: "https://example.com/video-thumb.jpg",
+          photoStoragePath: null,
+          photoUrl: null,
+          videoStoragePath: "user/m/video.mp4",
+          videoUrl: "https://example.com/video.mp4",
+        }}
+      />,
+    );
+
+    const poster = container.querySelector("img");
+    expect(poster).toHaveAttribute(
+      "src",
+      "https://example.com/video-thumb.jpg",
+    );
+    fireEvent.error(poster!);
+
+    await waitFor(() => {
+      expect(container.querySelector("video")).toHaveAttribute(
+        "src",
+        "https://example.com/video.mp4",
+      );
+    });
   });
 
   it("highlights matching search terms in the body", () => {

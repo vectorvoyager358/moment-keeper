@@ -153,10 +153,13 @@ export function MomentCard({
     truncateBody(previewBody(moment.body), 120),
     highlightQuery,
   );
-  const imageSrc =
-    preferOriginalPhoto && moment.photoUrl
+  const isVideo = moment.mediaType === "video";
+  const imageSrc = isVideo
+    ? null
+    : preferOriginalPhoto && moment.photoUrl
       ? moment.photoUrl
       : (moment.thumbnailUrl ?? moment.photoUrl);
+  const videoPosterSrc = isVideo ? moment.thumbnailUrl : null;
   const imageFallbackSrc =
     !preferOriginalPhoto &&
     moment.thumbnailUrl &&
@@ -166,7 +169,9 @@ export function MomentCard({
       : null;
   const visibleTags = compact ? moment.tags.slice(0, 3) : moment.tags;
   const hiddenTagCount = moment.tags.length - visibleTags.length;
-  const hasVisualCover = Boolean(imageSrc || moment.videoUrl);
+  const hasVisualCover = Boolean(
+    imageSrc || videoPosterSrc || (isVideo && moment.videoUrl),
+  );
   const mediaOverlay = hasVisualCover ? (
     <>
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/5 to-black/10" />
@@ -213,7 +218,22 @@ export function MomentCard({
           balanceLayout && "flex h-full flex-col",
         )}
       >
-        {imageSrc ? (
+        {isVideo && (videoPosterSrc || moment.videoUrl) ? (
+          <div
+            className={cn(
+              timelineMediaFrame,
+              "w-full min-w-0 max-w-full",
+              compact && "h-[clamp(7rem,22svh,10rem)] sm:h-auto",
+            )}
+          >
+            <VideoThumbnail
+              src={moment.videoUrl}
+              posterSrc={videoPosterSrc}
+              fill
+            />
+            {mediaOverlay}
+          </div>
+        ) : imageSrc ? (
           <div
             className={cn(
               timelineMediaFrame,
@@ -247,17 +267,6 @@ export function MomentCard({
                 className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.025]"
               />
             )}
-            {mediaOverlay}
-          </div>
-        ) : moment.videoUrl ? (
-          <div
-            className={cn(
-              timelineMediaFrame,
-              "w-full min-w-0 max-w-full",
-              compact && "h-[clamp(7rem,22svh,10rem)] sm:h-auto",
-            )}
-          >
-            <VideoThumbnail src={moment.videoUrl} fill />
             {mediaOverlay}
           </div>
         ) : balanceLayout ? (

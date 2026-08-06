@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Lora, Source_Sans_3 } from "next/font/google";
+import { Dancing_Script, Lora, Source_Sans_3 } from "next/font/google";
 
 import { AnalyticsProvider } from "@/components/AnalyticsProvider";
 import { PersistentAppNav } from "@/components/AppNav";
@@ -18,6 +18,13 @@ const sourceSans = Source_Sans_3({
   variable: "--font-source-sans",
   subsets: ["latin"],
   weight: ["400", "500", "600"],
+  display: "swap",
+});
+
+const dancingScript = Dancing_Script({
+  variable: "--font-dancing-script",
+  subsets: ["latin"],
+  weight: ["600"],
   display: "swap",
 });
 
@@ -89,7 +96,7 @@ export default function RootLayout({
     <html
       lang="en"
       data-theme="light"
-      className={`${lora.variable} ${sourceSans.variable} h-full antialiased`}
+      className={`${lora.variable} ${sourceSans.variable} ${dancingScript.variable} h-full antialiased`}
     >
       <head>
         <meta name="color-scheme" content="light" />

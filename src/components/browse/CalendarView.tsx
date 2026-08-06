@@ -247,16 +247,19 @@ export async function CalendarView({
               (moment) =>
                 moment.thumbnailUrl || moment.photoUrl || moment.videoUrl,
             );
-            const imageUrl =
-              visualMoment?.thumbnailUrl ?? visualMoment?.photoUrl;
+            const isVideo = visualMoment?.mediaType === "video";
+            const imageUrl = isVideo
+              ? null
+              : (visualMoment?.thumbnailUrl ?? visualMoment?.photoUrl);
             const imageFallbackUrl =
               visualMoment?.thumbnailUrl &&
               visualMoment.photoUrl &&
               visualMoment.thumbnailUrl !== visualMoment.photoUrl
                 ? visualMoment.photoUrl
                 : null;
-            const videoUrl = imageUrl ? null : visualMoment?.videoUrl;
-            const hasVisual = Boolean(imageUrl || videoUrl);
+            const videoPosterUrl = isVideo ? visualMoment?.thumbnailUrl : null;
+            const videoUrl = isVideo ? visualMoment?.videoUrl : null;
+            const hasVisual = Boolean(imageUrl || videoPosterUrl || videoUrl);
             const selected = selectedDay === day.dateKey;
             const populated = day.inMonth && dayMoments.length > 0;
             const content = (
@@ -273,9 +276,10 @@ export async function CalendarView({
                     className="absolute inset-0 h-full w-full object-cover"
                   />
                 ) : null}
-                {videoUrl ? (
+                {isVideo && (videoPosterUrl || videoUrl) ? (
                   <VideoThumbnail
                     src={videoUrl}
+                    posterSrc={videoPosterUrl}
                     fill
                     className="[&>span]:hidden"
                   />
