@@ -33,12 +33,12 @@ describe("MediaDownloadButton", () => {
       configurable: true,
       value: vi.fn(),
     });
-    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(
-      function () {
-        downloaded.href = this.href;
-        downloaded.filename = this.download;
-      },
-    );
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      downloaded.href = this.href;
+      downloaded.filename = this.download;
+    });
 
     render(
       <MediaDownloadButton

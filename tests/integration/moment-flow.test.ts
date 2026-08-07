@@ -55,6 +55,9 @@ describe("moment lifecycle integration", () => {
       id: "moment-1",
       body: "Nailed the presentation today",
       occurred_at: "2026-07-07T12:00:00.000Z",
+      location: null,
+      link_url: null,
+      is_favorite: false,
       moment_tags: [
         { tags: { id: tagIds[0], name: "work" } },
         { tags: { id: tagIds[1], name: "proud moment" } },

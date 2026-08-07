@@ -25,6 +25,8 @@ const firstMoment: TimelineMoment = {
   thumbnailUrl: null,
   photoStoragePath: null,
   photoUrl: null,
+  videoStoragePath: null,
+  videoUrl: null,
 };
 
 const secondMoment: TimelineMoment = {
