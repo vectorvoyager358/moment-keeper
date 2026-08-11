@@ -2,14 +2,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
   createClientMock,
+  registerDirectUploadedMedia,
   revalidatePath,
+  removeDirectUploadedMedia,
   removeMediaAttachmentsById,
   reorderMediaAttachments,
   replaceMomentTags,
   uploadMediaFilesForMoment,
 } = vi.hoisted(() => ({
   createClientMock: vi.fn(),
+  registerDirectUploadedMedia: vi.fn(),
   revalidatePath: vi.fn(),
+  removeDirectUploadedMedia: vi.fn(),
   removeMediaAttachmentsById: vi.fn(),
   reorderMediaAttachments: vi.fn(),
   replaceMomentTags: vi.fn(),
@@ -24,6 +28,8 @@ vi.mock("@/lib/moments/repository", () => ({
   replaceMomentTags,
 }));
 vi.mock("@/lib/moments/media-storage", () => ({
+  registerDirectUploadedMedia,
+  removeDirectUploadedMedia,
   removeMediaAttachmentsById,
   reorderMediaAttachments,
   uploadMediaFilesForMoment,
@@ -43,7 +49,9 @@ function validFormData(): FormData {
 describe("moment theme saving", () => {
   beforeEach(() => {
     createClientMock.mockReset();
+    registerDirectUploadedMedia.mockReset().mockResolvedValue([]);
     revalidatePath.mockReset();
+    removeDirectUploadedMedia.mockReset().mockResolvedValue(undefined);
     removeMediaAttachmentsById.mockReset().mockResolvedValue(undefined);
     reorderMediaAttachments.mockReset().mockResolvedValue(undefined);
     replaceMomentTags.mockReset().mockResolvedValue(undefined);
@@ -272,6 +280,52 @@ describe("moment theme saving", () => {
       "moment-1",
       files,
     );
+  });
+
+  it("registers a directly uploaded MOV without proxying its bytes", async () => {
+    const momentId = "11111111-1111-4111-8111-111111111111";
+    const directUpload = {
+      id: "22222222-2222-4222-8222-222222222222",
+      clientIndex: 0,
+      storagePath: `u1/${momentId}/22222222-2222-4222-8222-222222222222.mov`,
+      thumbnailPath: `u1/${momentId}/22222222-2222-4222-8222-222222222222.thumb.jpg`,
+      mimeType: "video/quicktime",
+      fileSize: 5 * 1024 * 1024,
+      originalFilename: "gallery-video.mov",
+    };
+    const insert = vi.fn(() => ({
+      select: () => ({
+        single: vi.fn().mockResolvedValue({
+          data: { id: momentId },
+          error: null,
+        }),
+      }),
+    }));
+    const supabase = {
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: "u1" } } }),
+      },
+      from: vi.fn(() => ({ insert })),
+    };
+    createClientMock.mockResolvedValue(supabase);
+    const formData = validFormData();
+    formData.set("moment_id", momentId);
+    formData.set("direct_media", JSON.stringify([directUpload]));
+
+    expect(await saveNewMoment(formData)).toEqual({
+      ok: true,
+      redirectTo: "/timeline?saved=1",
+    });
+    expect(insert).toHaveBeenCalledWith(
+      expect.objectContaining({ id: momentId }),
+    );
+    expect(registerDirectUploadedMedia).toHaveBeenCalledWith(
+      supabase,
+      "u1",
+      momentId,
+      [directUpload],
+    );
+    expect(uploadMediaFilesForMoment).not.toHaveBeenCalled();
   });
 
   it("clears themes when an edited moment has none selected", async () => {

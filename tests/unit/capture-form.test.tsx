@@ -13,10 +13,18 @@ import {
   writeCaptureDraft,
 } from "@/lib/moments/capture-draft";
 
-const { postFormDataWithProgress, push, refresh } = vi.hoisted(() => ({
+const {
+  postFormDataWithProgress,
+  push,
+  refresh,
+  removeDirectUploads,
+  uploadVideosDirectly,
+} = vi.hoisted(() => ({
   postFormDataWithProgress: vi.fn(),
   push: vi.fn(),
   refresh: vi.fn(),
+  removeDirectUploads: vi.fn(),
+  uploadVideosDirectly: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -110,12 +118,19 @@ vi.mock("@/lib/moments/upload-progress", async (importOriginal) => {
   return { ...original, postFormDataWithProgress };
 });
 
+vi.mock("@/lib/moments/direct-video-upload", () => ({
+  removeDirectUploads,
+  uploadVideosDirectly,
+}));
+
 describe("CaptureForm drafts", () => {
   beforeEach(() => {
     localStorage.clear();
     postFormDataWithProgress.mockReset();
     push.mockReset();
     refresh.mockReset();
+    removeDirectUploads.mockReset().mockResolvedValue(undefined);
+    uploadVideosDirectly.mockReset().mockResolvedValue([]);
   });
 
   afterEach(() => {
@@ -212,7 +227,20 @@ describe("CaptureForm drafts", () => {
     );
   });
 
-  it("submits a generated poster alongside a new video", async () => {
+  it("uploads a generated video and poster directly before saving", async () => {
+    uploadVideosDirectly.mockResolvedValue([
+      {
+        id: "22222222-2222-4222-8222-222222222222",
+        clientIndex: 0,
+        storagePath:
+          "user-1/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222.mp4",
+        thumbnailPath:
+          "user-1/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222.thumb.jpg",
+        mimeType: "video/mp4",
+        fileSize: 5,
+        originalFilename: "camera.mp4",
+      },
+    ]);
     postFormDataWithProgress.mockResolvedValue({ redirectTo: "/timeline" });
     render(<CaptureForm userId="user-1" />);
 
@@ -230,13 +258,34 @@ describe("CaptureForm drafts", () => {
     await waitFor(() => {
       expect(postFormDataWithProgress).toHaveBeenCalled();
     });
-    const formData = postFormDataWithProgress.mock.calls[0][1] as FormData;
-    expect(formData.get("media_thumbnail_index")).toBe("0");
-    expect(formData.get("media_thumbnail")).toEqual(
+    expect(uploadVideosDirectly).toHaveBeenCalledWith(
       expect.objectContaining({
-        name: "camera-poster.jpg",
-        type: "image/jpeg",
+        userId: "user-1",
+        videos: [
+          expect.objectContaining({
+            clientIndex: 0,
+            file: expect.objectContaining({
+              name: "camera.mp4",
+              type: "video/mp4",
+            }),
+            thumbnail: expect.objectContaining({
+              name: "camera-poster.jpg",
+              type: "image/jpeg",
+            }),
+          }),
+        ],
       }),
+    );
+    const formData = postFormDataWithProgress.mock.calls[0][1] as FormData;
+    expect(formData.get("media")).toBeNull();
+    expect(formData.get("media_thumbnail")).toBeNull();
+    expect(JSON.parse(String(formData.get("direct_media")))).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          originalFilename: "camera.mp4",
+          mimeType: "video/mp4",
+        }),
+      ]),
     );
   });
 

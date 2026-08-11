@@ -7,6 +7,7 @@ import {
   MEDIA_BUCKET,
   validateMediaFile,
 } from "@/lib/moments/media";
+import type { DirectUploadedMedia } from "@/lib/moments/direct-upload";
 import { createPhotoThumbnailBuffer } from "@/lib/moments/thumbnail-image";
 import {
   shouldGenerateThumbnail,
@@ -19,6 +20,62 @@ type UploadedAttachment = {
   id: string;
   paths: string[];
 };
+
+export async function removeDirectUploadedMedia(
+  supabase: StorageSupabase,
+  uploads: DirectUploadedMedia[],
+): Promise<void> {
+  const paths = uploads.flatMap((upload) => [
+    upload.storagePath,
+    ...(upload.thumbnailPath ? [upload.thumbnailPath] : []),
+  ]);
+
+  if (paths.length > 0) {
+    await supabase.storage.from(MEDIA_BUCKET).remove(paths);
+  }
+}
+
+export async function registerDirectUploadedMedia(
+  supabase: StorageSupabase,
+  userId: string,
+  momentId: string,
+  uploads: DirectUploadedMedia[],
+  displayOrders?: number[],
+): Promise<string[]> {
+  const registeredIds: string[] = [];
+
+  for (const [index, upload] of uploads.entries()) {
+    const mediaType = getMediaTypeFromFile({
+      name: upload.originalFilename,
+      type: upload.mimeType,
+    });
+
+    if (!mediaType) {
+      throw new Error("Unsupported uploaded media type.");
+    }
+
+    const { error } = await supabase.from("media_attachments").insert({
+      id: upload.id,
+      moment_id: momentId,
+      user_id: userId,
+      media_type: mediaType,
+      display_order: displayOrders?.[index] ?? upload.clientIndex,
+      storage_path: upload.storagePath,
+      thumbnail_path: upload.thumbnailPath,
+      mime_type: upload.mimeType,
+      file_size_bytes: upload.fileSize,
+      original_filename: upload.originalFilename,
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    registeredIds.push(upload.id);
+  }
+
+  return registeredIds;
+}
 
 export async function removeMediaAttachmentsForMoment(
   supabase: StorageSupabase,

@@ -10,10 +10,20 @@ import {
   getMediaFilesFromFormData,
   getRemovedMediaIds,
   MAX_MEDIA_ATTACHMENTS,
+  MAX_TOTAL_MEDIA_BYTES,
   parseMediaThumbnailsFromFormData,
   validateMediaFiles,
 } from "@/lib/moments/media";
 import {
+  isUuid,
+  parseDirectUploadedMedia,
+  parseMediaClientIndexes,
+  validateCombinedMediaIndexes,
+  validateDirectUploadedMedia,
+} from "@/lib/moments/direct-upload";
+import {
+  registerDirectUploadedMedia,
+  removeDirectUploadedMedia,
   removeMediaAttachmentsById,
   reorderMediaAttachments,
   uploadMediaFilesForMoment,
@@ -93,6 +103,11 @@ export async function saveNewMoment(
     formData,
     mediaFiles.length,
   );
+  const directMediaInput = parseDirectUploadedMedia(formData);
+  const mediaClientIndexInput = parseMediaClientIndexes(
+    formData,
+    mediaFiles.length,
+  );
   const linkInput = parseMomentLinkFormData(formData);
 
   if (richTextInput.error) {
@@ -111,6 +126,14 @@ export async function saveNewMoment(
     return { ok: false, error: mediaThumbnailInput.error, status: 400 };
   }
 
+  if (directMediaInput.error) {
+    return { ok: false, error: directMediaInput.error, status: 400 };
+  }
+
+  if (mediaClientIndexInput.error) {
+    return { ok: false, error: mediaClientIndexInput.error, status: 400 };
+  }
+
   const bodyError = validateMomentBody(body);
   if (bodyError) {
     return { ok: false, error: bodyError, status: 400 };
@@ -122,9 +145,26 @@ export async function saveNewMoment(
     return { ok: false, error: occurredAtError, status: 400 };
   }
 
-  const mediaError = validateMediaFiles(mediaFiles);
+  const mediaError = validateMediaFiles(
+    mediaFiles,
+    directMediaInput.uploads.length,
+  );
   if (mediaError) {
     return { ok: false, error: mediaError, status: 400 };
+  }
+
+  const combinedMediaBytes =
+    mediaFiles.reduce((total, file) => total + file.size, 0) +
+    directMediaInput.uploads.reduce(
+      (total, upload) => total + upload.fileSize,
+      0,
+    );
+  if (combinedMediaBytes > MAX_TOTAL_MEDIA_BYTES) {
+    return {
+      ok: false,
+      error: "Combined media upload must be 50 MB or less.",
+      status: 400,
+    };
   }
 
   const location = parseLocationFormData(formData);
@@ -146,11 +186,38 @@ export async function saveNewMoment(
     };
   }
 
+  const requestedMomentId = String(formData.get("moment_id") ?? "");
+  if (requestedMomentId && !isUuid(requestedMomentId)) {
+    return { ok: false, error: "Invalid moment data.", status: 400 };
+  }
+
+  if (directMediaInput.uploads.length > 0 && !requestedMomentId) {
+    return { ok: false, error: "Invalid uploaded media data.", status: 400 };
+  }
+
+  const directMediaError = validateDirectUploadedMedia(
+    directMediaInput.uploads,
+    user.id,
+    requestedMomentId,
+  );
+  if (directMediaError) {
+    return { ok: false, error: directMediaError, status: 400 };
+  }
+
+  const combinedIndexError = validateCombinedMediaIndexes(
+    mediaClientIndexInput.indexes,
+    directMediaInput.uploads,
+  );
+  if (combinedIndexError) {
+    return { ok: false, error: combinedIndexError, status: 400 };
+  }
+
   const occurredAt = parseOccurredAtFormValue(occurredAtRaw, timezoneOffset);
 
   const { data: moment, error: momentError } = await supabase
     .from("moments")
     .insert({
+      ...(requestedMomentId ? { id: requestedMomentId } : {}),
       user_id: user.id,
       body,
       body_content: richTextInput.content as unknown as Json,
@@ -164,6 +231,7 @@ export async function saveNewMoment(
     .single();
 
   if (momentError || !moment) {
+    await removeDirectUploadedMedia(supabase, directMediaInput.uploads);
     return {
       ok: false,
       error: toUserErrorMessage(momentError, "Could not save your moment."),
@@ -176,7 +244,18 @@ export async function saveNewMoment(
     const tagIds = await findOrCreateTagIds(supabase, user.id, tagNames);
     await linkMomentTags(supabase, moment.id, tagIds);
 
+    if (directMediaInput.uploads.length > 0) {
+      await registerDirectUploadedMedia(
+        supabase,
+        user.id,
+        moment.id,
+        directMediaInput.uploads,
+      );
+    }
+
     if (mediaFiles.length > 0) {
+      const hasExplicitMediaIndexes =
+        formData.getAll("media_client_index").length > 0;
       if (mediaThumbnailInput.thumbnails.some(Boolean)) {
         await uploadMediaFilesForMoment(
           supabase,
@@ -184,8 +263,17 @@ export async function saveNewMoment(
           moment.id,
           mediaFiles,
           0,
-          undefined,
+          hasExplicitMediaIndexes ? mediaClientIndexInput.indexes : undefined,
           mediaThumbnailInput.thumbnails,
+        );
+      } else if (hasExplicitMediaIndexes) {
+        await uploadMediaFilesForMoment(
+          supabase,
+          user.id,
+          moment.id,
+          mediaFiles,
+          0,
+          mediaClientIndexInput.indexes,
         );
       } else {
         await uploadMediaFilesForMoment(
@@ -197,6 +285,7 @@ export async function saveNewMoment(
       }
     }
   } catch (error) {
+    await removeDirectUploadedMedia(supabase, directMediaInput.uploads);
     await supabase.from("moments").delete().eq("id", moment.id);
 
     return {
