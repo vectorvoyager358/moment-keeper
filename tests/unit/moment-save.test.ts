@@ -417,6 +417,7 @@ describe("moment theme saving", () => {
       ),
     };
     createClientMock.mockResolvedValue(supabase);
+    uploadMediaFilesForMoment.mockResolvedValue(["media-new"]);
     const formData = validFormData();
     const newFile = new File(["new"], "new.jpg", { type: "image/jpeg" });
     formData.append("remove_media_id", "media-1");
@@ -483,6 +484,59 @@ describe("moment theme saving", () => {
       "media-3",
       "media-2",
       "media-1",
+    ]);
+  });
+
+  it("registers a directly uploaded MOV when editing a moment", async () => {
+    const momentId = "11111111-1111-4111-8111-111111111111";
+    const mediaId = "22222222-2222-4222-8222-222222222222";
+    const directUpload = {
+      id: mediaId,
+      clientIndex: 0,
+      storagePath: `u1/${momentId}/${mediaId}.mov`,
+      thumbnailPath: `u1/${momentId}/${mediaId}.thumb.jpg`,
+      mimeType: "video/quicktime",
+      fileSize: 5 * 1024 * 1024,
+      originalFilename: "edited-memory.mov",
+    };
+    const eq = vi.fn().mockResolvedValue({ error: null });
+    const update = vi.fn(() => ({ eq }));
+    const supabase = {
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: "u1" } } }),
+      },
+      from: vi.fn((table: string) =>
+        table === "media_attachments"
+          ? {
+              select: vi.fn(() => ({
+                eq: vi.fn(() => ({
+                  order: vi.fn().mockResolvedValue({ data: [], error: null }),
+                })),
+              })),
+            }
+          : { update },
+      ),
+    };
+    createClientMock.mockResolvedValue(supabase);
+    registerDirectUploadedMedia.mockResolvedValue([mediaId]);
+    const formData = validFormData();
+    formData.set("direct_media", JSON.stringify([directUpload]));
+    formData.append("media_order", "new:0");
+
+    expect(await saveUpdatedMoment(momentId, formData)).toEqual({
+      ok: true,
+      redirectTo: `/moments/${momentId}?updated=1`,
+    });
+    expect(registerDirectUploadedMedia).toHaveBeenCalledWith(
+      supabase,
+      "u1",
+      momentId,
+      [directUpload],
+      [0],
+    );
+    expect(uploadMediaFilesForMoment).not.toHaveBeenCalled();
+    expect(reorderMediaAttachments).toHaveBeenCalledWith(supabase, momentId, [
+      mediaId,
     ]);
   });
 

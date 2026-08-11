@@ -313,6 +313,11 @@ export async function saveUpdatedMoment(
     formData,
     mediaFiles.length,
   );
+  const directMediaInput = parseDirectUploadedMedia(formData);
+  const mediaClientIndexInput = parseMediaClientIndexes(
+    formData,
+    mediaFiles.length,
+  );
   const removedMediaIds = getRemovedMediaIds(formData);
   const requestedMediaOrder = getRequestedMediaOrder(formData);
   const linkInput = parseMomentLinkFormData(formData);
@@ -330,6 +335,14 @@ export async function saveUpdatedMoment(
 
   if (mediaThumbnailInput.error) {
     return { ok: false, error: mediaThumbnailInput.error, status: 400 };
+  }
+
+  if (directMediaInput.error) {
+    return { ok: false, error: directMediaInput.error, status: 400 };
+  }
+
+  if (mediaClientIndexInput.error) {
+    return { ok: false, error: mediaClientIndexInput.error, status: 400 };
   }
 
   const bodyError = validateMomentBody(body);
@@ -356,6 +369,25 @@ export async function saveUpdatedMoment(
     };
   }
 
+  if (directMediaInput.uploads.length > 0) {
+    const directMediaError = validateDirectUploadedMedia(
+      directMediaInput.uploads,
+      user.id,
+      momentId,
+    );
+    if (directMediaError) {
+      return { ok: false, error: directMediaError, status: 400 };
+    }
+  }
+
+  const combinedIndexError = validateCombinedMediaIndexes(
+    mediaClientIndexInput.indexes,
+    directMediaInput.uploads,
+  );
+  if (combinedIndexError) {
+    return { ok: false, error: combinedIndexError, status: 400 };
+  }
+
   const { data: existingMedia, error: existingMediaError } = await supabase
     .from("media_attachments")
     .select("id, display_order")
@@ -380,10 +412,27 @@ export async function saveUpdatedMoment(
   const remainingMedia = (existingMedia ?? []).filter(
     (attachment) => !validRemovedIds.includes(attachment.id),
   );
-  const mediaError = validateMediaFiles(mediaFiles, remainingMedia.length);
+  const mediaError = validateMediaFiles(
+    mediaFiles,
+    remainingMedia.length + directMediaInput.uploads.length,
+  );
 
   if (mediaError) {
     return { ok: false, error: mediaError, status: 400 };
+  }
+
+  const combinedMediaBytes =
+    mediaFiles.reduce((total, file) => total + file.size, 0) +
+    directMediaInput.uploads.reduce(
+      (total, upload) => total + upload.fileSize,
+      0,
+    );
+  if (combinedMediaBytes > MAX_TOTAL_MEDIA_BYTES) {
+    return {
+      ok: false,
+      error: "Combined media upload must be 50 MB or less.",
+      status: 400,
+    };
   }
 
   const location = parseLocationFormData(formData);
@@ -408,6 +457,7 @@ export async function saveUpdatedMoment(
     .eq("id", momentId);
 
   if (updateError) {
+    await removeDirectUploadedMedia(supabase, directMediaInput.uploads);
     return {
       ok: false,
       error: toUserErrorMessage(updateError, "Could not update your moment."),
@@ -427,8 +477,9 @@ export async function saveUpdatedMoment(
       await removeMediaAttachmentsById(supabase, momentId, validRemovedIds);
     }
 
+    const newMediaCount = mediaFiles.length + directMediaInput.uploads.length;
     let uploadedMediaIds: string[] = [];
-    if (mediaFiles.length > 0) {
+    if (newMediaCount > 0) {
       const occupiedOrders = new Set(
         remainingMedia.map((attachment) => attachment.display_order),
       );
@@ -436,26 +487,67 @@ export async function saveUpdatedMoment(
         { length: MAX_MEDIA_ATTACHMENTS },
         (_, index) => index,
       ).filter((order) => !occupiedOrders.has(order));
+      const uploadedIdsByClientIndex: Array<string | undefined> =
+        Array(newMediaCount).fill(undefined);
 
-      if (mediaThumbnailInput.thumbnails.some(Boolean)) {
-        uploadedMediaIds = await uploadMediaFilesForMoment(
+      if (directMediaInput.uploads.length > 0) {
+        const directMediaIds = await registerDirectUploadedMedia(
           supabase,
           user.id,
           momentId,
-          mediaFiles,
-          0,
-          availableOrders,
-          mediaThumbnailInput.thumbnails,
+          directMediaInput.uploads,
+          directMediaInput.uploads.map(
+            (upload) => availableOrders[upload.clientIndex],
+          ),
         );
-      } else {
-        uploadedMediaIds = await uploadMediaFilesForMoment(
-          supabase,
-          user.id,
-          momentId,
-          mediaFiles,
-          0,
-          availableOrders,
-        );
+        directMediaInput.uploads.forEach((upload, index) => {
+          uploadedIdsByClientIndex[upload.clientIndex] = directMediaIds[index];
+        });
+      }
+
+      if (mediaFiles.length > 0) {
+        let proxiedMediaIds: string[];
+        const hasExplicitMediaIndexes =
+          formData.getAll("media_client_index").length > 0 ||
+          directMediaInput.uploads.length > 0;
+        const proxiedDisplayOrders = hasExplicitMediaIndexes
+          ? mediaClientIndexInput.indexes.map(
+              (clientIndex) => availableOrders[clientIndex],
+            )
+          : availableOrders;
+
+        if (mediaThumbnailInput.thumbnails.some(Boolean)) {
+          proxiedMediaIds = await uploadMediaFilesForMoment(
+            supabase,
+            user.id,
+            momentId,
+            mediaFiles,
+            0,
+            proxiedDisplayOrders,
+            mediaThumbnailInput.thumbnails,
+          );
+        } else {
+          proxiedMediaIds = await uploadMediaFilesForMoment(
+            supabase,
+            user.id,
+            momentId,
+            mediaFiles,
+            0,
+            proxiedDisplayOrders,
+          );
+        }
+
+        mediaClientIndexInput.indexes.forEach((clientIndex, index) => {
+          uploadedIdsByClientIndex[clientIndex] = proxiedMediaIds[index];
+        });
+      }
+
+      uploadedMediaIds = uploadedIdsByClientIndex.filter((id): id is string =>
+        Boolean(id),
+      );
+
+      if (uploadedMediaIds.length !== newMediaCount) {
+        throw new Error("Could not preserve the new media order.");
       }
     }
 
@@ -468,6 +560,18 @@ export async function saveUpdatedMoment(
       await reorderMediaAttachments(supabase, momentId, finalMediaOrder);
     }
   } catch (error) {
+    if (directMediaInput.uploads.length > 0) {
+      try {
+        await removeMediaAttachmentsById(
+          supabase,
+          momentId,
+          directMediaInput.uploads.map((upload) => upload.id),
+        );
+        await removeDirectUploadedMedia(supabase, directMediaInput.uploads);
+      } catch {
+        // Preserve the original update failure if cleanup also fails.
+      }
+    }
     return {
       ok: false,
       error: toUserErrorMessage(error, "Could not update your moment."),

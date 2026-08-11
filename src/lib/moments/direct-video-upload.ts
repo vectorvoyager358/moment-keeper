@@ -17,7 +17,7 @@ type DirectVideoInput = {
 };
 
 type UploadDirectVideosOptions = {
-  userId: string;
+  userId?: string;
   momentId: string;
   videos: DirectVideoInput[];
   onProgress?: (percent: number) => void;
@@ -57,6 +57,20 @@ export async function uploadVideosDirectly({
   }
 
   const supabase = createClient();
+  let resolvedUserId = userId;
+  if (!resolvedUserId) {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      throw new Error("Your session expired. Please log in again.");
+    }
+
+    resolvedUserId = user.id;
+  }
+
   const bucket = supabase.storage.from(MEDIA_BUCKET);
   const uploadedPaths: string[] = [];
   const uploads: DirectUploadedMedia[] = [];
@@ -81,7 +95,7 @@ export async function uploadVideosDirectly({
       }
 
       const id = crypto.randomUUID();
-      const storagePath = `${userId}/${momentId}/${id}.${extension}`;
+      const storagePath = `${resolvedUserId}/${momentId}/${id}.${extension}`;
       const { error: uploadError } = await bucket.upload(storagePath, file, {
         contentType: mimeType,
         upsert: false,

@@ -14,7 +14,16 @@ import { SaveProgress } from "@/components/ui/SaveProgress";
 import { toUserErrorMessage } from "@/lib/errors";
 import type { MemoryTheme } from "@/lib/database.types";
 import { toDatetimeLocalValueFromIso } from "@/lib/moments/dates";
+import {
+  DIRECT_MEDIA_FORM_FIELD,
+  type DirectUploadedMedia,
+} from "@/lib/moments/direct-upload";
+import {
+  removeDirectUploads,
+  uploadVideosDirectly,
+} from "@/lib/moments/direct-video-upload";
 import { parseMomentLinkUrl } from "@/lib/moments/link";
+import { getMediaTypeFromFile } from "@/lib/moments/media";
 import {
   plainTextToRichTextDocument,
   type RichTextDocument,
@@ -106,29 +115,71 @@ export function EditMomentForm({
       setLinkUrl(linkInput.url);
     }
 
-    formData.delete("media");
-    formData.delete("media_thumbnail");
-    formData.delete("media_thumbnail_index");
-    preparedMediaFiles.forEach((file) => formData.append("media", file));
-    preparedMediaThumbnails.forEach((thumbnail, index) => {
-      if (thumbnail) {
-        formData.append("media_thumbnail_index", String(index));
-        formData.append("media_thumbnail", thumbnail);
-      }
-    });
-
     setError(null);
     setPending(true);
     setProcessing(false);
     setPercent(0);
 
+    let directUploads: DirectUploadedMedia[] = [];
+
     try {
+      const directVideos = preparedMediaFiles.flatMap((file, clientIndex) =>
+        getMediaTypeFromFile(file) === "video"
+          ? [
+              {
+                file,
+                clientIndex,
+                thumbnail: preparedMediaThumbnails[clientIndex] ?? null,
+              },
+            ]
+          : [],
+      );
+
+      formData.delete("media");
+      formData.delete("media_client_index");
+      formData.delete("media_thumbnail");
+      formData.delete("media_thumbnail_index");
+      formData.delete(DIRECT_MEDIA_FORM_FIELD);
+
+      if (directVideos.length > 0) {
+        directUploads = await uploadVideosDirectly({
+          momentId: moment.id,
+          videos: directVideos,
+          onProgress: (progress) => {
+            setPercent(Math.round(progress * 0.85));
+          },
+        });
+        formData.set(DIRECT_MEDIA_FORM_FIELD, JSON.stringify(directUploads));
+      }
+
+      let serverMediaIndex = 0;
+      preparedMediaFiles.forEach((file, clientIndex) => {
+        if (getMediaTypeFromFile(file) === "video") {
+          return;
+        }
+
+        formData.append("media", file);
+        formData.append("media_client_index", String(clientIndex));
+        const thumbnail = preparedMediaThumbnails[clientIndex];
+        if (thumbnail) {
+          formData.append("media_thumbnail_index", String(serverMediaIndex));
+          formData.append("media_thumbnail", thumbnail);
+        }
+        serverMediaIndex += 1;
+      });
+
+      const directUploadShare = directVideos.length > 0 ? 85 : 0;
       const result = await postFormDataWithProgress(
         `/api/moments/${moment.id}`,
         formData,
         {
           onProgress: (progress) => {
-            setPercent(progress.percent);
+            setPercent(
+              directUploadShare +
+                Math.round(
+                  progress.percent * ((100 - directUploadShare) / 100),
+                ),
+            );
           },
           onUploadComplete: () => {
             setProcessing(true);
@@ -148,6 +199,13 @@ export function EditMomentForm({
       );
       router.refresh();
     } catch (submitError) {
+      if (directUploads.length > 0) {
+        try {
+          await removeDirectUploads(directUploads);
+        } catch {
+          // Keep the original update error visible if cleanup also fails.
+        }
+      }
       setPending(false);
       setProcessing(false);
       setPercent(null);
