@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 
-import { KeepMomentLink } from "@/components/KeepMomentLink";
 import { JournalGreeting } from "@/components/timeline/JournalGreeting";
 import {
   DeferredTimelineRevisit,
@@ -59,20 +58,12 @@ export default async function TimelinePage({
   return (
     <PageShell>
       <PageContainer size="xl" className="pt-6 pb-8 sm:pt-9 sm:pb-12">
-        <header className="mb-6 sm:mb-8">
-          <div className="flex items-end justify-between gap-4">
-            <div className="min-w-0">
-              <Suspense fallback={<div className="h-6" aria-hidden="true" />}>
-                <TimelineGreeting profilePromise={profilePromise} />
-              </Suspense>
-
-              <h1 className="font-display text-[2rem] font-semibold leading-none tracking-[-0.035em] text-ink sm:text-[2.5rem]">
-                Your journal
-              </h1>
-            </div>
-
-            <KeepMomentLink className="mb-0.5 sm:mb-0" />
-          </div>
+        <header className="mb-7 min-w-0 px-1 pt-1 sm:mb-10 sm:px-2 sm:pt-2">
+          <Suspense
+            fallback={<div className="h-12 sm:h-16" aria-hidden="true" />}
+          >
+            <TimelineGreeting profilePromise={profilePromise} />
+          </Suspense>
         </header>
 
         <SavedToast
@@ -111,9 +102,15 @@ async function TimelineGreeting({
 }) {
   const profile = await profilePromise;
 
-  return profile?.hasDisplayName ? (
-    <JournalGreeting name={formatProfileNameForDisplay(profile.displayName)} />
-  ) : null;
+  return (
+    <JournalGreeting
+      name={
+        profile?.hasDisplayName
+          ? formatProfileNameForDisplay(profile.displayName)
+          : "there"
+      }
+    />
+  );
 }
 
 async function TimelineHomeContent({

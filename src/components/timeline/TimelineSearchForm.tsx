@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Heart, Search, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { TagFilterField } from "@/components/timeline/TagFilterField";
 import { buttonClassName } from "@/components/ui/Button";
@@ -27,6 +27,24 @@ type TimelineSearchFormProps = {
 
 function filtersKey(filters: TimelineSearchFilters): string {
   return `${filters.keyword}|${filters.tagIds.join(",")}|${filters.favoriteOnly}`;
+}
+
+function SearchFieldsContainer({
+  embedded,
+  children,
+}: {
+  embedded: boolean;
+  children: ReactNode;
+}) {
+  if (embedded) {
+    return <div className="space-y-3">{children}</div>;
+  }
+
+  return (
+    <Card padding="sm" className="space-y-3 rounded-[1.25rem]">
+      {children}
+    </Card>
+  );
 }
 
 export function TimelineSearchForm({
@@ -103,13 +121,7 @@ function TimelineSearchFormFields({
 
   return (
     <div className="space-y-4">
-      <Card
-        padding={embedded ? "none" : "sm"}
-        className={cn(
-          "space-y-3 rounded-[1.25rem]",
-          embedded && "rounded-none border-0 bg-transparent shadow-none",
-        )}
-      >
+      <SearchFieldsContainer embedded={embedded}>
         <div className="relative min-w-0">
           <Label htmlFor="q" className="sr-only">
             Find a moment
@@ -217,7 +229,7 @@ function TimelineSearchFormFields({
             </div>
           </div>
         ) : null}
-      </Card>
+      </SearchFieldsContainer>
     </div>
   );
 }
