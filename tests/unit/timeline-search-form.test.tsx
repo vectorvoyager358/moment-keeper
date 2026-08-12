@@ -20,6 +20,20 @@ import { TimelineSearchForm } from "@/components/timeline/TimelineSearchForm";
 afterEach(cleanup);
 
 describe("TimelineSearchForm active filters", () => {
+  it("does not render a nested card when embedded in Find", () => {
+    const { container } = render(
+      <TimelineSearchForm
+        filters={{ keyword: "", tagIds: [], favoriteOnly: false }}
+        tags={[]}
+        embedded
+      />,
+    );
+
+    const fields = container.firstElementChild?.firstElementChild;
+    expect(fields).toHaveClass("space-y-3");
+    expect(fields).not.toHaveClass("ring-1", "shadow-card", "rounded-3xl");
+  });
+
   beforeEach(() => {
     push.mockReset();
     vi.useFakeTimers();
