@@ -27,6 +27,7 @@ import {
   TimelineOnThisDayProvider,
 } from "@/components/timeline/DeferredTimelinePanels";
 import { TimelineCollapsiblePanel } from "@/components/timeline/TimelineCollapsiblePanel";
+import { announceRemovedTags } from "@/lib/moments/tag-events";
 
 beforeEach(() => {
   sessionStorage.clear();
@@ -53,6 +54,34 @@ describe("deferred timeline panels", () => {
     await waitFor(() => {
       expect(loadTimelineTags).toHaveBeenCalledOnce();
     });
+  });
+
+  it("removes a newly orphaned tag from an open Find panel", async () => {
+    loadTimelineTags.mockResolvedValue({
+      tags: [
+        { id: "tag-orphaned", name: "temporary", momentCount: 1 },
+        { id: "tag-shared", name: "shared", momentCount: 2 },
+      ],
+    });
+
+    render(
+      <TimelineCollapsiblePanel panelId="find" title="Find">
+        <DeferredTimelineSearch
+          filters={{ keyword: "", tagIds: [], favoriteOnly: false }}
+        />
+      </TimelineCollapsiblePanel>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Find" }));
+    expect(await screen.findByText("temporary")).toBeVisible();
+    expect(screen.getByText("shared")).toBeVisible();
+
+    announceRemovedTags(["tag-orphaned"]);
+
+    await waitFor(() => {
+      expect(screen.queryByText("temporary")).not.toBeInTheDocument();
+    });
+    expect(screen.getByText("shared")).toBeVisible();
   });
 
   it("shows every server-loaded on-this-day memory immediately", () => {

@@ -27,6 +27,10 @@ import {
   hasActiveResurfacingFilters,
   type ResurfacingFilters,
 } from "@/lib/moments/themes";
+import {
+  TAGS_REMOVED_EVENT,
+  type TagsRemovedEvent,
+} from "@/lib/moments/tag-events";
 
 type DeferredResult<T> =
   | { status: "loading" }
@@ -60,6 +64,29 @@ export function DeferredTimelineSearch({
     return () => {
       active = false;
     };
+  }, []);
+
+  useEffect(() => {
+    const removeDeletedTags = (event: Event) => {
+      const removedIds = new Set((event as TagsRemovedEvent).detail ?? []);
+
+      if (removedIds.size === 0) {
+        return;
+      }
+
+      setResult((current) =>
+        current.status === "ready"
+          ? {
+              status: "ready",
+              data: current.data.filter((tag) => !removedIds.has(tag.id)),
+            }
+          : current,
+      );
+    };
+
+    window.addEventListener(TAGS_REMOVED_EVENT, removeDeletedTags);
+    return () =>
+      window.removeEventListener(TAGS_REMOVED_EVENT, removeDeletedTags);
   }, []);
 
   if (result.status === "loading") {

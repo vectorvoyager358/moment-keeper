@@ -265,6 +265,7 @@ export async function getUserTags(): Promise<UserTag[]> {
           ? tag.moment_tags[0].count
           : 0,
     }))
+    .filter((tag) => tag.momentCount > 0)
     .sort(compareTagsForPicker);
 }
 

@@ -4,6 +4,7 @@ import { Check } from "lucide-react";
 import { useEffect, useRef, useState, useTransition } from "react";
 
 import { announceRestoredMoment } from "@/lib/moments/restore-event";
+import { announceRemovedTags } from "@/lib/moments/tag-events";
 import type { TimelineMoment } from "@/lib/moments/timeline";
 
 const AUTO_DISMISS_MS = 5000;
@@ -19,7 +20,7 @@ type SavedToastProps = {
     error: string | null;
     restoredMoment?: TimelineMoment | null;
   }>;
-  onExpire?: () => Promise<void>;
+  onExpire?: () => Promise<{ removedTagIds?: string[] } | void>;
 };
 
 const DEFAULT_MESSAGE = "Saved — it's now part of your journal.";
@@ -56,7 +57,9 @@ export function SavedToast({
     timerRef.current = window.setTimeout(() => {
       timerRef.current = null;
       setVisible(false);
-      void onExpireRef.current?.();
+      void onExpireRef.current?.().then((result) => {
+        announceRemovedTags(result?.removedTagIds ?? []);
+      });
     }, autoDismissMs);
 
     return () => {
