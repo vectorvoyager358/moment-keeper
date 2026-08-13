@@ -52,6 +52,29 @@ export type TimelineQueryRow = {
     | null;
 };
 
+export function compareTimelineMoments(
+  left: Pick<TimelineMoment, "id" | "occurred_at">,
+  right: Pick<TimelineMoment, "id" | "occurred_at">,
+): number {
+  const occurredAtDifference = right.occurred_at.localeCompare(
+    left.occurred_at,
+  );
+  return occurredAtDifference || right.id.localeCompare(left.id);
+}
+
+export function mergeTimelineMoments(
+  current: TimelineMoment[],
+  incoming: TimelineMoment[],
+): TimelineMoment[] {
+  const byId = new Map(current.map((moment) => [moment.id, moment]));
+
+  for (const moment of incoming) {
+    byId.set(moment.id, moment);
+  }
+
+  return [...byId.values()].sort(compareTimelineMoments);
+}
+
 export function mapTimelineRow(
   moment: TimelineQueryRow,
   thumbnailUrl: string | null = null,

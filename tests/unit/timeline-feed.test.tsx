@@ -184,4 +184,77 @@ describe("TimelineFeed", () => {
       },
     );
   });
+
+  it("keeps an undone moment in date order when an earlier page arrives late", async () => {
+    let finishLoadMore: (value: {
+      items: TimelineMoment[];
+      hasMore: boolean;
+    }) => void = () => {};
+    loadMoreTimelineMoments.mockReturnValue(
+      new Promise((resolve) => {
+        finishLoadMore = resolve;
+      }),
+    );
+
+    const newestMoment = {
+      ...firstMoment,
+      id: "moment-newest",
+      body: "Newest memory",
+      occurred_at: "2026-07-20T12:00:00.000Z",
+    };
+    const middleMoment = {
+      ...firstMoment,
+      id: "moment-middle",
+      body: "Middle memory",
+      occurred_at: "2026-07-19T18:00:00.000Z",
+    };
+    const restoredMoment = {
+      ...firstMoment,
+      id: "moment-restored",
+      body: "Restored memory",
+      occurred_at: "2026-07-19T06:00:00.000Z",
+    };
+
+    render(
+      <TimelineFeed
+        initialMoments={[newestMoment]}
+        initialHasMore
+        initialNextCursor={{
+          occurredAt: newestMoment.occurred_at,
+          id: newestMoment.id,
+        }}
+        filters={{ keyword: "", tagIds: [], favoriteOnly: false }}
+      />,
+    );
+
+    act(() => {
+      intersectionCallback(
+        [{ isIntersecting: true } as IntersectionObserverEntry],
+        {} as IntersectionObserver,
+      );
+    });
+
+    act(() => {
+      announceRestoredMoment(restoredMoment);
+    });
+
+    expect(screen.getByText("Restored memory")).toBeVisible();
+
+    await act(async () => {
+      finishLoadMore({
+        items: [middleMoment],
+        hasMore: false,
+      });
+    });
+
+    const momentTexts = screen
+      .getAllByRole("link")
+      .map((link) => link.textContent)
+      .filter(Boolean);
+    expect(momentTexts).toEqual([
+      expect.stringContaining("Newest memory"),
+      expect.stringContaining("Middle memory"),
+      expect.stringContaining("Restored memory"),
+    ]);
+  });
 });

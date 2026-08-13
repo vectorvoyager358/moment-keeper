@@ -1,8 +1,5 @@
-import { Suspense } from "react";
-
+import { BrowseContent } from "@/components/browse/BrowseContent";
 import { BrowseTabs } from "@/components/browse/BrowseTabs";
-import { CalendarView } from "@/components/browse/CalendarView";
-import { MediaGallery } from "@/components/browse/MediaGallery";
 import { KeepMomentLink } from "@/components/KeepMomentLink";
 import {
   PageContainer,
@@ -12,6 +9,7 @@ import {
 import { ScrollToTopButton } from "@/components/ui/ScrollToTopButton";
 import type { MediaType } from "@/lib/database.types";
 import { parseCalendarParams } from "@/lib/moments/calendar";
+import { calendarViewKey } from "@/lib/moments/view-cache";
 
 type BrowsePageProps = {
   searchParams: Promise<{
@@ -50,31 +48,16 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
         <BrowseTabs active={view} />
 
         <div className="mt-8">
-          <Suspense
-            key={
-              view === "calendar"
-                ? `${calendar.year}-${calendar.month}-${calendar.day ?? ""}`
-                : `media-${mediaType ?? "all"}`
-            }
-            fallback={
-              <div
-                className="h-[32rem] animate-pulse rounded-3xl bg-surface shadow-card ring-1 ring-border/60"
-                aria-hidden
-              />
-            }
-          >
-            {view === "calendar" ? (
-              <div className="mx-auto max-w-4xl">
-                <CalendarView
-                  year={calendar.year}
-                  month={calendar.month}
-                  selectedDay={calendar.day}
-                />
-              </div>
-            ) : (
-              <MediaGallery mediaType={mediaType} />
-            )}
-          </Suspense>
+          {view === "calendar" ? (
+            <BrowseContent
+              key={calendarViewKey(calendar.year, calendar.month)}
+              view="calendar"
+              calendar={calendar}
+              selectedDay={calendar.day}
+            />
+          ) : (
+            <BrowseContent key="media" view="media" mediaType={mediaType} />
+          )}
         </div>
       </PageContainer>
       <ScrollToTopButton />

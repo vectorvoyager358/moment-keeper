@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
     root: projectRoot,
   },
   experimental: {
+    // Reuse the last Journal/Look back RSC payload on tab switches.
+    staleTimes: {
+      dynamic: 180,
+    },
     // Keep in sync with MEDIA_SIZE_LIMITS.video (50 MB) + form overhead.
     serverActions: {
       bodySizeLimit: "52mb",

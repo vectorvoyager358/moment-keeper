@@ -29,6 +29,21 @@ export function formatOnThisDayHeading(
   return `On this day · ${label}`;
 }
 
+export function isOnThisDayMoment(
+  occurredAt: string,
+  todayIso: string,
+  timeZone: string,
+): boolean {
+  const today = getLocalCalendarParts(new Date(todayIso), timeZone);
+  const occurred = getLocalCalendarParts(new Date(occurredAt), timeZone);
+
+  return (
+    occurred.month === today.month &&
+    occurred.day === today.day &&
+    occurred.year < today.year
+  );
+}
+
 export function yearsAgoLabel(
   occurredAt: string,
   referenceDate: Date = new Date(),

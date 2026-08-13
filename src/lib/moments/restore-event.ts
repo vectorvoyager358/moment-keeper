@@ -1,4 +1,5 @@
 import type { TimelineMoment } from "@/lib/moments/timeline";
+import { restoreMomentToOnThisDayView } from "@/lib/moments/view-cache";
 
 export const MOMENT_RESTORED_EVENT = "moment-keeper:moment-restored";
 
@@ -7,6 +8,7 @@ export type MomentRestoredEvent = CustomEvent<TimelineMoment>;
 const pendingRestoredMoments = new Map<string, TimelineMoment>();
 
 export function announceRestoredMoment(moment: TimelineMoment): void {
+  restoreMomentToOnThisDayView(moment);
   pendingRestoredMoments.set(moment.id, moment);
   window.dispatchEvent(
     new CustomEvent(MOMENT_RESTORED_EVENT, { detail: moment }),

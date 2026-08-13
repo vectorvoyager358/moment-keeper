@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { mapTimelineRow } from "@/lib/moments/timeline";
+import { mapTimelineRow, mergeTimelineMoments } from "@/lib/moments/timeline";
 
 describe("mapTimelineRow", () => {
   it("handles null nested relations from Supabase", () => {
@@ -144,5 +144,36 @@ describe("mapTimelineRow", () => {
 
     expect(result.photoStoragePath).toBe("user/m/photo.jpg");
     expect(result.thumbnailPath).toBe("user/m/photo.thumb.jpg");
+  });
+});
+
+describe("mergeTimelineMoments", () => {
+  it("places a restored moment among a later-arriving page", () => {
+    const newest = mapTimelineRow({
+      id: "newest",
+      body: "Newest",
+      occurred_at: "2026-07-20T12:00:00.000Z",
+      location: null,
+      link_url: null,
+      is_favorite: false,
+      moment_tags: null,
+      media_attachments: null,
+    });
+    const middle = {
+      ...newest,
+      id: "middle",
+      body: "Middle",
+      occurred_at: "2026-07-19T18:00:00.000Z",
+    };
+    const restored = {
+      ...newest,
+      id: "restored",
+      body: "Restored",
+      occurred_at: "2026-07-19T06:00:00.000Z",
+    };
+
+    expect(
+      mergeTimelineMoments([newest, restored], [middle]).map((item) => item.id),
+    ).toEqual(["newest", "middle", "restored"]);
   });
 });

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { InvalidateViewCaches } from "@/components/moments/InvalidateViewCaches";
 import { MomentDetailPanel } from "@/components/moments/MomentDetailPanel";
 import { PageContainer, PageShell } from "@/components/ui/PageShell";
 import { SavedToast } from "@/components/ui/SavedToast";
@@ -41,6 +42,7 @@ export default async function MomentDetailPage({
   return (
     <PageShell>
       <PageContainer size="wide" className="px-0 py-0 sm:px-5 sm:py-6">
+        {showUpdatedToast ? <InvalidateViewCaches /> : null}
         <SavedToast
           initialVisible={showUpdatedToast}
           queryParam="updated"

@@ -12,43 +12,35 @@ import { Button } from "@/components/ui/Button";
 import type { TimelineMoment } from "@/lib/moments/queries";
 import type { TimelineCursor } from "@/lib/moments/pagination";
 import { subscribeToRestoredMoments } from "@/lib/moments/restore-event";
+import { mergeTimelineMoments } from "@/lib/moments/timeline";
 import {
   hasActiveSearchFilters,
   type TimelineSearchFilters,
 } from "@/lib/moments/search";
+
+type TimelineFeedSnapshot = {
+  moments: TimelineMoment[];
+  hasMore: boolean;
+  nextCursor: TimelineCursor | null;
+};
 
 type TimelineFeedProps = {
   initialMoments: TimelineMoment[];
   initialHasMore: boolean;
   initialNextCursor?: TimelineCursor | null;
   filters: TimelineSearchFilters;
+  onSnapshotChange?: (snapshot: TimelineFeedSnapshot) => void;
 };
 
 const MAX_STAGGER_INDEX = 8;
 const STAGGER_MS = 50;
-
-function insertMomentChronologically(
-  moments: TimelineMoment[],
-  restoredMoment: TimelineMoment,
-): TimelineMoment[] {
-  const withoutDuplicate = moments.filter(
-    (moment) => moment.id !== restoredMoment.id,
-  );
-
-  return [...withoutDuplicate, restoredMoment].sort((left, right) => {
-    const occurredAtDifference = right.occurred_at.localeCompare(
-      left.occurred_at,
-    );
-
-    return occurredAtDifference || right.id.localeCompare(left.id);
-  });
-}
 
 export function TimelineFeed({
   initialMoments,
   initialHasMore,
   initialNextCursor = null,
   filters,
+  onSnapshotChange,
 }: TimelineFeedProps) {
   const [moments, setMoments] = useState(initialMoments);
   const [hasMore, setHasMore] = useState(initialHasMore);
@@ -79,11 +71,13 @@ export function TimelineFeed({
         }
 
         setMoments((current) => {
-          const existingIds = new Set(current.map((moment) => moment.id));
-          return [
-            ...current,
-            ...result.items.filter((moment) => !existingIds.has(moment.id)),
-          ];
+          const nextMoments = mergeTimelineMoments(current, result.items);
+          onSnapshotChange?.({
+            moments: nextMoments,
+            hasMore: result.hasMore,
+            nextCursor: result.nextCursor ?? null,
+          });
+          return nextMoments;
         });
         setHasMore(result.hasMore);
         setNextCursor(result.nextCursor ?? null);
@@ -91,7 +85,7 @@ export function TimelineFeed({
         loadingRef.current = false;
       }
     });
-  }, [filters, hasMore, moments.length, nextCursor]);
+  }, [filters, hasMore, moments.length, nextCursor, onSnapshotChange]);
 
   useEffect(() => {
     const loadAhead = loadAheadRef.current;
@@ -123,11 +117,17 @@ export function TimelineFeed({
     }
 
     return subscribeToRestoredMoments((restoredMoment) => {
-      setMoments((current) =>
-        insertMomentChronologically(current, restoredMoment),
-      );
+      setMoments((current) => {
+        const nextMoments = mergeTimelineMoments(current, [restoredMoment]);
+        onSnapshotChange?.({
+          moments: nextMoments,
+          hasMore,
+          nextCursor,
+        });
+        return nextMoments;
+      });
     });
-  }, [filters]);
+  }, [filters, hasMore, nextCursor, onSnapshotChange]);
 
   if (moments.length === 0) {
     return <TimelineEmptyState />;
