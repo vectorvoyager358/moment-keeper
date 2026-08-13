@@ -7,16 +7,13 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { loadTimelineTags, loadOnThisDayTimeline, loadResurfacedTimeline } =
-  vi.hoisted(() => ({
-    loadTimelineTags: vi.fn(),
-    loadOnThisDayTimeline: vi.fn(),
-    loadResurfacedTimeline: vi.fn(),
-  }));
+const { loadTimelineTags, loadResurfacedTimeline } = vi.hoisted(() => ({
+  loadTimelineTags: vi.fn(),
+  loadResurfacedTimeline: vi.fn(),
+}));
 
 vi.mock("@/app/timeline/actions", () => ({
   loadTimelineTags,
-  loadOnThisDayTimeline,
   loadResurfacedTimeline,
 }));
 
@@ -24,13 +21,16 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
 
-import { DeferredTimelineSearch } from "@/components/timeline/DeferredTimelinePanels";
+import {
+  DeferredOnThisDayPreview,
+  DeferredTimelineSearch,
+  TimelineOnThisDayProvider,
+} from "@/components/timeline/DeferredTimelinePanels";
 import { TimelineCollapsiblePanel } from "@/components/timeline/TimelineCollapsiblePanel";
 
 beforeEach(() => {
   sessionStorage.clear();
   loadTimelineTags.mockReset().mockResolvedValue({ tags: [] });
-  loadOnThisDayTimeline.mockReset();
   loadResurfacedTimeline.mockReset();
 });
 
@@ -53,5 +53,75 @@ describe("deferred timeline panels", () => {
     await waitFor(() => {
       expect(loadTimelineTags).toHaveBeenCalledOnce();
     });
+  });
+
+  it("shows every server-loaded on-this-day memory immediately", () => {
+    const result = {
+      moments: [
+        {
+          id: "memory-1",
+          body: "First past memory",
+          occurred_at: "2025-08-11T12:00:00.000Z",
+          location: null,
+          linkUrl: null,
+          isFavorite: false,
+          tags: [],
+          hasMedia: false,
+          attachmentCount: 0,
+          mediaType: null,
+          thumbnailPath: null,
+          thumbnailUrl: null,
+          photoStoragePath: null,
+          photoUrl: null,
+          videoStoragePath: null,
+          videoUrl: null,
+        },
+        {
+          id: "memory-2",
+          body: "Second past memory",
+          occurred_at: "2024-08-11T12:00:00.000Z",
+          location: null,
+          linkUrl: null,
+          isFavorite: false,
+          tags: [],
+          hasMedia: false,
+          attachmentCount: 0,
+          mediaType: null,
+          thumbnailPath: null,
+          thumbnailUrl: null,
+          photoStoragePath: null,
+          photoUrl: null,
+          videoStoragePath: null,
+          videoUrl: null,
+        },
+      ],
+      todayIso: "2026-08-11T12:00:00.000Z",
+      timeZone: "America/Chicago",
+    };
+
+    render(
+      <TimelineOnThisDayProvider result={result}>
+        <DeferredOnThisDayPreview />
+      </TimelineOnThisDayProvider>,
+    );
+
+    expect(screen.getByText("First past memory")).toBeVisible();
+    expect(screen.getByText("Second past memory")).toBeVisible();
+  });
+
+  it("does not render an automatic preview when there are no past memories", () => {
+    const result = {
+      moments: [],
+      todayIso: "2026-08-11T12:00:00.000Z",
+      timeZone: "America/Chicago",
+    };
+
+    const { container } = render(
+      <TimelineOnThisDayProvider result={result}>
+        <DeferredOnThisDayPreview />
+      </TimelineOnThisDayProvider>,
+    );
+
+    expect(container).toBeEmptyDOMElement();
   });
 });

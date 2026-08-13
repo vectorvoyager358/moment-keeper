@@ -25,6 +25,6 @@ describe("DeleteMomentButton", () => {
     expect(
       screen.getByRole("alertdialog", { name: "Remove this moment?" }),
     ).toBeVisible();
-    expect(screen.getByText(/leave your journal for good/i)).toBeVisible();
+    expect(screen.getByText(/10 seconds to undo/i)).toBeVisible();
   });
 });

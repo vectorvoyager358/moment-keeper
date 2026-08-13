@@ -272,7 +272,8 @@ export async function getRandomMomentId(): Promise<string | null> {
   const supabase = await createClient();
   const { count, error: countError } = await supabase
     .from("moments")
-    .select("id", { count: "exact", head: true });
+    .select("id", { count: "exact", head: true })
+    .is("deleted_at", null);
 
   if (countError) {
     throw countError;
@@ -286,6 +287,7 @@ export async function getRandomMomentId(): Promise<string | null> {
   const { data, error } = await supabase
     .from("moments")
     .select("id")
+    .is("deleted_at", null)
     .order("occurred_at", { ascending: false })
     .range(offset, offset)
     .maybeSingle();
@@ -306,6 +308,7 @@ export async function getCalendarMoments(
   const { data, error } = await supabase
     .from("moments")
     .select(TIMELINE_SELECT)
+    .is("deleted_at", null)
     .gte("occurred_at", start)
     .lt("occurred_at", end)
     .order("occurred_at", { ascending: true });
@@ -323,7 +326,10 @@ export async function getMediaGalleryMoments(
   mediaType: MediaType | null = null,
 ): Promise<MediaGalleryItem[]> {
   const supabase = await createClient();
-  let query = supabase.from("moments").select(MEDIA_GALLERY_SELECT);
+  let query = supabase
+    .from("moments")
+    .select(MEDIA_GALLERY_SELECT)
+    .is("deleted_at", null);
 
   if (mediaType) {
     query = query.eq("media_attachments.media_type", mediaType);
@@ -435,6 +441,7 @@ export async function getOnThisDayMoments(
   const { data, error } = await supabase
     .from("moments")
     .select(TIMELINE_SELECT)
+    .is("deleted_at", null)
     .in("id", orderedIds);
 
   if (error) {
@@ -480,6 +487,7 @@ export async function getResurfacedMoments(
   const { data, error } = await supabase
     .from("moments")
     .select(TIMELINE_SELECT)
+    .is("deleted_at", null)
     .in("id", orderedIds);
 
   if (error) {
@@ -520,6 +528,7 @@ async function fetchAllTimelineMoments(
   let query = supabase
     .from("moments")
     .select(TIMELINE_SELECT)
+    .is("deleted_at", null)
     .order("occurred_at", { ascending: false })
     .order("id", { ascending: false });
 
@@ -586,6 +595,7 @@ async function searchTimelineMoments(
   const { data, error } = await supabase
     .from("moments")
     .select(TIMELINE_SELECT)
+    .is("deleted_at", null)
     .in("id", idPage.items);
 
   if (error) {
@@ -607,6 +617,7 @@ export async function getMomentById(id: string): Promise<MomentDetail | null> {
     .from("moments")
     .select(MOMENT_SELECT)
     .eq("id", id)
+    .is("deleted_at", null)
     .maybeSingle();
 
   if (error) {
@@ -647,7 +658,8 @@ export async function getUserMomentCount(): Promise<number> {
   const supabase = await createClient();
   const { count, error } = await supabase
     .from("moments")
-    .select("id", { count: "exact", head: true });
+    .select("id", { count: "exact", head: true })
+    .is("deleted_at", null);
 
   if (error) {
     throw error;
@@ -666,6 +678,7 @@ export async function getAdjacentMomentIds(momentId: string): Promise<{
     .from("moments")
     .select("occurred_at")
     .eq("id", momentId)
+    .is("deleted_at", null)
     .maybeSingle();
 
   if (error || !current) {
@@ -679,6 +692,7 @@ export async function getAdjacentMomentIds(momentId: string): Promise<{
     supabase
       .from("moments")
       .select("id")
+      .is("deleted_at", null)
       .or(
         `occurred_at.lt.${current.occurred_at},and(occurred_at.eq.${current.occurred_at},id.lt.${momentId})`,
       )
@@ -688,6 +702,7 @@ export async function getAdjacentMomentIds(momentId: string): Promise<{
     supabase
       .from("moments")
       .select("id")
+      .is("deleted_at", null)
       .or(
         `occurred_at.gt.${current.occurred_at},and(occurred_at.eq.${current.occurred_at},id.gt.${momentId})`,
       )

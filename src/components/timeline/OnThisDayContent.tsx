@@ -14,16 +14,21 @@ export function OnThisDayContent({
   moments,
   todayIso,
   timeZone,
+  preview = false,
 }: {
   moments: TimelineMoment[];
   todayIso: string;
   timeZone: string;
+  preview?: boolean;
 }) {
   const today = new Date(todayIso);
   const heading = formatOnThisDayHeading(today, timeZone);
 
   return (
-    <section className="mb-8" aria-labelledby="on-this-day-heading">
+    <section
+      className={preview ? "mb-0" : "mb-8"}
+      aria-labelledby="on-this-day-heading"
+    >
       <div className="mb-4 flex items-start gap-3">
         <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-subtle text-accent">
           <CalendarHeart className="h-4 w-4" strokeWidth={2.25} aria-hidden />

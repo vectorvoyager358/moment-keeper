@@ -1,9 +1,18 @@
+import { after } from "next/server";
 import { Suspense } from "react";
 
+import { loadOnThisDayTimeline } from "@/app/timeline/actions";
+import {
+  cleanupExpiredDeletedMoments,
+  finalizeDeletedMoment,
+  undoDeleteMoment,
+} from "@/app/moments/[id]/actions";
 import { JournalGreeting } from "@/components/timeline/JournalGreeting";
 import {
+  DeferredOnThisDayPreview,
   DeferredTimelineRevisit,
   DeferredTimelineSearch,
+  TimelineOnThisDayProvider,
 } from "@/components/timeline/DeferredTimelinePanels";
 import { TimelineResults } from "@/components/timeline/TimelinePageSections";
 import { TimelineSurpriseLink } from "@/components/timeline/TimelineSurpriseLink";
@@ -25,6 +34,8 @@ import {
   type TimelinePageResult,
 } from "@/lib/moments/queries";
 import { TIMELINE_INITIAL_PAGE_SIZE } from "@/lib/moments/pagination";
+import { MOMENT_DELETE_UNDO_MS } from "@/lib/moments/delete-undo";
+import { isUuid } from "@/lib/moments/direct-upload";
 import { getUserProfile } from "@/lib/profile/queries";
 import { formatProfileNameForDisplay } from "@/lib/profile/validation";
 import type { ResurfacingFilters } from "@/lib/moments/themes";
@@ -49,11 +60,22 @@ export default async function TimelinePage({
   const filters = parseSearchParams(rawParams);
   const resurfacingFilters = parseResurfacingParams(rawParams);
   const showSavedToast = rawParams.saved === "1";
-  const showDeletedToast = rawParams.deleted === "1";
+  const deletedMomentId =
+    typeof rawParams.deleted === "string" && isUuid(rawParams.deleted)
+      ? rawParams.deleted
+      : null;
   const timelinePromise = getTimelineMoments(filters, {
     limit: TIMELINE_INITIAL_PAGE_SIZE,
   });
+  const onThisDayPromise = hasActiveSearchFilters(filters)
+    ? Promise.resolve(null)
+    : loadOnThisDayTimeline();
   const profilePromise = getUserProfile();
+  const deletedMomentCleanupPromise = cleanupExpiredDeletedMoments();
+
+  after(async () => {
+    await deletedMomentCleanupPromise;
+  });
 
   return (
     <PageShell>
@@ -67,9 +89,21 @@ export default async function TimelinePage({
         </header>
 
         <SavedToast
-          initialVisible={showDeletedToast}
+          initialVisible={Boolean(deletedMomentId)}
           queryParam="deleted"
           message="Moment deleted."
+          autoDismissMs={MOMENT_DELETE_UNDO_MS}
+          actionLabel="Undo"
+          onAction={
+            deletedMomentId
+              ? undoDeleteMoment.bind(null, deletedMomentId)
+              : undefined
+          }
+          onExpire={
+            deletedMomentId
+              ? finalizeDeletedMoment.bind(null, deletedMomentId)
+              : undefined
+          }
         />
 
         <Suspense
@@ -85,6 +119,7 @@ export default async function TimelinePage({
             filters={filters}
             resurfacingFilters={resurfacingFilters}
             timelinePromise={timelinePromise}
+            onThisDayPromise={onThisDayPromise}
             showSavedToast={showSavedToast}
             showEmptySurprise={rawParams.surprise === "empty"}
           />
@@ -117,16 +152,23 @@ async function TimelineHomeContent({
   filters,
   resurfacingFilters,
   timelinePromise,
+  onThisDayPromise,
   showSavedToast,
   showEmptySurprise,
 }: {
   filters: TimelineSearchFilters;
   resurfacingFilters: ResurfacingFilters;
   timelinePromise: Promise<TimelinePageResult<TimelineMoment>>;
+  onThisDayPromise: Promise<
+    Awaited<ReturnType<typeof loadOnThisDayTimeline>> | null
+  >;
   showSavedToast: boolean;
   showEmptySurprise: boolean;
 }) {
-  const timelinePage = await timelinePromise;
+  const [timelinePage, onThisDayResult] = await Promise.all([
+    timelinePromise,
+    onThisDayPromise,
+  ]);
   const hasMoments = timelinePage.items.length > 0;
   const hasSearchFilters = hasActiveSearchFilters(filters);
   const canUseJournalTools = hasMoments || hasSearchFilters;
@@ -153,20 +195,23 @@ async function TimelineHomeContent({
       ) : null}
 
       {canUseJournalTools ? (
-        <TimelineTools
-          key={hasSearchFilters ? "searching" : "browsing"}
-          initialTool={hasSearchFilters ? "find" : null}
-          findContent={<DeferredTimelineSearch filters={filters} />}
-          revisitContent={
-            <>
-              <DeferredTimelineRevisit
-                searchFilters={filters}
-                resurfacingFilters={resurfacingFilters}
-              />
-              <TimelineSurpriseLink />
-            </>
-          }
-        />
+        <TimelineOnThisDayProvider result={onThisDayResult}>
+          <TimelineTools
+            key={hasSearchFilters ? "searching" : "browsing"}
+            initialTool={hasSearchFilters ? "find" : null}
+            findContent={<DeferredTimelineSearch filters={filters} />}
+            revisitPreview={<DeferredOnThisDayPreview />}
+            revisitContent={
+              <>
+                <DeferredTimelineRevisit
+                  searchFilters={filters}
+                  resurfacingFilters={resurfacingFilters}
+                />
+                <TimelineSurpriseLink />
+              </>
+            }
+          />
+        </TimelineOnThisDayProvider>
       ) : null}
 
       <TimelineResults

@@ -11,6 +11,7 @@ describe("TimelineTools", () => {
       <TimelineTools
         findContent={<p>Find controls</p>}
         revisitContent={<p>Revisit controls</p>}
+        revisitPreview={<p>On this day preview</p>}
       />,
     );
 
@@ -20,19 +21,23 @@ describe("TimelineTools", () => {
     expect(findButton).toHaveAttribute("aria-expanded", "false");
     expect(revisitButton).toHaveAttribute("aria-expanded", "false");
     expect(screen.queryByText("Find controls")).not.toBeInTheDocument();
+    expect(screen.getByText("On this day preview")).toBeVisible();
 
     fireEvent.click(findButton);
     expect(findButton).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByText("Find controls")).toBeVisible();
+    expect(screen.getByText("On this day preview")).toBeVisible();
 
     fireEvent.click(revisitButton);
     expect(findButton).toHaveAttribute("aria-expanded", "false");
     expect(revisitButton).toHaveAttribute("aria-expanded", "true");
     expect(screen.queryByText("Find controls")).not.toBeInTheDocument();
     expect(screen.getByText("Revisit controls")).toBeVisible();
+    expect(screen.queryByText("On this day preview")).not.toBeInTheDocument();
 
     fireEvent.click(revisitButton);
     expect(screen.queryByText("Revisit controls")).not.toBeInTheDocument();
+    expect(screen.getByText("On this day preview")).toBeVisible();
   });
 
   it("opens Find immediately when filters are active", () => {

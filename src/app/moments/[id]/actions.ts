@@ -4,6 +4,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { toUserErrorMessage } from "@/lib/errors";
+import {
+  MOMENT_DELETE_REQUEST_GRACE_MS,
+  MOMENT_DELETE_STALE_CLEANUP_MS,
+  MOMENT_DELETE_UNDO_MS,
+} from "@/lib/moments/delete-undo";
 import { removeMediaAttachmentsForMoment } from "@/lib/moments/media-storage";
 import { saveUpdatedMoment } from "@/lib/moments/save";
 import type { CaptureFormState } from "@/lib/moments/types";
@@ -46,21 +51,115 @@ export async function setMomentFavorite(
 
 export async function deleteMoment(momentId: string): Promise<void> {
   const supabase = await createClient();
+  const deletedAt = new Date().toISOString();
 
-  try {
-    await removeMediaAttachmentsForMoment(supabase, momentId);
-  } catch (error) {
-    throw new Error(
-      toUserErrorMessage(error, "Could not delete moment media."),
-    );
-  }
+  const { data, error } = await supabase
+    .from("moments")
+    .update({ deleted_at: deletedAt })
+    .eq("id", momentId)
+    .is("deleted_at", null)
+    .select("id")
+    .maybeSingle();
 
-  const { error } = await supabase.from("moments").delete().eq("id", momentId);
-
-  if (error) {
+  if (error || !data) {
     throw new Error(toUserErrorMessage(error, "Could not delete this moment."));
   }
 
   revalidatePath("/timeline");
-  redirect("/timeline?deleted=1");
+  revalidatePath("/browse");
+  redirect(`/timeline?deleted=${momentId}`);
+}
+
+export async function undoDeleteMoment(
+  momentId: string,
+): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+  const cutoff = new Date(
+    Date.now() - MOMENT_DELETE_UNDO_MS - MOMENT_DELETE_REQUEST_GRACE_MS,
+  ).toISOString();
+  const { data, error } = await supabase
+    .from("moments")
+    .update({ deleted_at: null })
+    .eq("id", momentId)
+    .gt("deleted_at", cutoff)
+    .select("id")
+    .maybeSingle();
+
+  if (error || !data) {
+    return {
+      error: toUserErrorMessage(error, "The undo period has expired."),
+    };
+  }
+
+  revalidatePath("/timeline");
+  revalidatePath("/browse");
+  return { error: null };
+}
+
+async function permanentlyDeleteMoment(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  momentId: string,
+  cutoff: string,
+): Promise<void> {
+  const claimedDeletedAt = new Date(0).toISOString();
+  const { data: claimed, error } = await supabase
+    .from("moments")
+    .update({ deleted_at: claimedDeletedAt })
+    .eq("id", momentId)
+    .not("deleted_at", "is", null)
+    .lte("deleted_at", cutoff)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!claimed) {
+    return;
+  }
+
+  await removeMediaAttachmentsForMoment(supabase, momentId);
+
+  const { error: deleteError } = await supabase
+    .from("moments")
+    .delete()
+    .eq("id", momentId)
+    .eq("deleted_at", claimedDeletedAt);
+
+  if (deleteError) {
+    throw new Error(
+      toUserErrorMessage(deleteError, "Could not delete this moment."),
+    );
+  }
+}
+
+export async function finalizeDeletedMoment(momentId: string): Promise<void> {
+  const supabase = await createClient();
+  const cutoff = new Date(Date.now() - MOMENT_DELETE_UNDO_MS).toISOString();
+
+  try {
+    await permanentlyDeleteMoment(supabase, momentId, cutoff);
+  } catch {
+    // Keep the hidden row available for the next cleanup attempt.
+  }
+}
+
+export async function cleanupExpiredDeletedMoments(): Promise<void> {
+  const supabase = await createClient();
+  const cutoff = new Date(
+    Date.now() - MOMENT_DELETE_STALE_CLEANUP_MS,
+  ).toISOString();
+  const { data } = await supabase
+    .from("moments")
+    .select("id")
+    .not("deleted_at", "is", null)
+    .lte("deleted_at", cutoff)
+    .limit(20);
+
+  await Promise.allSettled(
+    (data ?? []).map((moment) =>
+      permanentlyDeleteMoment(supabase, moment.id, cutoff),
+    ),
+  );
 }

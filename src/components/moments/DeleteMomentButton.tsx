@@ -38,7 +38,7 @@ export function DeleteMomentButton({
       <ConfirmDialog
         open={open}
         title="Remove this moment?"
-        description="It will leave your journal for good, including any media."
+        description="It will leave your journal. You’ll have 10 seconds to undo."
         confirmLabel="Delete moment"
         cancelLabel="Keep it"
         confirmVariant="danger"

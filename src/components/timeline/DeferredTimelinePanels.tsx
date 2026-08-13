@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 
 import {
-  loadOnThisDayTimeline,
   loadResurfacedTimeline,
   loadTimelineTags,
 } from "@/app/timeline/actions";
@@ -74,6 +79,60 @@ type OnThisDayData = {
   timeZone: string;
 };
 
+type OnThisDayResponse = OnThisDayData & { error?: string };
+type OnThisDayResult = Exclude<DeferredResult<OnThisDayData>, { status: "loading" }>;
+
+const OnThisDayContext = createContext<OnThisDayResult | null>(null);
+
+export function TimelineOnThisDayProvider({
+  children,
+  result,
+}: {
+  children: ReactNode;
+  result: OnThisDayResponse | null;
+}) {
+  const contextValue: OnThisDayResult | null = result
+    ? result.error
+      ? { status: "error", message: result.error }
+      : {
+          status: "ready",
+          data: {
+            moments: result.moments,
+            todayIso: result.todayIso,
+            timeZone: result.timeZone,
+          },
+        }
+    : null;
+
+  return (
+    <OnThisDayContext.Provider value={contextValue}>
+      {children}
+    </OnThisDayContext.Provider>
+  );
+}
+
+function useOnThisDayResult() {
+  return useContext(OnThisDayContext);
+}
+
+export function DeferredOnThisDayPreview() {
+  const result = useOnThisDayResult();
+
+  if (
+    !result ||
+    result.status !== "ready" ||
+    result.data.moments.length === 0
+  ) {
+    return null;
+  }
+
+  return (
+    <div className="mt-3 overflow-hidden rounded-3xl bg-surface p-4 shadow-card ring-1 ring-border/55 sm:mt-4 sm:p-6">
+      <OnThisDayContent {...result.data} preview />
+    </div>
+  );
+}
+
 export function DeferredTimelineRevisit({
   searchFilters,
   resurfacingFilters,
@@ -81,9 +140,7 @@ export function DeferredTimelineRevisit({
   searchFilters: TimelineSearchFilters;
   resurfacingFilters: ResurfacingFilters;
 }) {
-  const [onThisDay, setOnThisDay] = useState<DeferredResult<OnThisDayData>>({
-    status: "loading",
-  });
+  const onThisDay = useOnThisDayResult();
   const [resurfaced, setResurfaced] = useState<
     DeferredResult<TimelineMoment[]>
   >({ status: "loading" });
@@ -96,25 +153,6 @@ export function DeferredTimelineRevisit({
     }
 
     let active = true;
-
-    void loadOnThisDayTimeline().then((response) => {
-      if (!active) {
-        return;
-      }
-
-      setOnThisDay(
-        response.error
-          ? { status: "error", message: response.error }
-          : {
-              status: "ready",
-              data: {
-                moments: response.moments,
-                todayIso: response.todayIso,
-                timeZone: response.timeZone,
-              },
-            },
-      );
-    });
 
     if (shouldLoadResurfaced) {
       void loadResurfacedTimeline(resurfacingFilters).then((response) => {
@@ -141,12 +179,7 @@ export function DeferredTimelineRevisit({
 
   return (
     <>
-      {onThisDay.status === "loading" ? (
-        <div
-          className="h-36 animate-pulse rounded-2xl border border-border bg-surface"
-          aria-hidden="true"
-        />
-      ) : onThisDay.status === "error" ? (
+      {!onThisDay ? null : onThisDay.status === "error" ? (
         <Alert variant="error">{onThisDay.message}</Alert>
       ) : (
         <OnThisDayContent {...onThisDay.data} />

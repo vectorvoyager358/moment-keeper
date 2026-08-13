@@ -55,7 +55,9 @@ describe("getTimelineMoments cursor pagination", () => {
       }),
       or: vi.fn(),
       order: vi.fn(),
+      is: vi.fn(),
     };
+    query.is.mockReturnValue(query);
     query.order.mockReturnValue(query);
     query.or.mockReturnValue(query);
 
@@ -140,7 +142,9 @@ describe("getTimelineMoments cursor pagination", () => {
         error: null,
       }),
       order: vi.fn(),
+      is: vi.fn(),
     };
+    query.is.mockReturnValue(query);
     query.order.mockReturnValue(query);
 
     createClientMock.mockResolvedValue({
@@ -203,7 +207,9 @@ describe("getTimelineMoments cursor pagination", () => {
         error: null,
       }),
       order: vi.fn(),
+      is: vi.fn(),
     };
+    query.is.mockReturnValue(query);
     query.order.mockReturnValue(query);
 
     createClientMock.mockResolvedValue({
@@ -267,7 +273,7 @@ describe("getTimelineMoments keyword search", () => {
       rpc,
       from: vi.fn(() => ({
         select: () => ({
-          in: inFilter,
+          is: () => ({ in: inFilter }),
         }),
       })),
       storage: {
@@ -349,7 +355,7 @@ describe("getTimelineMoments keyword search", () => {
       rpc,
       from: vi.fn(() => ({
         select: () => ({
-          in: inFilter,
+          is: () => ({ in: inFilter }),
         }),
       })),
       storage: {
@@ -384,7 +390,8 @@ describe("getUserMomentCount", () => {
   });
 
   it("returns the authenticated user's moment count", async () => {
-    const select = vi.fn().mockResolvedValue({ count: 3, error: null });
+    const is = vi.fn().mockResolvedValue({ count: 3, error: null });
+    const select = vi.fn(() => ({ is }));
     createClientMock.mockResolvedValue({
       from: vi.fn(() => ({ select })),
     });
@@ -394,6 +401,7 @@ describe("getUserMomentCount", () => {
       count: "exact",
       head: true,
     });
+    expect(is).toHaveBeenCalledWith("deleted_at", null);
   });
 });
 
@@ -407,16 +415,20 @@ describe("getAdjacentMomentIds", () => {
       limit: vi.fn().mockResolvedValue({ data: [{ id: "earlier-1" }] }),
       or: vi.fn(),
       order: vi.fn(),
+      is: vi.fn(),
     };
     const laterQuery = {
       limit: vi.fn().mockResolvedValue({ data: [{ id: "later-1" }] }),
       or: vi.fn(),
       order: vi.fn(),
+      is: vi.fn(),
     };
     earlierQuery.or.mockReturnValue(earlierQuery);
     earlierQuery.order.mockReturnValue(earlierQuery);
+    earlierQuery.is.mockReturnValue(earlierQuery);
     laterQuery.or.mockReturnValue(laterQuery);
     laterQuery.order.mockReturnValue(laterQuery);
+    laterQuery.is.mockReturnValue(laterQuery);
     let adjacencyQueryIndex = 0;
 
     createClientMock.mockResolvedValue({
@@ -430,10 +442,12 @@ describe("getAdjacentMomentIds", () => {
             if (columns === "occurred_at") {
               return {
                 eq: vi.fn(() => ({
-                  maybeSingle: vi.fn().mockResolvedValue({
-                    data: { occurred_at: "2026-07-09T12:00:00.000Z" },
-                    error: null,
-                  }),
+                  is: vi.fn(() => ({
+                    maybeSingle: vi.fn().mockResolvedValue({
+                      data: { occurred_at: "2026-07-09T12:00:00.000Z" },
+                      error: null,
+                    }),
+                  })),
                 })),
               };
             }

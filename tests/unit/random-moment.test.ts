@@ -27,11 +27,13 @@ describe("getRandomMomentId", () => {
     const from = vi
       .fn()
       .mockReturnValueOnce({
-        select: vi.fn().mockResolvedValue({ count: 4, error: null }),
+        select: vi.fn(() => ({
+          is: vi.fn().mockResolvedValue({ count: 4, error: null }),
+        })),
       })
       .mockReturnValueOnce({
         select: () => ({
-          order: () => ({ range }),
+          is: () => ({ order: () => ({ range }) }),
         }),
       });
     createClientMock.mockResolvedValue({ from });
@@ -43,7 +45,9 @@ describe("getRandomMomentId", () => {
   it("returns null when the journal is empty", async () => {
     createClientMock.mockResolvedValue({
       from: () => ({
-        select: vi.fn().mockResolvedValue({ count: 0, error: null }),
+        select: vi.fn(() => ({
+          is: vi.fn().mockResolvedValue({ count: 0, error: null }),
+        })),
       }),
     });
 
