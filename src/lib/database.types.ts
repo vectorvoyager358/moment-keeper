@@ -169,6 +169,14 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      cleanup_orphaned_tags: {
+        Args: {
+          p_tag_ids?: string[] | null;
+        };
+        Returns: {
+          tag_id: string;
+        }[];
+      };
       search_moment_ids: {
         Args: {
           p_query: string;

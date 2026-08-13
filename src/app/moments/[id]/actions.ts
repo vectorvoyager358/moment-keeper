@@ -120,7 +120,7 @@ async function permanentlyDeleteMoment(
   supabase: Awaited<ReturnType<typeof createClient>>,
   momentId: string,
   cutoff: string,
-): Promise<void> {
+): Promise<string[]> {
   const claimedDeletedAt = new Date(0).toISOString();
   const { data: claimed, error } = await supabase
     .from("moments")
@@ -136,8 +136,19 @@ async function permanentlyDeleteMoment(
   }
 
   if (!claimed) {
-    return;
+    return [];
   }
+
+  const { data: momentTags, error: tagFetchError } = await supabase
+    .from("moment_tags")
+    .select("tag_id")
+    .eq("moment_id", momentId);
+
+  if (tagFetchError) {
+    throw tagFetchError;
+  }
+
+  const candidateTagIds = (momentTags ?? []).map((link) => link.tag_id);
 
   await removeMediaAttachmentsForMoment(supabase, momentId);
 
@@ -152,16 +163,41 @@ async function permanentlyDeleteMoment(
       toUserErrorMessage(deleteError, "Could not delete this moment."),
     );
   }
+
+  if (candidateTagIds.length === 0) {
+    return [];
+  }
+
+  const { data: removedTags, error: cleanupError } = await supabase.rpc(
+    "cleanup_orphaned_tags",
+    { p_tag_ids: candidateTagIds },
+  );
+
+  if (cleanupError) {
+    return [];
+  }
+
+  return ((removedTags ?? []) as Array<{ tag_id: string }>).map(
+    (tag) => tag.tag_id,
+  );
 }
 
-export async function finalizeDeletedMoment(momentId: string): Promise<void> {
+export async function finalizeDeletedMoment(
+  momentId: string,
+): Promise<{ removedTagIds: string[] }> {
   const supabase = await createClient();
   const cutoff = new Date(Date.now() - MOMENT_DELETE_UNDO_MS).toISOString();
 
   try {
-    await permanentlyDeleteMoment(supabase, momentId, cutoff);
+    const removedTagIds = await permanentlyDeleteMoment(
+      supabase,
+      momentId,
+      cutoff,
+    );
+    return { removedTagIds };
   } catch {
     // Keep the hidden row available for the next cleanup attempt.
+    return { removedTagIds: [] };
   }
 }
 
@@ -182,4 +218,6 @@ export async function cleanupExpiredDeletedMoments(): Promise<void> {
       permanentlyDeleteMoment(supabase, moment.id, cutoff),
     ),
   );
+
+  await supabase.rpc("cleanup_orphaned_tags", { p_tag_ids: null });
 }
