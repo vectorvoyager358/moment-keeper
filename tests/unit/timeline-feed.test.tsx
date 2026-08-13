@@ -9,7 +9,10 @@ vi.mock("@/app/timeline/actions", () => ({ loadMoreTimelineMoments }));
 
 import { TimelineFeed } from "@/components/timeline/TimelineFeed";
 import type { TimelineMoment } from "@/lib/moments/queries";
-import { MOMENT_RESTORED_EVENT } from "@/lib/moments/restore-event";
+import {
+  announceRestoredMoment,
+  MOMENT_RESTORED_EVENT,
+} from "@/lib/moments/restore-event";
 
 const firstMoment: TimelineMoment = {
   id: "moment-1",
@@ -59,6 +62,49 @@ afterEach(() => {
 });
 
 describe("TimelineFeed", () => {
+  it("receives an undo that finishes before the feed mounts", async () => {
+    announceRestoredMoment({
+      ...firstMoment,
+      id: "moment-restored-before-mount",
+      body: "Restored before mount",
+    });
+
+    render(
+      <TimelineFeed
+        initialMoments={[firstMoment]}
+        initialHasMore={false}
+        filters={{ keyword: "", tagIds: [], favoriteOnly: false }}
+      />,
+    );
+
+    expect(await screen.findByText("Restored before mount")).toBeVisible();
+  });
+
+  it("replaces an empty journal after undoing its only moment", async () => {
+    render(
+      <TimelineFeed
+        initialMoments={[]}
+        initialHasMore={false}
+        filters={{ keyword: "", tagIds: [], favoriteOnly: false }}
+      />,
+    );
+
+    expect(screen.getByText("Your journal is waiting")).toBeVisible();
+
+    act(() => {
+      announceRestoredMoment({
+        ...firstMoment,
+        id: "only-restored-moment",
+        body: "Only restored memory",
+      });
+    });
+
+    expect(await screen.findByText("Only restored memory")).toBeVisible();
+    expect(
+      screen.queryByText("Your journal is waiting"),
+    ).not.toBeInTheDocument();
+  });
+
   it("restores an undone moment immediately in chronological order", () => {
     const newestMoment = {
       ...firstMoment,

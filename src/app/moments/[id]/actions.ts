@@ -96,13 +96,18 @@ export async function undoDeleteMoment(momentId: string): Promise<{
     };
   }
 
-  revalidatePath("/timeline");
-  revalidatePath("/browse");
-
   try {
+    const restoredMoment = await getTimelineMomentById(momentId);
+
+    if (!restoredMoment) {
+      return {
+        error: "The moment was restored, but it could not be shown yet.",
+      };
+    }
+
     return {
       error: null,
-      restoredMoment: await getTimelineMomentById(momentId),
+      restoredMoment,
     };
   } catch {
     return {
