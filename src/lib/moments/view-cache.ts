@@ -98,6 +98,23 @@ export function setGalleryView(
   return next;
 }
 
+export function filterGalleryItems(
+  items: MediaGalleryItem[],
+  mediaType: MediaType | null,
+): MediaGalleryItem[] {
+  if (!mediaType) {
+    return items;
+  }
+
+  return items.filter((item) => item.mediaType === mediaType);
+}
+
+export function galleryFilterUrl(mediaType: MediaType | null): string {
+  return mediaType
+    ? `/browse?view=media&media=${mediaType}`
+    : "/browse?view=media";
+}
+
 export function getCalendarView(
   year: number,
   month: number,

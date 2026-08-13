@@ -3,6 +3,8 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { TimelineMoment } from "@/lib/moments/timeline";
 import {
   didTimelineItemsChange,
+  filterGalleryItems,
+  galleryFilterUrl,
   getGalleryView,
   getTimelineView,
   invalidateAllViewCaches,
@@ -165,6 +167,39 @@ describe("view cache", () => {
     expect(shouldFetchFreshView(false)).toBe(true);
     expect(shouldFetchFreshView(true)).toBe(false);
     expect(shouldFetchFreshView(true, true)).toBe(true);
+  });
+
+  it("filters the remembered everything gallery without another fetch", () => {
+    const items = [
+      {
+        id: "photo-1",
+        momentId: "m1",
+        body: "photo",
+        occurred_at: "2026-08-13T12:00:00.000Z",
+        location: null,
+        mediaType: "photo" as const,
+        thumbnailUrl: null,
+        photoUrl: null,
+        videoUrl: null,
+      },
+      {
+        id: "video-1",
+        momentId: "m2",
+        body: "video",
+        occurred_at: "2026-08-12T12:00:00.000Z",
+        location: null,
+        mediaType: "video" as const,
+        thumbnailUrl: null,
+        photoUrl: null,
+        videoUrl: null,
+      },
+    ];
+
+    expect(filterGalleryItems(items, null)).toEqual(items);
+    expect(filterGalleryItems(items, "photo").map((item) => item.id)).toEqual([
+      "photo-1",
+    ]);
+    expect(galleryFilterUrl("video")).toBe("/browse?view=media&media=video");
   });
 
   it("does not treat identical journal cards as a change", () => {

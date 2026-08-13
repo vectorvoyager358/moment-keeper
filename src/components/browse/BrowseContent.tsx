@@ -18,6 +18,7 @@ import {
 } from "@/lib/moments/use-cached-view";
 import {
   calendarViewKey,
+  filterGalleryItems,
   galleryViewKey,
   getCalendarView,
   getGalleryView,
@@ -38,15 +39,16 @@ type BrowseContentProps =
     };
 
 export function BrowseContent(props: BrowseContentProps) {
+  const [mediaType, setMediaType] = useState<MediaType | null>(
+    props.view === "media" ? props.mediaType : null,
+  );
   const cacheKey =
     props.view === "media"
-      ? galleryViewKey(props.mediaType)
+      ? galleryViewKey(null)
       : calendarViewKey(props.calendar.year, props.calendar.month);
   const [galleryItems, setGalleryItems] = useState<MediaGalleryItem[] | null>(
     () =>
-      props.view === "media"
-        ? (getGalleryView(props.mediaType)?.items ?? null)
-        : null,
+      props.view === "media" ? (getGalleryView(null)?.items ?? null) : null,
   );
   const [calendarMoments, setCalendarMoments] = useState<
     TimelineMoment[] | null
@@ -59,7 +61,7 @@ export function BrowseContent(props: BrowseContentProps) {
   const [error, setError] = useState<string | null>(null);
   const cachedScroll =
     props.view === "media"
-      ? getGalleryView(props.mediaType)?.scrollY
+      ? getGalleryView(null)?.scrollY
       : getCalendarView(props.calendar.year, props.calendar.month)?.scrollY;
   const hasSnapshot =
     props.view === "media" ? galleryItems !== null : calendarMoments !== null;
@@ -74,13 +76,13 @@ export function BrowseContent(props: BrowseContentProps) {
       }
 
       setError(null);
-      setGalleryView(props.view === "media" ? props.mediaType : null, {
+      setGalleryView(null, {
         items: result.items,
       });
       setGalleryItems(result.items);
       setRefreshing(false);
     },
-    [props],
+    [],
   );
 
   const applyCalendar = useCallback(
@@ -109,7 +111,7 @@ export function BrowseContent(props: BrowseContentProps) {
     setRefreshing(true);
 
     if (props.view === "media") {
-      applyGallery(await loadBrowseGallery(props.mediaType));
+      applyGallery(await loadBrowseGallery(null));
       return;
     }
 
@@ -126,7 +128,7 @@ export function BrowseContent(props: BrowseContentProps) {
     let active = true;
 
     if (props.view === "media") {
-      void loadBrowseGallery(props.mediaType).then((result) => {
+      void loadBrowseGallery(null).then((result) => {
         if (active) {
           applyGallery(result);
         }
@@ -161,8 +163,9 @@ export function BrowseContent(props: BrowseContentProps) {
         />
       ) : props.view === "media" ? (
         <MediaGallery
-          mediaType={props.mediaType}
-          moments={galleryItems ?? []}
+          mediaType={mediaType}
+          moments={filterGalleryItems(galleryItems ?? [], mediaType)}
+          onMediaTypeChange={setMediaType}
         />
       ) : (
         <CalendarView

@@ -9,10 +9,12 @@ import { cn } from "@/lib/cn";
 import type { MediaType } from "@/lib/database.types";
 import { truncateBody } from "@/lib/moments/dates";
 import type { MediaGalleryItem } from "@/lib/moments/queries";
+import { galleryFilterUrl } from "@/lib/moments/view-cache";
 
 type MediaGalleryProps = {
   mediaType: MediaType | null;
   moments: MediaGalleryItem[];
+  onMediaTypeChange?: (mediaType: MediaType | null) => void;
 };
 
 const FILTERS: Array<{ value: MediaType | null; label: string }> = [
@@ -22,10 +24,12 @@ const FILTERS: Array<{ value: MediaType | null; label: string }> = [
   { value: "audio", label: "Voice" },
 ];
 
-export function MediaGallery({ mediaType, moments }: MediaGalleryProps) {
-  const returnTo = mediaType
-    ? `/browse?view=media&media=${mediaType}`
-    : "/browse?view=media";
+export function MediaGallery({
+  mediaType,
+  moments,
+  onMediaTypeChange,
+}: MediaGalleryProps) {
+  const returnTo = galleryFilterUrl(mediaType);
 
   return (
     <div>
@@ -37,15 +41,22 @@ export function MediaGallery({ mediaType, moments }: MediaGalleryProps) {
           >
             {FILTERS.map((filter) => {
               const active = filter.value === mediaType;
-              const href = filter.value
-                ? `/browse?view=media&media=${filter.value}`
-                : "/browse?view=media";
+              const href = galleryFilterUrl(filter.value);
 
               return (
-                <Link
+                <button
                   key={filter.label}
-                  href={href}
-                  aria-current={active ? "page" : undefined}
+                  type="button"
+                  aria-pressed={active}
+                  aria-current={active ? "true" : undefined}
+                  onClick={() => {
+                    if (filter.value === mediaType) {
+                      return;
+                    }
+
+                    window.history.replaceState(window.history.state, "", href);
+                    onMediaTypeChange?.(filter.value);
+                  }}
                   className={cn(
                     "rounded-lg px-3 py-1.5 text-xs font-medium whitespace-nowrap transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40",
                     active
@@ -54,7 +65,7 @@ export function MediaGallery({ mediaType, moments }: MediaGalleryProps) {
                   )}
                 >
                   {filter.label}
-                </Link>
+                </button>
               );
             })}
           </div>

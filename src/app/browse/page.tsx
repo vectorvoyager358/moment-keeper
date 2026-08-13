@@ -9,7 +9,7 @@ import {
 import { ScrollToTopButton } from "@/components/ui/ScrollToTopButton";
 import type { MediaType } from "@/lib/database.types";
 import { parseCalendarParams } from "@/lib/moments/calendar";
-import { calendarViewKey, galleryViewKey } from "@/lib/moments/view-cache";
+import { calendarViewKey } from "@/lib/moments/view-cache";
 
 type BrowsePageProps = {
   searchParams: Promise<{
@@ -56,11 +56,7 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
               selectedDay={calendar.day}
             />
           ) : (
-            <BrowseContent
-              key={galleryViewKey(mediaType)}
-              view="media"
-              mediaType={mediaType}
-            />
+            <BrowseContent key="media" view="media" mediaType={mediaType} />
           )}
         </div>
       </PageContainer>
