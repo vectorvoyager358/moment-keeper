@@ -32,6 +32,7 @@ export interface Moment {
   link_url: string | null;
   themes: MemoryTheme[];
   is_favorite: boolean;
+  deleted_at: string | null;
   occurred_at: string;
   created_at: string;
   updated_at: string;
@@ -94,6 +95,7 @@ export type Database = {
           link_url?: string | null;
           themes?: MemoryTheme[];
           is_favorite?: boolean;
+          deleted_at?: string | null;
           occurred_at?: string;
           created_at?: string;
           updated_at?: string;
@@ -105,6 +107,7 @@ export type Database = {
           link_url?: string | null;
           themes?: MemoryTheme[];
           is_favorite?: boolean;
+          deleted_at?: string | null;
           occurred_at?: string;
           updated_at?: string;
         };

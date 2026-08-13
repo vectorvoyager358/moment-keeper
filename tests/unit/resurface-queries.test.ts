@@ -46,7 +46,7 @@ describe("getResurfacedMoments", () => {
     createClientMock.mockResolvedValue({
       rpc,
       from: vi.fn(() => ({
-        select: () => ({ in: inFilter }),
+        select: () => ({ is: () => ({ in: inFilter }) }),
       })),
       storage: {
         from: () => ({

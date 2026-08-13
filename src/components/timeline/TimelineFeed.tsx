@@ -9,6 +9,10 @@ import { Button } from "@/components/ui/Button";
 import type { TimelineMoment } from "@/lib/moments/queries";
 import type { TimelineCursor } from "@/lib/moments/pagination";
 import {
+  MOMENT_RESTORED_EVENT,
+  type MomentRestoredEvent,
+} from "@/lib/moments/restore-event";
+import {
   hasActiveSearchFilters,
   type TimelineSearchFilters,
 } from "@/lib/moments/search";
@@ -22,6 +26,23 @@ type TimelineFeedProps = {
 
 const MAX_STAGGER_INDEX = 8;
 const STAGGER_MS = 50;
+
+function insertMomentChronologically(
+  moments: TimelineMoment[],
+  restoredMoment: TimelineMoment,
+): TimelineMoment[] {
+  const withoutDuplicate = moments.filter(
+    (moment) => moment.id !== restoredMoment.id,
+  );
+
+  return [...withoutDuplicate, restoredMoment].sort((left, right) => {
+    const occurredAtDifference = right.occurred_at.localeCompare(
+      left.occurred_at,
+    );
+
+    return occurredAtDifference || right.id.localeCompare(left.id);
+  });
+}
 
 export function TimelineFeed({
   initialMoments,
@@ -57,7 +78,13 @@ export function TimelineFeed({
           return;
         }
 
-        setMoments((current) => [...current, ...result.items]);
+        setMoments((current) => {
+          const existingIds = new Set(current.map((moment) => moment.id));
+          return [
+            ...current,
+            ...result.items.filter((moment) => !existingIds.has(moment.id)),
+          ];
+        });
         setHasMore(result.hasMore);
         setNextCursor(result.nextCursor ?? null);
       } finally {
@@ -89,6 +116,28 @@ export function TimelineFeed({
     observer.observe(loadAhead);
     return () => observer.disconnect();
   }, [error, handleLoadMore, hasMore]);
+
+  useEffect(() => {
+    if (hasActiveSearchFilters(filters)) {
+      return;
+    }
+
+    const restoreMoment = (event: Event) => {
+      const restoredMoment = (event as MomentRestoredEvent).detail;
+
+      if (!restoredMoment) {
+        return;
+      }
+
+      setMoments((current) =>
+        insertMomentChronologically(current, restoredMoment),
+      );
+    };
+
+    window.addEventListener(MOMENT_RESTORED_EVENT, restoreMoment);
+    return () =>
+      window.removeEventListener(MOMENT_RESTORED_EVENT, restoreMoment);
+  }, [filters]);
 
   return (
     <>

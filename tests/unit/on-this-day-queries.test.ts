@@ -46,7 +46,7 @@ describe("getOnThisDayMoments", () => {
 
     const from = vi.fn(() => ({
       select: vi.fn(() => ({
-        in: inFilter,
+        is: () => ({ in: inFilter }),
       })),
     }));
 

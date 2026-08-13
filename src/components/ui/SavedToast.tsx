@@ -2,7 +2,10 @@
 
 import { Check } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
+
+import { MOMENT_RESTORED_EVENT } from "@/lib/moments/restore-event";
+import type { TimelineMoment } from "@/lib/moments/timeline";
 
 const AUTO_DISMISS_MS = 5000;
 
@@ -12,6 +15,12 @@ type SavedToastProps = {
   queryParam?: string;
   hint?: string | null;
   autoDismissMs?: number;
+  actionLabel?: string;
+  onAction?: () => Promise<{
+    error: string | null;
+    restoredMoment?: TimelineMoment | null;
+  }>;
+  onExpire?: () => Promise<void>;
 };
 
 const DEFAULT_MESSAGE = "Saved — it's now part of your journal.";
@@ -22,10 +31,17 @@ export function SavedToast({
   queryParam = "saved",
   hint = null,
   autoDismissMs = AUTO_DISMISS_MS,
+  actionLabel,
+  onAction,
+  onExpire,
 }: SavedToastProps) {
   const router = useRouter();
   const shouldShowRef = useRef(initialVisible);
+  const timerRef = useRef<number | null>(null);
+  const onExpireRef = useRef(onExpire);
   const [visible, setVisible] = useState(initialVisible);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     if (!shouldShowRef.current) {
@@ -39,12 +55,16 @@ export function SavedToast({
       router.replace(nextUrl, { scroll: false });
     }
 
-    const timer = window.setTimeout(() => {
+    timerRef.current = window.setTimeout(() => {
+      timerRef.current = null;
       setVisible(false);
+      void onExpireRef.current?.();
     }, autoDismissMs);
 
     return () => {
-      window.clearTimeout(timer);
+      if (timerRef.current !== null) {
+        window.clearTimeout(timerRef.current);
+      }
     };
   }, [autoDismissMs, queryParam, router]);
 
@@ -64,13 +84,45 @@ export function SavedToast({
       <div className="min-w-0">
         <p className="text-sm font-medium">{message}</p>
         {hint ? <p className="mt-1 text-sm text-success/90">{hint}</p> : null}
+        {actionError ? (
+          <p className="mt-1 text-sm text-danger">{actionError}</p>
+        ) : null}
       </div>
       <button
         type="button"
-        onClick={() => setVisible(false)}
+        disabled={isPending}
+        onClick={() => {
+          if (!onAction) {
+            setVisible(false);
+            return;
+          }
+
+          if (timerRef.current !== null) {
+            window.clearTimeout(timerRef.current);
+            timerRef.current = null;
+          }
+
+          startTransition(async () => {
+            const result = await onAction();
+            if (result.error) {
+              setActionError(result.error);
+              return;
+            }
+
+            if (result.restoredMoment) {
+              window.dispatchEvent(
+                new CustomEvent(MOMENT_RESTORED_EVENT, {
+                  detail: result.restoredMoment,
+                }),
+              );
+            }
+
+            setVisible(false);
+          });
+        }}
         className="ml-auto text-sm font-medium text-success/80 transition hover:text-success"
       >
-        Dismiss
+        {isPending ? "Restoring…" : (actionLabel ?? "Dismiss")}
       </button>
     </div>
   );

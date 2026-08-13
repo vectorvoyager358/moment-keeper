@@ -9,6 +9,7 @@ vi.mock("@/app/timeline/actions", () => ({ loadMoreTimelineMoments }));
 
 import { TimelineFeed } from "@/components/timeline/TimelineFeed";
 import type { TimelineMoment } from "@/lib/moments/queries";
+import { MOMENT_RESTORED_EVENT } from "@/lib/moments/restore-event";
 
 const firstMoment: TimelineMoment = {
   id: "moment-1",
@@ -58,6 +59,45 @@ afterEach(() => {
 });
 
 describe("TimelineFeed", () => {
+  it("restores an undone moment immediately in chronological order", () => {
+    const newestMoment = {
+      ...firstMoment,
+      id: "moment-newest",
+      body: "Newest memory",
+      occurred_at: "2026-07-20T12:00:00.000Z",
+    };
+    const restoredMoment = {
+      ...firstMoment,
+      id: "moment-restored",
+      body: "Restored memory",
+      occurred_at: "2026-07-19T18:00:00.000Z",
+    };
+
+    render(
+      <TimelineFeed
+        initialMoments={[newestMoment, firstMoment]}
+        initialHasMore={false}
+        filters={{ keyword: "", tagIds: [], favoriteOnly: false }}
+      />,
+    );
+
+    act(() => {
+      window.dispatchEvent(
+        new CustomEvent(MOMENT_RESTORED_EVENT, { detail: restoredMoment }),
+      );
+    });
+
+    const momentTexts = screen
+      .getAllByRole("link")
+      .map((link) => link.textContent)
+      .filter(Boolean);
+    expect(momentTexts).toEqual([
+      expect.stringContaining("Newest memory"),
+      expect.stringContaining("Restored memory"),
+      expect.stringContaining("First memory"),
+    ]);
+  });
+
   it("loads the next bounded page before the user reaches the end", async () => {
     loadMoreTimelineMoments.mockResolvedValue({
       items: [secondMoment],

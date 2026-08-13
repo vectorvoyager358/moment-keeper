@@ -10,6 +10,7 @@ type TimelineTool = "find" | "revisit";
 type TimelineToolsProps = {
   findContent: ReactNode;
   revisitContent: ReactNode;
+  revisitPreview?: ReactNode;
   initialTool?: TimelineTool | null;
 };
 
@@ -31,6 +32,7 @@ const tools = [
 export function TimelineTools({
   findContent,
   revisitContent,
+  revisitPreview = null,
   initialTool = null,
 }: TimelineToolsProps) {
   const [activeTool, setActiveTool] = useState<TimelineTool | null>(
@@ -99,6 +101,8 @@ export function TimelineTools({
           {activeContent}
         </div>
       ) : null}
+
+      {activeTool !== "revisit" ? revisitPreview : null}
     </section>
   );
 }

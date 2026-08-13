@@ -34,6 +34,7 @@ describe("browse queries", () => {
 
   it("loads moments inside the requested UTC calendar month", async () => {
     const builder: Record<string, ReturnType<typeof vi.fn>> = {};
+    builder.is = vi.fn(() => builder);
     builder.gte = vi.fn(() => builder);
     builder.lt = vi.fn(() => builder);
     builder.order = vi.fn().mockResolvedValue({ data: [], error: null });
@@ -56,6 +57,7 @@ describe("browse queries", () => {
 
   it("filters and limits the media gallery", async () => {
     const builder: Record<string, ReturnType<typeof vi.fn>> = {};
+    builder.is = vi.fn(() => builder);
     builder.eq = vi.fn(() => builder);
     builder.order = vi.fn(() => builder);
     builder.limit = vi.fn().mockResolvedValue({ data: [], error: null });
@@ -75,6 +77,7 @@ describe("browse queries", () => {
 
   it("returns one gallery item per attachment", async () => {
     const builder: Record<string, ReturnType<typeof vi.fn>> = {};
+    builder.is = vi.fn(() => builder);
     builder.order = vi.fn(() => builder);
     builder.limit = vi.fn().mockResolvedValue({
       data: [
@@ -144,6 +147,7 @@ describe("browse queries", () => {
 
   it("retries a missing video URL without discarding the media card", async () => {
     const builder: Record<string, ReturnType<typeof vi.fn>> = {};
+    builder.is = vi.fn(() => builder);
     builder.gte = vi.fn(() => builder);
     builder.lt = vi.fn(() => builder);
     builder.order = vi.fn().mockResolvedValue({
