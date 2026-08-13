@@ -1,4 +1,5 @@
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -30,10 +31,16 @@ import {
   TimelineOnThisDayProvider,
 } from "@/components/timeline/DeferredTimelinePanels";
 import { TimelineCollapsiblePanel } from "@/components/timeline/TimelineCollapsiblePanel";
+import { announceRestoredMoment } from "@/lib/moments/restore-event";
 import { announceRemovedTags } from "@/lib/moments/tag-events";
+import {
+  invalidateAllViewCaches,
+  setOnThisDayView,
+} from "@/lib/moments/view-cache";
 
 beforeEach(() => {
   sessionStorage.clear();
+  invalidateAllViewCaches();
   loadTimelineTags.mockReset().mockResolvedValue({ tags: [] });
   loadResurfacedTimeline.mockReset();
   loadOnThisDayTimeline.mockReset().mockResolvedValue({
@@ -160,5 +167,46 @@ describe("deferred timeline panels", () => {
     );
 
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it("puts an undone memory back in the on-this-day preview", async () => {
+    const restored = {
+      id: "memory-restored",
+      body: "Restored past memory",
+      occurred_at: "2025-08-11T12:00:00.000Z",
+      location: null,
+      linkUrl: null,
+      isFavorite: false,
+      tags: [],
+      hasMedia: false,
+      attachmentCount: 0,
+      mediaType: null,
+      thumbnailPath: null,
+      thumbnailUrl: null,
+      photoStoragePath: null,
+      photoUrl: null,
+      videoStoragePath: null,
+      videoUrl: null,
+    };
+
+    setOnThisDayView({
+      moments: [],
+      todayIso: "2026-08-11T12:00:00.000Z",
+      timeZone: "UTC",
+    });
+
+    render(
+      <TimelineOnThisDayProvider>
+        <DeferredOnThisDayPreview />
+      </TimelineOnThisDayProvider>,
+    );
+
+    expect(screen.queryByText("Restored past memory")).not.toBeInTheDocument();
+
+    act(() => {
+      announceRestoredMoment(restored);
+    });
+
+    expect(await screen.findByText("Restored past memory")).toBeVisible();
   });
 });

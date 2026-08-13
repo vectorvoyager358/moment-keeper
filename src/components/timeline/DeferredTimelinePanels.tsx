@@ -32,6 +32,7 @@ import {
   TAGS_REMOVED_EVENT,
   type TagsRemovedEvent,
 } from "@/lib/moments/tag-events";
+import { subscribeToRestoredMoments } from "@/lib/moments/restore-event";
 import { getOnThisDayView, setOnThisDayView } from "@/lib/moments/view-cache";
 
 type DeferredResult<T> =
@@ -153,6 +154,15 @@ export function TimelineOnThisDayProvider({
       active = false;
     };
   }, [result]);
+
+  useEffect(() => {
+    return subscribeToRestoredMoments(() => {
+      const next = getOnThisDayView();
+      if (next) {
+        setFetched(next);
+      }
+    });
+  }, []);
 
   const contextValue: OnThisDayResult | null = loaded
     ? loaded.error

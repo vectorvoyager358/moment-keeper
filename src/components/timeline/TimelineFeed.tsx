@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/Button";
 import type { TimelineMoment } from "@/lib/moments/queries";
 import type { TimelineCursor } from "@/lib/moments/pagination";
 import { subscribeToRestoredMoments } from "@/lib/moments/restore-event";
+import { mergeTimelineMoments } from "@/lib/moments/timeline";
 import {
   hasActiveSearchFilters,
   type TimelineSearchFilters,
@@ -33,23 +34,6 @@ type TimelineFeedProps = {
 
 const MAX_STAGGER_INDEX = 8;
 const STAGGER_MS = 50;
-
-function insertMomentChronologically(
-  moments: TimelineMoment[],
-  restoredMoment: TimelineMoment,
-): TimelineMoment[] {
-  const withoutDuplicate = moments.filter(
-    (moment) => moment.id !== restoredMoment.id,
-  );
-
-  return [...withoutDuplicate, restoredMoment].sort((left, right) => {
-    const occurredAtDifference = right.occurred_at.localeCompare(
-      left.occurred_at,
-    );
-
-    return occurredAtDifference || right.id.localeCompare(left.id);
-  });
-}
 
 export function TimelineFeed({
   initialMoments,
@@ -87,11 +71,7 @@ export function TimelineFeed({
         }
 
         setMoments((current) => {
-          const existingIds = new Set(current.map((moment) => moment.id));
-          const nextMoments = [
-            ...current,
-            ...result.items.filter((moment) => !existingIds.has(moment.id)),
-          ];
+          const nextMoments = mergeTimelineMoments(current, result.items);
           onSnapshotChange?.({
             moments: nextMoments,
             hasMore: result.hasMore,
@@ -138,10 +118,7 @@ export function TimelineFeed({
 
     return subscribeToRestoredMoments((restoredMoment) => {
       setMoments((current) => {
-        const nextMoments = insertMomentChronologically(
-          current,
-          restoredMoment,
-        );
+        const nextMoments = mergeTimelineMoments(current, [restoredMoment]);
         onSnapshotChange?.({
           moments: nextMoments,
           hasMore,

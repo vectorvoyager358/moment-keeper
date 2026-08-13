@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { loadMoreTimelineMoments, loadOnThisDayTimeline } = vi.hoisted(() => ({
@@ -18,6 +18,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 import { JournalMoments } from "@/components/timeline/JournalMoments";
+import { announceRestoredMoment } from "@/lib/moments/restore-event";
 import type { TimelineMoment } from "@/lib/moments/timeline";
 import {
   invalidateAllViewCaches,
@@ -141,5 +142,81 @@ describe("JournalMoments", () => {
 
     expect(screen.getByText("Already on the page")).toBeVisible();
     expect(screen.queryByText("Should disappear")).not.toBeInTheDocument();
+  });
+
+  it("hides a deleted moment from the on-this-day preview", () => {
+    setTimelineView(filters, {
+      items: [cachedMoment],
+      hasMore: false,
+      nextCursor: null,
+    });
+    setOnThisDayView({
+      moments: [
+        {
+          ...cachedMoment,
+          id: "deleted-1",
+          body: "From a previous year",
+          occurred_at: "2025-08-13T12:00:00.000Z",
+        },
+      ],
+      todayIso: "2026-08-13T12:00:00.000Z",
+      timeZone: "UTC",
+    });
+
+    render(
+      <JournalMoments
+        filters={filters}
+        resurfacingFilters={{ themes: [], mediaType: null }}
+        showSavedToast={false}
+        showEmptySurprise={false}
+        deletedMomentId="deleted-1"
+      />,
+    );
+
+    expect(screen.getByText("Already on the page")).toBeVisible();
+    expect(screen.queryByText("From a previous year")).not.toBeInTheDocument();
+  });
+
+  it("puts an undone moment back in the on-this-day preview", async () => {
+    const pastMoment = {
+      ...cachedMoment,
+      id: "deleted-1",
+      body: "From a previous year",
+      occurred_at: "2025-08-13T12:00:00.000Z",
+    };
+
+    setTimelineView(filters, {
+      items: [cachedMoment],
+      hasMore: false,
+      nextCursor: null,
+    });
+    setOnThisDayView({
+      moments: [pastMoment],
+      todayIso: "2026-08-13T12:00:00.000Z",
+      timeZone: "UTC",
+    });
+
+    render(
+      <JournalMoments
+        filters={filters}
+        resurfacingFilters={{ themes: [], mediaType: null }}
+        showSavedToast={false}
+        showEmptySurprise={false}
+        deletedMomentId="deleted-1"
+      />,
+    );
+
+    expect(screen.queryByText("From a previous year")).not.toBeInTheDocument();
+
+    act(() => {
+      announceRestoredMoment(pastMoment);
+    });
+
+    const preview = await screen.findByRole("heading", {
+      name: /On this day/i,
+    });
+    expect(preview.closest("section")).toHaveTextContent(
+      "From a previous year",
+    );
   });
 });

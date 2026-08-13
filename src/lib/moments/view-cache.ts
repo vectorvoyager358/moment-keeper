@@ -1,8 +1,12 @@
 import type { MediaType } from "@/lib/database.types";
 import type { MediaGalleryItem } from "@/lib/moments/queries";
+import { isOnThisDayMoment } from "@/lib/moments/on-this-day";
 import type { TimelineCursor } from "@/lib/moments/pagination";
 import type { TimelineSearchFilters } from "@/lib/moments/search";
-import type { TimelineMoment } from "@/lib/moments/timeline";
+import {
+  mergeTimelineMoments,
+  type TimelineMoment,
+} from "@/lib/moments/timeline";
 
 export const VIEW_CACHE_HIDDEN_REFRESH_MS = 5 * 60_000;
 
@@ -222,6 +226,35 @@ export function removeMomentFromViewCache(momentId: string): void {
       },
     });
   }
+
+  if (onThisDayView) {
+    onThisDayView = {
+      ...onThisDayView,
+      moments: onThisDayView.moments.filter((item) => item.id !== momentId),
+    };
+  }
+}
+
+export function restoreMomentToOnThisDayView(
+  moment: TimelineMoment,
+): OnThisDayView | null {
+  if (
+    !onThisDayView ||
+    onThisDayView.error ||
+    !isOnThisDayMoment(
+      moment.occurred_at,
+      onThisDayView.todayIso,
+      onThisDayView.timeZone,
+    )
+  ) {
+    return onThisDayView;
+  }
+
+  onThisDayView = {
+    ...onThisDayView,
+    moments: mergeTimelineMoments(onThisDayView.moments, [moment]),
+  };
+  return onThisDayView;
 }
 
 export function patchCachedMomentFavorite(

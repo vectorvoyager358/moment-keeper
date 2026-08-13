@@ -6,12 +6,15 @@ import {
   filterGalleryItems,
   galleryFilterUrl,
   getGalleryView,
+  getOnThisDayView,
   getTimelineView,
   invalidateAllViewCaches,
   mergeTimelineView,
   patchCachedMomentFavorite,
   removeMomentFromViewCache,
+  restoreMomentToOnThisDayView,
   setGalleryView,
+  setOnThisDayView,
   setTimelineView,
   shouldFetchFreshView,
   timelineViewKey,
@@ -107,7 +110,7 @@ describe("view cache", () => {
     expect(merged.items.map((item) => item.id)).toEqual(["m3", "m1"]);
   });
 
-  it("removes a deleted moment from journal and look-back snapshots", () => {
+  it("removes a deleted moment from journal, look-back, and on-this-day snapshots", () => {
     setTimelineView(emptyFilters, {
       items: [
         moment("keep", "2026-08-13T12:00:00.000Z"),
@@ -132,12 +135,56 @@ describe("view cache", () => {
       ],
     });
 
+    setOnThisDayView({
+      moments: [
+        moment("keep", "2025-08-13T12:00:00.000Z"),
+        moment("gone", "2024-08-13T12:00:00.000Z"),
+      ],
+      todayIso: "2026-08-13T12:00:00.000Z",
+      timeZone: "UTC",
+    });
+
     removeMomentFromViewCache("gone");
 
     expect(getTimelineView(emptyFilters)?.items.map((item) => item.id)).toEqual(
       ["keep"],
     );
     expect(getGalleryView(null)?.items).toEqual([]);
+    expect(getOnThisDayView()?.moments.map((item) => item.id)).toEqual([
+      "keep",
+    ]);
+  });
+
+  it("puts an undone on-this-day moment back in date order", () => {
+    const kept = moment("keep", "2025-08-13T12:00:00.000Z");
+    const restored = moment("gone", "2024-08-13T12:00:00.000Z");
+
+    setOnThisDayView({
+      moments: [kept],
+      todayIso: "2026-08-13T12:00:00.000Z",
+      timeZone: "UTC",
+    });
+
+    restoreMomentToOnThisDayView(restored);
+
+    expect(getOnThisDayView()?.moments.map((item) => item.id)).toEqual([
+      "keep",
+      "gone",
+    ]);
+  });
+
+  it("does not add an undone moment from a different day to on-this-day", () => {
+    setOnThisDayView({
+      moments: [moment("keep", "2025-08-13T12:00:00.000Z")],
+      todayIso: "2026-08-13T12:00:00.000Z",
+      timeZone: "UTC",
+    });
+
+    restoreMomentToOnThisDayView(moment("other", "2024-07-01T12:00:00.000Z"));
+
+    expect(getOnThisDayView()?.moments.map((item) => item.id)).toEqual([
+      "keep",
+    ]);
   });
 
   it("patches favorite state and removes unfavorited moments from the favorites view", () => {

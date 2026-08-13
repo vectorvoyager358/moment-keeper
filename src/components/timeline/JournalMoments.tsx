@@ -128,19 +128,17 @@ export function JournalMoments({
   );
 
   useEffect(() => {
-    const forceRefresh = showSavedToast || Boolean(deletedMomentId);
-
-    if (forceRefresh) {
+    if (showSavedToast || deletedMomentId) {
       invalidateBrowseViews();
     }
 
     if (
-      !shouldFetchFreshView(Boolean(getTimelineView(filters)), forceRefresh)
+      !shouldFetchFreshView(Boolean(getTimelineView(filters)), showSavedToast)
     ) {
       return;
     }
 
-    const mode = forceRefresh ? "replace" : "merge";
+    const mode = showSavedToast ? "replace" : "merge";
     let active = true;
 
     void loadMoreTimelineMoments(filters, {

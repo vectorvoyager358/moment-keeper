@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   formatOnThisDayHeading,
   getLocalCalendarParts,
+  isOnThisDayMoment,
   yearsAgoLabel,
 } from "@/lib/moments/on-this-day";
 
@@ -29,6 +30,35 @@ describe("formatOnThisDayHeading", () => {
         "America/Chicago",
       ),
     ).toBe("On this day · July 11");
+  });
+});
+
+describe("isOnThisDayMoment", () => {
+  it("matches the same calendar day in a previous year", () => {
+    expect(
+      isOnThisDayMoment(
+        "2025-08-13T18:00:00.000Z",
+        "2026-08-13T12:00:00.000Z",
+        "UTC",
+      ),
+    ).toBe(true);
+  });
+
+  it("rejects this year and other calendar days", () => {
+    expect(
+      isOnThisDayMoment(
+        "2026-08-13T12:00:00.000Z",
+        "2026-08-13T12:00:00.000Z",
+        "UTC",
+      ),
+    ).toBe(false);
+    expect(
+      isOnThisDayMoment(
+        "2025-08-12T12:00:00.000Z",
+        "2026-08-13T12:00:00.000Z",
+        "UTC",
+      ),
+    ).toBe(false);
   });
 });
 
