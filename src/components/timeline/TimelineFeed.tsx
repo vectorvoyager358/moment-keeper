@@ -17,11 +17,18 @@ import {
   type TimelineSearchFilters,
 } from "@/lib/moments/search";
 
+type TimelineFeedSnapshot = {
+  moments: TimelineMoment[];
+  hasMore: boolean;
+  nextCursor: TimelineCursor | null;
+};
+
 type TimelineFeedProps = {
   initialMoments: TimelineMoment[];
   initialHasMore: boolean;
   initialNextCursor?: TimelineCursor | null;
   filters: TimelineSearchFilters;
+  onSnapshotChange?: (snapshot: TimelineFeedSnapshot) => void;
 };
 
 const MAX_STAGGER_INDEX = 8;
@@ -49,6 +56,7 @@ export function TimelineFeed({
   initialHasMore,
   initialNextCursor = null,
   filters,
+  onSnapshotChange,
 }: TimelineFeedProps) {
   const [moments, setMoments] = useState(initialMoments);
   const [hasMore, setHasMore] = useState(initialHasMore);
@@ -80,10 +88,16 @@ export function TimelineFeed({
 
         setMoments((current) => {
           const existingIds = new Set(current.map((moment) => moment.id));
-          return [
+          const nextMoments = [
             ...current,
             ...result.items.filter((moment) => !existingIds.has(moment.id)),
           ];
+          onSnapshotChange?.({
+            moments: nextMoments,
+            hasMore: result.hasMore,
+            nextCursor: result.nextCursor ?? null,
+          });
+          return nextMoments;
         });
         setHasMore(result.hasMore);
         setNextCursor(result.nextCursor ?? null);
@@ -91,7 +105,7 @@ export function TimelineFeed({
         loadingRef.current = false;
       }
     });
-  }, [filters, hasMore, moments.length, nextCursor]);
+  }, [filters, hasMore, moments.length, nextCursor, onSnapshotChange]);
 
   useEffect(() => {
     const loadAhead = loadAheadRef.current;
@@ -123,11 +137,20 @@ export function TimelineFeed({
     }
 
     return subscribeToRestoredMoments((restoredMoment) => {
-      setMoments((current) =>
-        insertMomentChronologically(current, restoredMoment),
-      );
+      setMoments((current) => {
+        const nextMoments = insertMomentChronologically(
+          current,
+          restoredMoment,
+        );
+        onSnapshotChange?.({
+          moments: nextMoments,
+          hasMore,
+          nextCursor,
+        });
+        return nextMoments;
+      });
     });
-  }, [filters]);
+  }, [filters, hasMore, nextCursor, onSnapshotChange]);
 
   if (moments.length === 0) {
     return <TimelineEmptyState />;

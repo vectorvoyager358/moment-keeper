@@ -7,12 +7,12 @@ import { TimelineMediaImage } from "@/components/timeline/TimelineMediaImage";
 import { Card } from "@/components/ui/Card";
 import { cn } from "@/lib/cn";
 import type { MediaType } from "@/lib/database.types";
-import { toUserErrorMessage } from "@/lib/errors";
 import { truncateBody } from "@/lib/moments/dates";
-import { getMediaGalleryMoments } from "@/lib/moments/queries";
+import type { MediaGalleryItem } from "@/lib/moments/queries";
 
 type MediaGalleryProps = {
   mediaType: MediaType | null;
+  moments: MediaGalleryItem[];
 };
 
 const FILTERS: Array<{ value: MediaType | null; label: string }> = [
@@ -22,17 +22,7 @@ const FILTERS: Array<{ value: MediaType | null; label: string }> = [
   { value: "audio", label: "Voice" },
 ];
 
-export async function MediaGallery({ mediaType }: MediaGalleryProps) {
-  let moments;
-
-  try {
-    moments = await getMediaGalleryMoments(mediaType);
-  } catch (error) {
-    throw new Error(
-      toUserErrorMessage(error, "Could not load your media gallery."),
-    );
-  }
-
+export function MediaGallery({ mediaType, moments }: MediaGalleryProps) {
   const returnTo = mediaType
     ? `/browse?view=media&media=${mediaType}`
     : "/browse?view=media";

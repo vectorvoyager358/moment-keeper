@@ -7,14 +7,17 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { loadTimelineTags, loadResurfacedTimeline } = vi.hoisted(() => ({
-  loadTimelineTags: vi.fn(),
-  loadResurfacedTimeline: vi.fn(),
-}));
+const { loadTimelineTags, loadResurfacedTimeline, loadOnThisDayTimeline } =
+  vi.hoisted(() => ({
+    loadTimelineTags: vi.fn(),
+    loadResurfacedTimeline: vi.fn(),
+    loadOnThisDayTimeline: vi.fn(),
+  }));
 
 vi.mock("@/app/timeline/actions", () => ({
   loadTimelineTags,
   loadResurfacedTimeline,
+  loadOnThisDayTimeline,
 }));
 
 vi.mock("next/navigation", () => ({
@@ -33,6 +36,11 @@ beforeEach(() => {
   sessionStorage.clear();
   loadTimelineTags.mockReset().mockResolvedValue({ tags: [] });
   loadResurfacedTimeline.mockReset();
+  loadOnThisDayTimeline.mockReset().mockResolvedValue({
+    moments: [],
+    todayIso: "2026-08-13T12:00:00.000Z",
+    timeZone: "UTC",
+  });
 });
 
 afterEach(cleanup);

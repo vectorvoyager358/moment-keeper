@@ -14,7 +14,6 @@ import { Card } from "@/components/ui/Card";
 import { Input, Label, Select } from "@/components/ui/Input";
 import { cn } from "@/lib/cn";
 import { localDateKey } from "@/lib/timezone";
-import { toUserErrorMessage } from "@/lib/errors";
 import {
   buildCalendarDays,
   calendarDayKey,
@@ -22,10 +21,11 @@ import {
   shiftCalendarMonth,
   type CalendarMonth,
 } from "@/lib/moments/calendar";
-import { getCalendarMoments } from "@/lib/moments/queries";
+import type { TimelineMoment } from "@/lib/moments/timeline";
 
 type CalendarViewProps = CalendarMonth & {
   selectedDay: string | null;
+  moments: TimelineMoment[];
 };
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -58,19 +58,12 @@ function monthUrl(month: CalendarMonth, day?: string): string {
   return `/browse?${params.toString()}`;
 }
 
-export async function CalendarView({
+export function CalendarView({
   year,
   month,
   selectedDay,
+  moments,
 }: CalendarViewProps) {
-  let moments;
-
-  try {
-    moments = await getCalendarMoments(year, month);
-  } catch (error) {
-    throw new Error(toUserErrorMessage(error, "Could not load your calendar."));
-  }
-
   const calendarMonth = { year, month };
   const previousMonth = shiftCalendarMonth(calendarMonth, -1);
   const nextMonth = shiftCalendarMonth(calendarMonth, 1);

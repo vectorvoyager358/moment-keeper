@@ -9,6 +9,7 @@ import {
 } from "react";
 
 import {
+  loadOnThisDayTimeline,
   loadResurfacedTimeline,
   loadTimelineTags,
 } from "@/app/timeline/actions";
@@ -31,6 +32,7 @@ import {
   TAGS_REMOVED_EVENT,
   type TagsRemovedEvent,
 } from "@/lib/moments/tag-events";
+import { getOnThisDayView, setOnThisDayView } from "@/lib/moments/view-cache";
 
 type DeferredResult<T> =
   | { status: "loading" }
@@ -116,20 +118,51 @@ const OnThisDayContext = createContext<OnThisDayResult | null>(null);
 
 export function TimelineOnThisDayProvider({
   children,
-  result,
+  result = null,
 }: {
   children: ReactNode;
-  result: OnThisDayResponse | null;
+  result?: OnThisDayResponse | null;
 }) {
-  const contextValue: OnThisDayResult | null = result
-    ? result.error
-      ? { status: "error", message: result.error }
+  const [fetched, setFetched] = useState<OnThisDayResponse | null>(
+    () => result ?? getOnThisDayView(),
+  );
+  const loaded = result ?? fetched;
+
+  useEffect(() => {
+    if (result) {
+      setOnThisDayView(result);
+      return;
+    }
+
+    if (getOnThisDayView()) {
+      return;
+    }
+
+    let active = true;
+
+    void loadOnThisDayTimeline().then((response) => {
+      if (!active) {
+        return;
+      }
+
+      setOnThisDayView(response);
+      setFetched(response);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [result]);
+
+  const contextValue: OnThisDayResult | null = loaded
+    ? loaded.error
+      ? { status: "error", message: loaded.error }
       : {
           status: "ready",
           data: {
-            moments: result.moments,
-            todayIso: result.todayIso,
-            timeZone: result.timeZone,
+            moments: loaded.moments,
+            todayIso: loaded.todayIso,
+            timeZone: loaded.timeZone,
           },
         }
     : null;

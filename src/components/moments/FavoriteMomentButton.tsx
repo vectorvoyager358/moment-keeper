@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import { setMomentFavorite } from "@/app/moments/[id]/actions";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
+import { patchCachedMomentFavorite } from "@/lib/moments/view-cache";
 
 type FavoriteMomentButtonProps = {
   momentId: string;
@@ -34,7 +35,10 @@ export function FavoriteMomentButton({
       if (result.error) {
         setFavorite(!nextFavorite);
         setError(result.error);
+        return;
       }
+
+      patchCachedMomentFavorite(momentId, nextFavorite);
     });
   }
 
