@@ -80,7 +80,10 @@ type OnThisDayData = {
 };
 
 type OnThisDayResponse = OnThisDayData & { error?: string };
-type OnThisDayResult = Exclude<DeferredResult<OnThisDayData>, { status: "loading" }>;
+type OnThisDayResult = Exclude<
+  DeferredResult<OnThisDayData>,
+  { status: "loading" }
+>;
 
 const OnThisDayContext = createContext<OnThisDayResult | null>(null);
 

@@ -518,6 +518,33 @@ export async function getTimelineMoments(
   return searchTimelineMoments(filters, limit, offset);
 }
 
+export async function getTimelineMomentById(
+  id: string,
+): Promise<TimelineMoment | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("moments")
+    .select(TIMELINE_SELECT)
+    .eq("id", id)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  const [moment] = await withSignedThumbnails(
+    [data as TimelineQueryRow],
+    supabase,
+  );
+
+  return moment ?? null;
+}
+
 async function fetchAllTimelineMoments(
   limit: number,
   cursor: TimelineCursor | null,

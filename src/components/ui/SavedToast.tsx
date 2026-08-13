@@ -4,6 +4,9 @@ import { Check } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 
+import { MOMENT_RESTORED_EVENT } from "@/lib/moments/restore-event";
+import type { TimelineMoment } from "@/lib/moments/timeline";
+
 const AUTO_DISMISS_MS = 5000;
 
 type SavedToastProps = {
@@ -13,7 +16,10 @@ type SavedToastProps = {
   hint?: string | null;
   autoDismissMs?: number;
   actionLabel?: string;
-  onAction?: () => Promise<{ error: string | null }>;
+  onAction?: () => Promise<{
+    error: string | null;
+    restoredMoment?: TimelineMoment | null;
+  }>;
   onExpire?: () => Promise<void>;
 };
 
@@ -32,8 +38,6 @@ export function SavedToast({
   const router = useRouter();
   const shouldShowRef = useRef(initialVisible);
   const timerRef = useRef<number | null>(null);
-  const actionLabelRef = useRef(actionLabel);
-  const onActionRef = useRef(onAction);
   const onExpireRef = useRef(onExpire);
   const [visible, setVisible] = useState(initialVisible);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -68,9 +72,6 @@ export function SavedToast({
     return null;
   }
 
-  const stableActionLabel = actionLabelRef.current;
-  const stableOnAction = onActionRef.current;
-
   return (
     <div
       className="animate-toast-in mb-6 flex items-center gap-3 rounded-xl border border-success/20 bg-success-subtle px-4 py-3 text-success shadow-card"
@@ -91,7 +92,7 @@ export function SavedToast({
         type="button"
         disabled={isPending}
         onClick={() => {
-          if (!stableOnAction) {
+          if (!onAction) {
             setVisible(false);
             return;
           }
@@ -102,19 +103,26 @@ export function SavedToast({
           }
 
           startTransition(async () => {
-            const result = await stableOnAction();
+            const result = await onAction();
             if (result.error) {
               setActionError(result.error);
               return;
             }
 
+            if (result.restoredMoment) {
+              window.dispatchEvent(
+                new CustomEvent(MOMENT_RESTORED_EVENT, {
+                  detail: result.restoredMoment,
+                }),
+              );
+            }
+
             setVisible(false);
-            router.refresh();
           });
         }}
         className="ml-auto text-sm font-medium text-success/80 transition hover:text-success"
       >
-        {isPending ? "Restoring…" : (stableActionLabel ?? "Dismiss")}
+        {isPending ? "Restoring…" : (actionLabel ?? "Dismiss")}
       </button>
     </div>
   );

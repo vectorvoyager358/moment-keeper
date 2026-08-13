@@ -159,9 +159,9 @@ async function TimelineHomeContent({
   filters: TimelineSearchFilters;
   resurfacingFilters: ResurfacingFilters;
   timelinePromise: Promise<TimelinePageResult<TimelineMoment>>;
-  onThisDayPromise: Promise<
-    Awaited<ReturnType<typeof loadOnThisDayTimeline>> | null
-  >;
+  onThisDayPromise: Promise<Awaited<
+    ReturnType<typeof loadOnThisDayTimeline>
+  > | null>;
   showSavedToast: boolean;
   showEmptySurprise: boolean;
 }) {

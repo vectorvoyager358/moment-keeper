@@ -10,6 +10,10 @@ import {
   MOMENT_DELETE_UNDO_MS,
 } from "@/lib/moments/delete-undo";
 import { removeMediaAttachmentsForMoment } from "@/lib/moments/media-storage";
+import {
+  getTimelineMomentById,
+  type TimelineMoment,
+} from "@/lib/moments/queries";
 import { saveUpdatedMoment } from "@/lib/moments/save";
 import type { CaptureFormState } from "@/lib/moments/types";
 import { createClient } from "@/lib/supabase/server";
@@ -70,9 +74,10 @@ export async function deleteMoment(momentId: string): Promise<void> {
   redirect(`/timeline?deleted=${momentId}`);
 }
 
-export async function undoDeleteMoment(
-  momentId: string,
-): Promise<{ error: string | null }> {
+export async function undoDeleteMoment(momentId: string): Promise<{
+  error: string | null;
+  restoredMoment?: TimelineMoment | null;
+}> {
   const supabase = await createClient();
   const cutoff = new Date(
     Date.now() - MOMENT_DELETE_UNDO_MS - MOMENT_DELETE_REQUEST_GRACE_MS,
@@ -93,7 +98,17 @@ export async function undoDeleteMoment(
 
   revalidatePath("/timeline");
   revalidatePath("/browse");
-  return { error: null };
+
+  try {
+    return {
+      error: null,
+      restoredMoment: await getTimelineMomentById(momentId),
+    };
+  } catch {
+    return {
+      error: "The moment was restored, but it could not be shown yet.",
+    };
+  }
 }
 
 async function permanentlyDeleteMoment(

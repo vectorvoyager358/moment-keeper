@@ -11,6 +11,8 @@ vi.mock("next/navigation", () => ({
 }));
 
 import { SavedToast } from "@/components/ui/SavedToast";
+import { MOMENT_RESTORED_EVENT } from "@/lib/moments/restore-event";
+import type { TimelineMoment } from "@/lib/moments/timeline";
 
 afterEach(cleanup);
 
@@ -85,9 +87,32 @@ describe("SavedToast", () => {
     expect(replace).toHaveBeenCalledWith("/timeline", { scroll: false });
   });
 
-  it("offers undo for ten seconds and refreshes restored moments", async () => {
-    const onAction = vi.fn().mockResolvedValue({ error: null });
+  it("offers undo for ten seconds and announces the restored moment", async () => {
+    const restoredMoment: TimelineMoment = {
+      id: "moment-1",
+      body: "Restored memory",
+      occurred_at: "2026-07-19T12:00:00.000Z",
+      location: null,
+      linkUrl: null,
+      isFavorite: false,
+      tags: [],
+      hasMedia: false,
+      attachmentCount: 0,
+      mediaType: null,
+      thumbnailPath: null,
+      thumbnailUrl: null,
+      photoStoragePath: null,
+      photoUrl: null,
+      videoStoragePath: null,
+      videoUrl: null,
+    };
+    const onAction = vi.fn().mockResolvedValue({
+      error: null,
+      restoredMoment,
+    });
     const onExpire = vi.fn().mockResolvedValue(undefined);
+    const restoredListener = vi.fn();
+    window.addEventListener(MOMENT_RESTORED_EVENT, restoredListener);
 
     render(
       <SavedToast
@@ -107,9 +132,15 @@ describe("SavedToast", () => {
     });
 
     expect(onAction).toHaveBeenCalledOnce();
-    expect(refresh).toHaveBeenCalledOnce();
+    expect(restoredListener).toHaveBeenCalledOnce();
+    expect((restoredListener.mock.calls[0]?.[0] as CustomEvent).detail).toEqual(
+      restoredMoment,
+    );
+    expect(refresh).not.toHaveBeenCalled();
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
     expect(onExpire).not.toHaveBeenCalled();
+
+    window.removeEventListener(MOMENT_RESTORED_EVENT, restoredListener);
   });
 
   it("keeps the deletion toast for ten seconds before finalizing", () => {
