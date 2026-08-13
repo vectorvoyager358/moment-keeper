@@ -3,15 +3,15 @@
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
 import { loadMoreTimelineMoments } from "@/app/timeline/actions";
-import { MomentCard } from "@/components/timeline/MomentCard";
+import {
+  MomentCard,
+  TimelineEmptyState,
+} from "@/components/timeline/MomentCard";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import type { TimelineMoment } from "@/lib/moments/queries";
 import type { TimelineCursor } from "@/lib/moments/pagination";
-import {
-  MOMENT_RESTORED_EVENT,
-  type MomentRestoredEvent,
-} from "@/lib/moments/restore-event";
+import { subscribeToRestoredMoments } from "@/lib/moments/restore-event";
 import {
   hasActiveSearchFilters,
   type TimelineSearchFilters,
@@ -122,22 +122,16 @@ export function TimelineFeed({
       return;
     }
 
-    const restoreMoment = (event: Event) => {
-      const restoredMoment = (event as MomentRestoredEvent).detail;
-
-      if (!restoredMoment) {
-        return;
-      }
-
+    return subscribeToRestoredMoments((restoredMoment) => {
       setMoments((current) =>
         insertMomentChronologically(current, restoredMoment),
       );
-    };
-
-    window.addEventListener(MOMENT_RESTORED_EVENT, restoreMoment);
-    return () =>
-      window.removeEventListener(MOMENT_RESTORED_EVENT, restoreMoment);
+    });
   }, [filters]);
+
+  if (moments.length === 0) {
+    return <TimelineEmptyState />;
+  }
 
   return (
     <>

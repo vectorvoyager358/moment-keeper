@@ -1,4 +1,3 @@
-import { TimelineEmptyState } from "@/components/timeline/MomentCard";
 import { TimelineFeed } from "@/components/timeline/TimelineFeed";
 import { TimelineSearchEmptyState } from "@/components/timeline/TimelineSearchForm";
 import { toUserErrorMessage } from "@/lib/errors";
@@ -29,8 +28,8 @@ export async function TimelineResults({
 
   const isSearching = hasActiveSearchFilters(filters);
 
-  if (timelinePage.items.length === 0) {
-    return isSearching ? <TimelineSearchEmptyState /> : <TimelineEmptyState />;
+  if (timelinePage.items.length === 0 && isSearching) {
+    return <TimelineSearchEmptyState />;
   }
 
   return (

@@ -1,10 +1,9 @@
 "use client";
 
 import { Check } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 
-import { MOMENT_RESTORED_EVENT } from "@/lib/moments/restore-event";
+import { announceRestoredMoment } from "@/lib/moments/restore-event";
 import type { TimelineMoment } from "@/lib/moments/timeline";
 
 const AUTO_DISMISS_MS = 5000;
@@ -35,7 +34,6 @@ export function SavedToast({
   onAction,
   onExpire,
 }: SavedToastProps) {
-  const router = useRouter();
   const shouldShowRef = useRef(initialVisible);
   const timerRef = useRef<number | null>(null);
   const onExpireRef = useRef(onExpire);
@@ -52,7 +50,7 @@ export function SavedToast({
     if (url.searchParams.has(queryParam)) {
       url.searchParams.delete(queryParam);
       const nextUrl = `${url.pathname}${url.search}${url.hash}`;
-      router.replace(nextUrl, { scroll: false });
+      window.history.replaceState(window.history.state, "", nextUrl);
     }
 
     timerRef.current = window.setTimeout(() => {
@@ -66,7 +64,7 @@ export function SavedToast({
         window.clearTimeout(timerRef.current);
       }
     };
-  }, [autoDismissMs, queryParam, router]);
+  }, [autoDismissMs, queryParam]);
 
   if (!visible) {
     return null;
@@ -110,11 +108,7 @@ export function SavedToast({
             }
 
             if (result.restoredMoment) {
-              window.dispatchEvent(
-                new CustomEvent(MOMENT_RESTORED_EVENT, {
-                  detail: result.restoredMoment,
-                }),
-              );
+              announceRestoredMoment(result.restoredMoment);
             }
 
             setVisible(false);

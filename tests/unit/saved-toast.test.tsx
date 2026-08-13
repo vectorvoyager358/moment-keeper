@@ -1,13 +1,12 @@
 import { cleanup, render, screen, act } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { replace, refresh } = vi.hoisted(() => ({
-  replace: vi.fn(),
+const { refresh } = vi.hoisted(() => ({
   refresh: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace, refresh }),
+  useRouter: () => ({ refresh }),
 }));
 
 import { SavedToast } from "@/components/ui/SavedToast";
@@ -19,7 +18,6 @@ afterEach(cleanup);
 describe("SavedToast", () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    replace.mockReset();
     refresh.mockReset();
     window.history.replaceState({}, "", "/timeline?saved=1");
   });
@@ -84,7 +82,8 @@ describe("SavedToast", () => {
     );
 
     expect(screen.getByRole("status")).toHaveTextContent("Moment deleted.");
-    expect(replace).toHaveBeenCalledWith("/timeline", { scroll: false });
+    expect(window.location.pathname).toBe("/timeline");
+    expect(window.location.search).toBe("");
   });
 
   it("offers undo for ten seconds and announces the restored moment", async () => {
